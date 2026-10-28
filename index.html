@@ -298,6 +298,33 @@
       color: var(--muted);
       line-height: 1.35;
     }
+    .trap-card { margin-top: 12px; }
+    .trap-topic {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .trap-answers { display: flex; gap: 8px; margin: 10px 0; }
+    .trap-answers .btn { flex: 1; }
+    .trap-answers .btn:disabled { opacity: .45; cursor: default; }
+    .trap-result { font-weight: 750; font-size: 16px; margin: 4px 0 6px; }
+    .trap-result.ok { color: #1f6b3a; }
+    .trap-result.no { color: var(--carmel); }
+    .trap-explain { font-size: 14px; line-height: 1.5; color: #333; margin-bottom: 12px; }
+    .trap-next-label { font-size: 12px; color: var(--muted); margin: 2px 0 8px; }
+    .trap-topics { display: flex; flex-wrap: wrap; gap: 8px; }
+    .trap-topics button {
+      min-height: 40px;
+      padding: 0 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    .trap-topics button:hover { border-color: var(--carmel); color: var(--carmel); }
     .badge {
       display: inline-block;
       font-size: 11px;
@@ -625,6 +652,19 @@
           <p class="fact-text" id="homeFactText"></p>
           <a class="fact-wiki" id="homeFactWiki" href="#" target="_blank" rel="noopener noreferrer" hidden></a>
           <p class="fact-credit">Sources: Wikipedia (CC BY-SA) · curated for teaching</p>
+        </div>
+        <div class="fact-card trap-card" id="trapCard">
+          <div class="fact-kicker">Quick check · DSE trap</div>
+          <p class="trap-topic" id="trapTopic"></p>
+          <p class="fact-text" id="trapQuestion">Loading a trap…</p>
+          <div class="trap-answers" id="trapAnswers">
+            <button type="button" class="btn btn-primary" id="trapTrue">True</button>
+            <button type="button" class="btn btn-ghost" id="trapFalse">False</button>
+          </div>
+          <p class="trap-result" id="trapResult" hidden></p>
+          <p class="trap-explain" id="trapExplain" hidden></p>
+          <p class="trap-next-label">Another question</p>
+          <div class="trap-topics" id="trapTopics"></div>
         </div>
       </section>
 
@@ -2717,6 +2757,84 @@ CE,2009,44,A`;
   window.addEventListener('hashchange', readHash);
   readHash();
   loadCatalog();
+
+  var trapBank = null;
+  var trapCurrent = null;
+
+  function trapTopics() {
+    return trapBank ? Object.keys(trapBank) : [];
+  }
+
+  function showTrap(topic) {
+    var names = trapTopics();
+    var pool = [];
+    if (topic && trapBank[topic]) {
+      trapBank[topic].forEach(function (item) { pool.push({ topic: topic, item: item }); });
+    } else {
+      names.forEach(function (name) {
+        trapBank[name].forEach(function (item) { pool.push({ topic: name, item: item }); });
+      });
+    }
+    if (!pool.length) return;
+    var pick = pool[Math.floor(Math.random() * pool.length)];
+    var guard = 0;
+    while (trapCurrent && pick.item.question === trapCurrent.item.question && pool.length > 1 && guard < 8) {
+      pick = pool[Math.floor(Math.random() * pool.length)];
+      guard++;
+    }
+    trapCurrent = pick;
+    document.getElementById("trapTopic").textContent = pick.topic;
+    document.getElementById("trapQuestion").textContent = pick.item.question;
+    document.getElementById("trapResult").hidden = true;
+    document.getElementById("trapExplain").hidden = true;
+    document.getElementById("trapTrue").disabled = false;
+    document.getElementById("trapFalse").disabled = false;
+  }
+
+  function answerTrap(choice) {
+    if (!trapCurrent) return;
+    var right = trapCurrent.item.answer === true;
+    var ok = choice === right;
+    var result = document.getElementById("trapResult");
+    var explain = document.getElementById("trapExplain");
+    result.hidden = false;
+    result.className = "trap-result " + (ok ? "ok" : "no");
+    result.textContent = ok ? "Correct" : "Not this time";
+    explain.hidden = false;
+    explain.textContent = trapCurrent.item.explanation;
+    document.getElementById("trapTrue").disabled = true;
+    document.getElementById("trapFalse").disabled = true;
+  }
+
+  function initTrapCheck() {
+    var box = document.getElementById("trapTopics");
+    fetch("tools/traps.json")
+      .then(function (res) { if (!res.ok) throw new Error("missing"); return res.json(); })
+      .then(function (data) {
+        trapBank = data;
+        box.textContent = "";
+        trapTopics().forEach(function (name) {
+          var button = document.createElement("button");
+          button.type = "button";
+          button.textContent = name;
+          button.setAttribute("data-trap-topic", name);
+          box.appendChild(button);
+        });
+        showTrap();
+      })
+      .catch(function () {
+        document.getElementById("trapQuestion").textContent = "The trap list did not load. Open DSE traps from Tools.";
+        document.getElementById("trapAnswers").hidden = true;
+      });
+    document.getElementById("trapTrue").addEventListener("click", function () { answerTrap(true); });
+    document.getElementById("trapFalse").addEventListener("click", function () { answerTrap(false); });
+    box.addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-trap-topic]");
+      if (!btn || !trapBank) return;
+      showTrap(btn.getAttribute("data-trap-topic"));
+    });
+  }
+  initTrapCheck();
 })();
   </script>
 </body>
