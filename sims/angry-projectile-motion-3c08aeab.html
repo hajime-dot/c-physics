@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Angry Birds Projectile Simulator</title>
+    <style>
+        :root {
+            --primary: #ef4444; /* Red */
+            --secondary: #3b82f6; /* Blue */
+            --accent: #f59e0b; /* Yellow */
+            --bg: #f0f9ff;
+            --panel: #ffffff;
+            --text: #1e293b;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            color: #1e1e1e;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        /* Layout Grid */
+        .main-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        @media (max-width: 900px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Controls Panel */
+        .panel {
+            background: var(--panel);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 5px;
+            appearance: none;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--secondary);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background .2s;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #2563eb;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .btn-fire { background: var(--primary); color: white; }
+        .btn-reset { background: #64748b; color: white; }
+        
+        .stats-display {
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        /* Visualization Area */
+        .canvas-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        canvas {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            cursor: crosshair;
+        }
+
+        .sim-canvas {
+            height: 400px;
+            background: linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 80%, #90EE90 80%, #228B22 100%);
+        }
+
+        .graphs-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .graphs-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .graph-wrapper {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .graph-title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            color: #475569;
+        }
+
+        /* Legend for graphs */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+        .legend-item { display: flex; align-items: center; gap: 4px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    </style>
+</head>
+<body>
+
+    <h1>🐦 Angry Projectile Physics</h1>
+    <div class="subtitle">Interactive simulator for Projectile Motion, Energy, and Velocity</div>
+
+    <div class="main-container">
+        
+        <!-- Left Panel: Controls -->
+        <div class="panel">
+            <div class="control-group">
+                <label>Initial Velocity (u): <span id="val-speed">50</span> m/s</label>
+                <input type="range" id="input-speed" min="10" max="100" value="50">
+            </div>
+
+            <div class="control-group">
+                <label>Launch Angle (θ): <span id="val-angle">45</span>°</label>
+                <input type="range" id="input-angle" min="0" max="90" value="45">
+            </div>
+
+            <div class="control-group">
+                <label>Mass (m): <span id="val-mass">5</span> kg</label>
+                <input type="range" id="input-mass" min="1" max="20" value="5">
+            </div>
+
+            <div class="control-group">
+                <label>Gravity (g): <span id="val-gravity">9.8</span> m/s²</label>
+                <input type="range" id="input-gravity" min="1" max="20" value="9.8" step="0.1">
+            </div>
+
+            <div class="control-group">
+                <label style="justify-content: flex-start; gap: 10px;">
+                    <input type="checkbox" id="check-slowmo"> Slow Motion (0.2x)
+                </label>
+            </div>
+             <div class="control-group">
+                <label style="justify-content: flex-start; gap: 10px;">
+                    <input type="checkbox" id="check-vectors" checked> Show Vectors
+                </label>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn-fire" id="btn-fire">FIRE!</button>
+                <button class="btn-reset" id="btn-reset">RESET</button>
+            </div>
+
+            <div class="stats-display" id="stats-box">
+                Time: 0.00 s<br>
+                Height: 0.00 m<br>
+                Distance: 0.00 m<br>
+                Vx: 0.00 m/s<br>
+                Vy: 0.00 m/s
+            </div>
+            
+            <div style="font-size: 0.8rem; color: #666; margin-top: 10px; line-height: 1.4;">
+                <strong>Study Note:</strong> Observe how Total Energy (Purple) stays constant (conservation of energy) while KE (Blue) and PE (Red) interchange.
+            </div>
+        </div>
+
+        <!-- Right Panel: Simulation & Graphs -->
+        <div class="canvas-container">
+            <!-- Main World -->
+            <canvas id="simCanvas" class="sim-canvas"></canvas>
+
+            <!-- Graphs -->
+            <div class="graphs-row">
+                <!-- Energy Graph -->
+                <div class="graph-wrapper">
+                    <div class="graph-title">Energy vs. Time</div>
+                    <canvas id="energyGraph" height="200"></canvas>
+                    <div class="legend">
+                        <div class="legend-item"><div class="dot" style="background:magenta"></div>Total (ME)</div>
+                        <div class="legend-item"><div class="dot" style="background:#0ea5e9"></div>KE</div>
+                        <div class="legend-item"><div class="dot" style="background:#ef4444"></div>PE</div>
+                    </div>
+                </div>
+                
+                <!-- Velocity Graph -->
+                <div class="graph-wrapper">
+                    <div class="graph-title">Velocity Components</div>
+                    <canvas id="velocityGraph" height="200"></canvas>
+                    <div class="legend">
+                        <div class="legend-item"><div class="dot" style="background:#8b5cf6"></div>Vy (Vertical)</div>
+                        <div class="legend-item"><div class="dot" style="background:#10b981"></div>Vx (Horizontal)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Configuration & Constants ---
+        const CONSTANTS = {
+            scale: 5, // pixels per meter (zoom level)
+            groundHeight: 50, // pixels from bottom
+            timeStep: 0.016, // roughly 60fps
+            maxHistory: 1000,
+            slingshotHeightPx: 80 // Height of the slingshot band from the base
+        };
+
+        const STATE = {
+            u: 50,
+            angle: 45,
+            mass: 5,
+            g: 9.8,
+            running: false,
+            t: 0,
+            x: 0,
+            y: 0,
+            vx: 0,
+            vy: 0,
+            maxH: 0, // Track max height
+            startX: 50,
+            startY: 0, // Calculated based on canvas height
+            history: [], // For trajectory
+            dataHistory: [], // For graphs {t, ke, pe, me, vx, vy}
+            slowMo: false,
+            showVectors: true,
+            cameraX: 0,
+            cameraY: 0
+        };
+
+        // --- DOM Elements ---
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+        const energyCanvas = document.getElementById('energyGraph');
+        const energyCtx = energyCanvas.getContext('2d');
+        const velocityCanvas = document.getElementById('velocityGraph');
+        const velocityCtx = velocityCanvas.getContext('2d');
+
+        const statsBox = document.getElementById('stats-box');
+        
+        // Inputs
+        const inputs = {
+            speed: document.getElementById('input-speed'),
+            angle: document.getElementById('input-angle'),
+            mass: document.getElementById('input-mass'),
+            gravity: document.getElementById('input-gravity'),
+            slowmo: document.getElementById('check-slowmo'),
+            vectors: document.getElementById('check-vectors')
+        };
+        const displays = {
+            speed: document.getElementById('val-speed'),
+            angle: document.getElementById('val-angle'),
+            mass: document.getElementById('val-mass'),
+            gravity: document.getElementById('val-gravity')
+        };
+
+        // --- Initialization ---
+        function resizeCanvas() {
+            // Main canvas resizing
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            STATE.startY = canvas.height - CONSTANTS.groundHeight;
+
+            // Graph canvas resizing
+            const gRect = energyCanvas.getBoundingClientRect();
+            energyCanvas.width = gRect.width;
+            velocityCanvas.width = gRect.width;
+            
+            drawFrame();
+        }
+        window.addEventListener('resize', resizeCanvas);
+        
+        function updateInputs() {
+            STATE.u = parseFloat(inputs.speed.value);
+            STATE.angle = parseFloat(inputs.angle.value);
+            STATE.mass = parseFloat(inputs.mass.value);
+            STATE.g = parseFloat(inputs.gravity.value);
+            STATE.slowMo = inputs.slowmo.checked;
+            STATE.showVectors = inputs.vectors.checked;
+
+            displays.speed.innerText = STATE.u;
+            displays.angle.innerText = STATE.angle;
+            displays.mass.innerText = STATE.mass;
+            displays.gravity.innerText = STATE.g;
+            
+            if (!STATE.running) {
+                resetSim();
+            }
+        }
+
+        Object.values(inputs).forEach(input => {
+            input.addEventListener('input', updateInputs);
+        });
+
+        document.getElementById('btn-fire').addEventListener('click', startSim);
+        document.getElementById('btn-reset').addEventListener('click', resetSim);
+
+        // --- Physics Engine ---
+        function resetSim() {
+            STATE.running = false;
+            STATE.t = 0;
+            STATE.x = 0;
+            
+            // Set initial height to match slingshot band
+            // The slingshot band is CONSTANTS.slingshotHeightPx pixels above the base.
+            // In physics units (meters), this is:
+            STATE.y = CONSTANTS.slingshotHeightPx / CONSTANTS.scale;
+            STATE.maxH = STATE.y; // Initialize max height
+            
+            const rad = STATE.angle * Math.PI / 180;
+            STATE.vx = STATE.u * Math.cos(rad);
+            STATE.vy = STATE.u * Math.sin(rad);
+            
+            STATE.history = [];
+            STATE.dataHistory = [];
+            STATE.cameraX = 0;
+            STATE.cameraY = 0;
+            
+            drawFrame();
+            drawGraphs();
+            updateStats();
+        }
+
+        function startSim() {
+            if (STATE.running) return;
+            // Ensure physics resets if it was already finished
+            if (STATE.y < 0 && STATE.t > 0) resetSim();
+            
+            // If starting fresh
+            if (STATE.t === 0) {
+                 const rad = STATE.angle * Math.PI / 180;
+                 STATE.vx = STATE.u * Math.cos(rad);
+                 STATE.vy = STATE.u * Math.sin(rad);
+            }
+            
+            STATE.running = true;
+            loop();
+        }
+
+        function loop() {
+            if (!STATE.running) return;
+
+            let dt = CONSTANTS.timeStep;
+            if (STATE.slowMo) dt *= 0.2;
+
+            // Physics Update
+            STATE.t += dt;
+            STATE.x += STATE.vx * dt;
+            STATE.y += STATE.vy * dt - 0.5 * STATE.g * dt * dt; // Displacement formula
+            STATE.vy -= STATE.g * dt; // Velocity formula
+
+            // Update Max Height
+            if (STATE.y > STATE.maxH) {
+                STATE.maxH = STATE.y;
+            }
+
+            // Ground Collision
+            if (STATE.y < 0) {
+                STATE.y = 0;
+                STATE.running = false;
+                // Final calculation to precise impact
+                // (Optional: interpolate exact hit time, but simple clamp is fine for visualization)
+            }
+
+            // Record Data
+            // Note: y is vertical displacement. 
+            // KE = 0.5 * m * v^2
+            // PE = m * g * h
+            const vSq = STATE.vx*STATE.vx + STATE.vy*STATE.vy;
+            const ke = 0.5 * STATE.mass * vSq;
+            const pe = STATE.mass * STATE.g * STATE.y;
+            
+            // Limit history size for performance
+            if (STATE.history.length > 2000) STATE.history.shift();
+
+            STATE.history.push({
+                x: STATE.startX + STATE.x * CONSTANTS.scale,
+                y: STATE.startY - STATE.y * CONSTANTS.scale
+            });
+            
+            STATE.dataHistory.push({
+                t: STATE.t,
+                ke: ke,
+                pe: pe,
+                me: ke + pe,
+                vx: STATE.vx,
+                vy: STATE.vy
+            });
+
+            drawFrame();
+            drawGraphs();
+            updateStats();
+
+            if (STATE.running) {
+                requestAnimationFrame(loop);
+            }
+        }
+
+        function updateStats() {
+            const vTotal = Math.sqrt(STATE.vx*STATE.vx + STATE.vy*STATE.vy);
+            statsBox.innerHTML = `
+                <div style="margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0;">
+                    <strong>Instant Position (t=${STATE.t.toFixed(2)}s)</strong><br>
+                    X: ${STATE.x.toFixed(2)} m<br>
+                    Y: ${Math.max(0, STATE.y).toFixed(2)} m
+                </div>
+                <div style="margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0;">
+                    <strong>Velocity</strong><br>
+                    Vx: ${STATE.vx.toFixed(2)} m/s<br>
+                    Vy: ${STATE.vy.toFixed(2)} m/s<br>
+                    <strong>V (Resultant): ${vTotal.toFixed(2)} m/s</strong>
+                </div>
+                <div>
+                    <strong>Trajectory Stats</strong><br>
+                    Max Height: ${STATE.maxH.toFixed(2)} m<br>
+                    Range: ${STATE.x.toFixed(2)} m
+                </div>
+            `;
+        }
+
+        // --- Drawing Logic ---
+
+        function drawAngryBird(ctx, x, y, radius, angle) {
+            ctx.save();
+            ctx.translate(x, y);
+            // Rotate bird based on velocity direction
+            const rot = Math.atan2(-STATE.vy, STATE.vx);
+            ctx.rotate(rot);
+
+            // Body (Red)
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#ef4444';
+            ctx.fill();
+            ctx.strokeStyle = '#991b1b';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Belly (White)
+            ctx.beginPath();
+            ctx.arc(0, radius*0.4, radius * 0.6, 0.2*Math.PI, 0.8*Math.PI);
+            ctx.fillStyle = '#fce7f3';
+            ctx.fill();
+
+            // Eyes (White & Black)
+            // Left Eye
+            ctx.beginPath();
+            ctx.arc(radius*0.2, -radius*0.3, radius*0.25, 0, Math.PI*2);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            ctx.stroke();
+             // Left Pupil
+            ctx.beginPath();
+            ctx.arc(radius*0.25, -radius*0.3, radius*0.08, 0, Math.PI*2);
+            ctx.fillStyle = 'black';
+            ctx.fill();
+
+            // Beak (Yellow)
+            ctx.beginPath();
+            ctx.moveTo(radius*0.4, 0);
+            ctx.lineTo(radius*0.9, radius*0.1);
+            ctx.lineTo(radius*0.4, radius*0.3);
+            ctx.fillStyle = '#f59e0b';
+            ctx.fill();
+            ctx.stroke();
+
+            // Eyebrows (Thick Black)
+            ctx.beginPath();
+            ctx.moveTo(-radius*0.2, -radius*0.5);
+            ctx.lineTo(radius*0.5, -radius*0.4);
+            ctx.lineWidth = radius * 0.15;
+            ctx.strokeStyle = 'black';
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            // Tail feathers
+            ctx.beginPath();
+            ctx.moveTo(-radius, -radius*0.2);
+            ctx.lineTo(-radius*1.3, -radius*0.3);
+            ctx.lineTo(-radius, 0);
+            ctx.lineTo(-radius*1.3, radius*0.3);
+            ctx.lineTo(-radius, radius*0.2);
+            ctx.fillStyle = 'black';
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawSlingshot(ctx, x, y) {
+            ctx.save();
+            ctx.strokeStyle = '#8B4513';
+            ctx.lineWidth = 8;
+            ctx.lineCap = 'round';
+            
+            // Stick
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x, y - 60);
+            
+            // Fork
+            ctx.moveTo(x, y - 60);
+            ctx.lineTo(x - 25, y - 100);
+            
+            ctx.moveTo(x, y - 60);
+            ctx.lineTo(x + 25, y - 100);
+            ctx.stroke();
+            
+            // Band (if not fired, simplified)
+            if (STATE.t === 0) {
+                 ctx.strokeStyle = '#3a1e0b';
+                 ctx.lineWidth = 4;
+                 ctx.beginPath();
+                 ctx.moveTo(x - 25, y - 100);
+                 ctx.lineTo(x, y - 80); // Center where bird sits
+                 ctx.lineTo(x + 25, y - 100);
+                 ctx.stroke();
+            }
+            
+            ctx.restore();
+        }
+
+        function drawArrow(ctx, fromX, fromY, toX, toY, color) {
+            const headlen = 10;
+            const dx = toX - fromX;
+            const dy = toY - fromY;
+            const angle = Math.atan2(dy, dx);
+            
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = 3;
+            
+            ctx.beginPath();
+            ctx.moveTo(fromX, fromY);
+            ctx.lineTo(toX, toY);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(toX, toY);
+            ctx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
+            ctx.lineTo(toX, toY);
+            ctx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
+            ctx.fill();
+        }
+
+        function drawFrame() {
+            // Camera Logic: Pan if bird goes past 30% of screen
+            const currentPixelX = STATE.startX + STATE.x * CONSTANTS.scale;
+            const currentPixelY = STATE.startY - STATE.y * CONSTANTS.scale;
+
+            // Horizontal Panning
+            let targetCameraX = currentPixelX - (canvas.width * 0.3);
+            if (targetCameraX < 0) targetCameraX = 0;
+            STATE.cameraX = targetCameraX;
+
+            // Vertical Panning (Keep bird below top 20% of screen)
+            // We shift the world down (positive Y translate) if the bird is too high
+            const minScreenY = canvas.height * 0.2; 
+            let targetCameraY = 0;
+            
+            // If bird's screen Y (without shift) is higher than minScreenY
+            // We want (currentPixelY + shift) = minScreenY
+            if (currentPixelY < minScreenY) {
+                targetCameraY = minScreenY - currentPixelY;
+            }
+            STATE.cameraY = targetCameraY;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.save();
+            // Apply Camera Transform (X moves left, Y moves down to show higher content)
+            ctx.translate(-STATE.cameraX, STATE.cameraY);
+
+            // Draw Ground (Infinite scrolling effect)
+            ctx.fillStyle = '#228B22'; // Forest Green
+            // Draw ground from camera start to camera end
+            ctx.fillRect(STATE.cameraX, canvas.height - CONSTANTS.groundHeight, canvas.width, CONSTANTS.groundHeight);
+            
+            // Draw Target/Pigs (Arbitrary position for fun)
+            const targetX = STATE.startX + 200 * CONSTANTS.scale; // 200m away? No, that's far. Let's say based on screen
+            
+            // Draw Trajectory
+            if (STATE.history.length > 0) {
+                ctx.beginPath();
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.moveTo(STATE.history[0].x, STATE.history[0].y);
+                for (let i = 1; i < STATE.history.length; i++) {
+                    ctx.lineTo(STATE.history[i].x, STATE.history[i].y);
+                }
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // Draw Slingshot (Base at startX, startY)
+            drawSlingshot(ctx, STATE.startX, STATE.startY);
+
+            // Draw Bird
+            const currentX = STATE.startX + STATE.x * CONSTANTS.scale;
+            const currentY = STATE.startY - STATE.y * CONSTANTS.scale; // y is height in meters
+            drawAngryBird(ctx, currentX, currentY, 15, 0);
+
+            // Draw Vectors
+            if (STATE.showVectors && STATE.running) {
+                // Velocity Scale Factor
+                const vScale = 2; 
+                
+                // Resultant Velocity (Black)
+                drawArrow(ctx, currentX, currentY, currentX + STATE.vx * vScale, currentY - STATE.vy * vScale, '#000000');
+
+                // Vy Component (Purple in graph)
+                drawArrow(ctx, currentX, currentY, currentX, currentY - STATE.vy * vScale, '#8b5cf6');
+                
+                // Vx Component (Green in graph)
+                drawArrow(ctx, currentX, currentY, currentX + STATE.vx * vScale, currentY, '#10b981');
+            }
+            
+            ctx.restore();
+        }
+
+        // --- Graphing Logic ---
+        
+        function drawGraph(ctx, data, keys, colors, maxYOverride = null) {
+            const width = ctx.canvas.width;
+            const height = ctx.canvas.height;
+            const padding = 30;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            // Axis
+            ctx.beginPath();
+            ctx.strokeStyle = '#ccc';
+            ctx.lineWidth = 1;
+            ctx.moveTo(padding, 10);
+            ctx.lineTo(padding, height - padding);
+            ctx.lineTo(width - 10, height - padding);
+            ctx.stroke();
+
+            if (data.length < 2) return;
+
+            // Determine scales
+            const maxT = data[data.length-1].t;
+            // Determine max Y for scaling
+            let maxY = 0;
+            if (maxYOverride !== null) {
+                maxY = maxYOverride;
+            } else {
+                keys.forEach(key => {
+                    const localMax = Math.max(...data.map(d => Math.abs(d[key])));
+                    if (localMax > maxY) maxY = localMax;
+                });
+                maxY = maxY * 1.1; // Add 10% padding
+            }
+            if (maxY === 0) maxY = 10;
+
+            // Draw Lines
+            keys.forEach((key, index) => {
+                ctx.beginPath();
+                ctx.strokeStyle = colors[index];
+                ctx.lineWidth = 2;
+                
+                // Map first point
+                const x0 = padding + (data[0].t / maxT) * (width - padding - 10);
+                // Invert Y: 0 is at height-padding, maxY is at 10
+                // y_pixel = (height - padding) - (val / maxY) * (height - padding - 10)
+                const y0 = (height - padding) - (data[0][key] / maxY) * (height - padding - 10);
+                
+                ctx.moveTo(x0, y0);
+
+                for(let i=1; i<data.length; i++) {
+                     const x = padding + (data[i].t / maxT) * (width - padding - 10);
+                     const y = (height - padding) - (data[i][key] / maxY) * (height - padding - 10);
+                     ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            });
+            
+            // Text Labels
+            ctx.fillStyle = '#666';
+            ctx.font = '10px sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText(maxY.toFixed(0), padding - 5, 15);
+            ctx.fillText('0', padding - 5, height - padding);
+            ctx.textAlign = 'center';
+            ctx.fillText(maxT.toFixed(1) + 's', width - 20, height - 10);
+        }
+
+        function drawGraphs() {
+            if (STATE.dataHistory.length === 0) return;
+            
+            // Energy Graph
+            // keys: me, ke, pe
+            // colors: magenta, blue, red
+            drawGraph(energyCtx, STATE.dataHistory, ['me', 'ke', 'pe'], ['magenta', '#0ea5e9', '#ef4444']);
+
+            // Velocity Graph
+            // keys: vy, vx
+            // colors: purple, green
+            // For velocity, vy can be negative, so we need to handle origin in middle?
+            // The user request shows absolute magnitudes or standard graphs.
+            // Standard projectile motion graph for Vy goes from +u to -u.
+            // Let's implement a centered Y axis for velocity if min < 0
+            
+            drawVelocityGraph(velocityCtx, STATE.dataHistory);
+        }
+
+        function drawVelocityGraph(ctx, data) {
+            const width = ctx.canvas.width;
+            const height = ctx.canvas.height;
+            const padding = 30;
+            ctx.clearRect(0, 0, width, height);
+
+            if (data.length < 2) return;
+
+            const maxT = data[data.length-1].t;
+            // Find max absolute velocity
+            let maxV = 0;
+            data.forEach(d => {
+                maxV = Math.max(maxV, Math.abs(d.vx), Math.abs(d.vy));
+            });
+            maxV = maxV * 1.1;
+            
+            // Draw Axis
+            ctx.beginPath();
+            ctx.strokeStyle = '#ccc';
+            ctx.moveTo(padding, height/2); // X axis in middle
+            ctx.lineTo(width-10, height/2);
+            ctx.moveTo(padding, 0);
+            ctx.lineTo(padding, height);
+            ctx.stroke();
+
+            // Draw Vx (Green)
+            ctx.beginPath();
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 2;
+            data.forEach((d, i) => {
+                const x = padding + (d.t / maxT) * (width - padding - 10);
+                // Center is height/2. +V is up.
+                const y = (height/2) - (d.vx / maxV) * (height/2 - 10);
+                if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+            });
+            ctx.stroke();
+
+            // Draw Vy (Purple)
+            ctx.beginPath();
+            ctx.strokeStyle = '#8b5cf6';
+            ctx.lineWidth = 2;
+            data.forEach((d, i) => {
+                const x = padding + (d.t / maxT) * (width - padding - 10);
+                const y = (height/2) - (d.vy / maxV) * (height/2 - 10);
+                if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+            });
+            ctx.stroke();
+            
+            // Labels
+            ctx.fillStyle = '#666';
+            ctx.textAlign = 'right';
+            ctx.fillText(maxV.toFixed(0), padding - 5, 10);
+            ctx.fillText(-maxV.toFixed(0), padding - 5, height - 10);
+        }
+
+        // Initialize
+        resizeCanvas();
+        resetSim();
+
+    </script>
+</body>
+</html>
