@@ -1,0 +1,1825 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEM Interactive Physics Simulator — HKDSE Atomic World</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        lab: {
+                            950: '#070b14',
+                            900: '#0f172a',
+                            800: '#1e293b',
+                            700: '#334155',
+                            accent: '#10b981',
+                            amber: '#f59e0b',
+                            cyan: '#06b6d4'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #070b14;
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        /* Custom Range Sliders */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            background: #1e293b;
+            border-radius: 999px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #10b981;
+            cursor: pointer;
+            border: 2px solid #070b14;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+            transition: transform 0.15s ease, background-color 0.15s ease;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+            background: #34d399;
+        }
+        input[type="range"].amber-slider::-webkit-slider-thumb {
+            background: #f59e0b;
+            box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+        }
+        input[type="range"].cyan-slider::-webkit-slider-thumb {
+            background: #06b6d4;
+            box-shadow: 0 0 8px rgba(6, 182, 212, 0.6);
+        }
+        .phosphor-glow {
+            box-shadow: 0 0 28px rgba(16, 185, 129, 0.25), inset 0 0 20px rgba(16, 185, 129, 0.15);
+        }
+        .tab-active {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.15));
+            border-color: #10b981;
+            color: #ecfdf5;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Top Navigation Bar -->
+    <header class="border-b border-slate-800/80 bg-slate-900/80 backdrop-blur-md sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/40 flex items-center justify-center shadow-inner">
+                    <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 5.07a1.125 1.125 0 01-1.084 1.43H3.882a1.125 1.125 0 01-1.084-1.43L4.2 15.3" />
+                    </svg>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-base sm:text-lg font-bold tracking-tight text-white">Transmission Electron Microscope (TEM)</h1>
+                        <span class="hidden sm:inline-block text-xs font-mono uppercase px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Fig 3.2i–3.2l</span>
+                    </div>
+                    <p class="text-xs text-slate-400">Interactive Electron Optics, de Broglie Wavelength & Magnetic Lens Lab</p>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <nav class="flex flex-wrap items-center gap-1.5" role="tablist">
+                <button onclick="switchTab('column')" id="tab-btn-column" class="tab-active text-xs sm:text-sm font-medium px-3.5 py-2 rounded-lg border border-slate-700/80 transition-all flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    1. Full TEM Column (Fig 3.2j)
+                </button>
+                <button onclick="switchTab('gun')" id="tab-btn-gun" class="text-xs sm:text-sm font-medium px-3.5 py-2 rounded-lg border border-slate-800 bg-slate-900/60 text-slate-300 hover:bg-slate-800 transition-all flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                    2. Electron Gun (Fig 3.2k)
+                </button>
+                <button onclick="switchTab('lens')" id="tab-btn-lens" class="text-xs sm:text-sm font-medium px-3.5 py-2 rounded-lg border border-slate-800 bg-slate-900/60 text-slate-300 hover:bg-slate-800 transition-all flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                    3. Magnetic vs Optical Lens (Fig 3.2l)
+                </button>
+                <button onclick="switchTab('quiz')" id="tab-btn-quiz" class="text-xs sm:text-sm font-medium px-3.5 py-2 rounded-lg border border-slate-800 bg-slate-900/60 text-slate-300 hover:bg-slate-800 transition-all flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+                    4. Concept Check
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-5">
+
+        <!-- ========================================== -->
+        <!-- TAB 1: FULL TEM COLUMN & VIEWING SCREEN    -->
+        <!-- ========================================== -->
+        <section id="tab-column" class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+            
+            <!-- Left Column: Interactive TEM Column Diagram (5 cols) -->
+            <div class="lg:col-span-5 bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col items-center relative shadow-xl">
+                <div class="w-full flex items-center justify-between mb-2">
+                    <div>
+                        <h2 class="text-sm font-semibold text-white flex items-center gap-2">
+                            <span>TEM Vacuum Column Cross-Section</span>
+                        </h2>
+                        <p class="text-xs text-slate-400">Click any component on the column to inspect its role</p>
+                    </div>
+                    <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-800 text-emerald-400 border border-slate-700">Vacuum &lt; 10⁻⁵ Pa</span>
+                </div>
+
+                <!-- Interactive TEM Ray Canvas -->
+                <div class="w-full relative bg-slate-950 rounded-xl border border-slate-800/90 overflow-hidden" style="height: 550px;">
+                    <canvas id="temColumnCanvas" class="w-full h-full cursor-pointer"></canvas>
+                    
+                    <!-- Component Inspector Tooltip Banner inside canvas bottom-left -->
+                    <div id="columnInspectorBadge" class="absolute bottom-3 left-3 right-3 bg-slate-900/95 border border-emerald-500/40 rounded-lg p-2.5 backdrop-blur-md shadow-lg transition-all">
+                        <div class="flex items-center justify-between">
+                            <span id="inspectorTitle" class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Objective Lens (Magnetic Lens)</span>
+                            <span class="text-[10px] font-mono text-slate-400">Click diagram parts</span>
+                        </div>
+                        <p id="inspectorDesc" class="text-xs text-slate-300 mt-1 leading-relaxed">
+                            Uses strong magnetic fields from copper coils to focus the transmitted electrons into an inverted & rotated intermediate image. Adjust its coil current to focus!
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Controls, Live Viewing Screen & Physics Telemetry (7 cols) -->
+            <div class="lg:col-span-7 flex flex-col gap-5">
+                
+                <!-- Top Row: Live Fluorescent Viewing Screen + Specimen Selector -->
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-4 bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl">
+                    
+                    <!-- Viewing Screen Display (7 cols) -->
+                    <div class="md:col-span-7 flex flex-col items-center">
+                        <div class="w-full flex items-center justify-between mb-2">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                Fluorescent Viewing Screen
+                            </span>
+                            <span id="focusStatusBadge" class="text-xs font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                                IN FOCUS
+                            </span>
+                        </div>
+
+                        <div class="relative w-full aspect-square max-w-[310px] rounded-full bg-black border-4 border-slate-700 phosphor-glow overflow-hidden flex items-center justify-center">
+                            <canvas id="micrographCanvas" width="320" height="320" class="w-full h-full"></canvas>
+                            <!-- Crosshair overlay -->
+                            <div class="pointer-events-none absolute inset-0 border border-emerald-500/20 rounded-full"></div>
+                            <div class="pointer-events-none absolute w-full h-[1px] bg-emerald-500/15"></div>
+                            <div class="pointer-events-none absolute h-full w-[1px] bg-emerald-500/15"></div>
+                        </div>
+
+                        <div class="w-full flex items-center justify-between text-xs text-slate-400 mt-2.5 px-2 font-mono">
+                            <span id="screenRotationReadout">Image Rotation: 142° (Inverted)</span>
+                            <span id="screenMagReadout" class="text-emerald-400 font-semibold">35,000×</span>
+                        </div>
+                    </div>
+
+                    <!-- Specimen Selection & Quick Actions (5 cols) -->
+                    <div class="md:col-span-5 flex flex-col justify-between border-t md:border-t-0 md:border-l border-slate-800 pt-3 md:pt-0 md:pl-4">
+                        <div>
+                            <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2.5">Select Specimen (Fig 3.2i)</h3>
+                            <div class="flex flex-col gap-2">
+                                <button onclick="selectSpecimen(0)" id="spec-btn-0" class="specimen-btn text-left p-2.5 rounded-xl border border-emerald-500 bg-emerald-500/10 transition-all">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs font-bold text-white">(i) Mouse Brain Tissue</span>
+                                        <span class="text-[11px] font-mono text-emerald-300">35 000×</span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">Scale bar: 270 nm • Organelle ultrastructure</p>
+                                </button>
+
+                                <button onclick="selectSpecimen(1)" id="spec-btn-1" class="specimen-btn text-left p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800/60 transition-all">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs font-bold text-white">(ii) Al–Cu Alloy</span>
+                                        <span class="text-[11px] font-mono text-emerald-300">68 000×</span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">Scale bar: 140 nm • Crystal dislocation lines</p>
+                                </button>
+
+                                <button onclick="selectSpecimen(2)" id="spec-btn-2" class="specimen-btn text-left p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800/60 transition-all">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs font-bold text-white">(iii) H5N1 Bird Flu Virion</span>
+                                        <span class="text-[11px] font-mono text-emerald-300">150 000×</span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">Scale bar: 70 nm • Rod-shaped viral capsid</p>
+                                </button>
+
+                                <button onclick="selectSpecimen(3)" id="spec-btn-3" class="specimen-btn text-left p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800/60 transition-all">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs font-bold text-white">(iv) Gold Atomic Lattice</span>
+                                        <span class="text-[11px] font-mono text-emerald-300">200 000×</span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">Scale bar: 0.1 nm limit • High-V resolution test</p>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Auto-Focus Helper Button -->
+                        <div class="mt-3 pt-3 border-t border-slate-800/80 flex flex-col gap-2">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="text-slate-400">Phosphor Tint:</span>
+                                <div class="flex gap-1.5">
+                                    <button onclick="setScreenMode('grey')" id="mode-grey" class="px-2 py-0.5 rounded text-[11px] bg-slate-700 text-white font-medium">Textbook B&W</button>
+                                    <button onclick="setScreenMode('green')" id="mode-green" class="px-2 py-0.5 rounded text-[11px] bg-slate-800 text-emerald-400 hover:bg-slate-700">Green Phosphor</button>
+                                </div>
+                            </div>
+                            <button onclick="autoFocusObjective()" class="w-full py-2 px-3 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/50 text-emerald-300 text-xs font-semibold transition-all flex items-center justify-center gap-1.5 shadow">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                Auto-Tune Objective Focus
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Middle Row: Interactive TEM Column Controls -->
+                <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl">
+                    <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Electron Gun & Magnetic Lens Controls</h3>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Control 1: Accelerating Voltage V -->
+                        <div class="bg-slate-950/70 p-3 rounded-xl border border-slate-800/80">
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-xs font-semibold text-amber-400">1. Accelerating Voltage (V)</label>
+                                <span id="val-voltage" class="text-xs font-mono font-bold text-white bg-amber-500/20 border border-amber-500/40 px-2 py-0.5 rounded">200 kV</span>
+                            </div>
+                            <input type="range" id="slider-voltage" class="amber-slider" min="40" max="400" step="5" value="200" oninput="updateTEMSimulation()">
+                            <div class="flex justify-between text-[10px] font-mono text-slate-500 mt-1">
+                                <span>40 kV (Longer λ)</span>
+                                <span>200 kV</span>
+                                <span>400 kV (Shorter λ)</span>
+                            </div>
+                        </div>
+
+                        <!-- Control 2: Condenser Lens Current -->
+                        <div class="bg-slate-950/70 p-3 rounded-xl border border-slate-800/80">
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-xs font-semibold text-cyan-400">2. Condenser Lens Current</label>
+                                <span id="val-condenser" class="text-xs font-mono font-bold text-white bg-cyan-500/20 border border-cyan-500/40 px-2 py-0.5 rounded">75%</span>
+                            </div>
+                            <input type="range" id="slider-condenser" class="cyan-slider" min="25" max="100" step="1" value="75" oninput="updateTEMSimulation()">
+                            <div class="flex justify-between text-[10px] font-mono text-slate-500 mt-1">
+                                <span>Wide Beam (Dim)</span>
+                                <span>Concentrated Beam (Bright)</span>
+                            </div>
+                        </div>
+
+                        <!-- Control 3: Objective Lens Current (Focus) -->
+                        <div class="bg-slate-950/70 p-3 rounded-xl border border-slate-800/80">
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-xs font-semibold text-emerald-400">3. Objective Lens Current (Focus)</label>
+                                <span id="val-objective" class="text-xs font-mono font-bold text-white bg-emerald-500/20 border border-emerald-500/40 px-2 py-0.5 rounded">5.00 A</span>
+                            </div>
+                            <input type="range" id="slider-objective" min="2.5" max="7.5" step="0.05" value="5.0" oninput="updateTEMSimulation()">
+                            <div class="flex justify-between text-[10px] font-mono text-slate-500 mt-1">
+                                <span>Under-focused</span>
+                                <span id="target-focus-label" class="text-emerald-400">Target: 5.00 A</span>
+                                <span>Over-focused</span>
+                            </div>
+                        </div>
+
+                        <!-- Control 4: Projector Lens Current (Magnification) -->
+                        <div class="bg-slate-950/70 p-3 rounded-xl border border-slate-800/80">
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-xs font-semibold text-emerald-400">4. Projector Lens (Magnification)</label>
+                                <span id="val-projector" class="text-xs font-mono font-bold text-white bg-emerald-500/20 border border-emerald-500/40 px-2 py-0.5 rounded">35,000×</span>
+                            </div>
+                            <input type="range" id="slider-projector" min="15000" max="200000" step="1000" value="35000" oninput="updateTEMSimulation()">
+                            <div class="flex justify-between text-[10px] font-mono text-slate-500 mt-1">
+                                <span>15,000× (Longer f)</span>
+                                <span>200,000× (Shorter f)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Row: Live Physics Readout Cards (Rayleigh Criterion & de Broglie Wavelength) -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3">
+                        <span class="text-[11px] text-slate-400 block">Electron Kinetic Energy</span>
+                        <span id="stat-ke" class="text-base font-mono font-bold text-amber-400">200 keV</span>
+                        <span id="stat-joules" class="text-[10px] font-mono text-slate-500 block mt-0.5">3.20 × 10⁻¹⁴ J</span>
+                    </div>
+                    <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3">
+                        <span class="text-[11px] text-slate-400 block">Electron Speed (v)</span>
+                        <span id="stat-speed" class="text-base font-mono font-bold text-cyan-400">2.08 × 10⁸ m/s</span>
+                        <span id="stat-c-frac" class="text-[10px] font-mono text-slate-500 block mt-0.5">0.695 c (Fast-moving)</span>
+                    </div>
+                    <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3">
+                        <span class="text-[11px] text-slate-400 block">de Broglie Wavelength (λ)</span>
+                        <span id="stat-lambda" class="text-base font-mono font-bold text-emerald-400">2.73 pm</span>
+                        <span class="text-[10px] font-mono text-slate-500 block mt-0.5">≪ Light (~550 nm)</span>
+                    </div>
+                    <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3">
+                        <span class="text-[11px] text-slate-400 block">Practical Resolution</span>
+                        <span id="stat-res" class="text-base font-mono font-bold text-white">~0.14 nm</span>
+                        <span class="text-[10px] font-mono text-emerald-400 block mt-0.5">Down to 0.1 nm at 400 kV</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 2: ELECTRON GUN DEEP-DIVE (Fig 3.2k)   -->
+        <!-- ========================================== -->
+        <section id="tab-gun" class="hidden grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <!-- Left Interactive Schematic Canvas (7 cols) -->
+            <div class="lg:col-span-7 bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                    <div>
+                        <span class="text-xs font-mono uppercase px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">Section a • Fig 3.2k</span>
+                        <h2 class="text-base font-bold text-white mt-1">The Structure of the Electron Gun</h2>
+                    </div>
+                    <div class="text-xs text-slate-400 font-mono">Thermionic Emission + Electric Field Acceleration</div>
+                </div>
+
+                <div class="w-full bg-slate-950 rounded-xl border border-slate-800 overflow-hidden" style="height: 440px;">
+                    <canvas id="electronGunCanvas" class="w-full h-full"></canvas>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                    <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
+                        <div class="flex justify-between mb-1">
+                            <label class="text-xs font-semibold text-amber-400">A.C. Filament Heating Current</label>
+                            <span id="gun-heater-val" class="text-xs font-mono font-bold text-amber-300">2600 K (Active)</span>
+                        </div>
+                        <input type="range" id="slider-gun-heater" class="amber-slider" min="0" max="100" value="80" oninput="updateGunSim()">
+                        <p class="text-[11px] text-slate-400 mt-1.5">Heats the cathode filament by an a.c. supply so electrons gain thermal energy to escape (thermionic emission).</p>
+                    </div>
+
+                    <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
+                        <div class="flex justify-between mb-1">
+                            <label class="text-xs font-semibold text-emerald-400">Accelerating Voltage V (40–400 kV)</label>
+                            <span id="gun-volt-val" class="text-xs font-mono font-bold text-emerald-300">200 kV</span>
+                        </div>
+                        <input type="range" id="slider-gun-volt" min="40" max="400" step="10" value="200" oninput="updateGunSim()">
+                        <p class="text-[11px] text-slate-400 mt-1.5">Produces a strong electric field between cathode (−) and cylindrical anode (+) to accelerate electrons to high speeds.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Physics Explanation & Live Equations (5 cols) -->
+            <div class="lg:col-span-5 flex flex-col gap-4">
+                <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                    <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                        Step-by-Step Physics of the Electron Gun
+                    </h3>
+                    <ol class="space-y-3 text-xs text-slate-300 leading-relaxed">
+                        <li class="p-3 rounded-xl bg-slate-950/80 border border-slate-800/80">
+                            <strong class="text-amber-400 block mb-0.5">1. Thermionic Emission at the Cathode (−)</strong>
+                            An alternating current (a.c.) passes through the tungsten filament (cathode), heating it to white-hot temperatures. Free electrons gain enough kinetic energy to overcome the work function of the metal.
+                        </li>
+                        <li class="p-3 rounded-xl bg-slate-950/80 border border-slate-800/80">
+                            <strong class="text-emerald-400 block mb-0.5">2. High-Voltage Electric Field Acceleration</strong>
+                            A high d.c. accelerating voltage <span class="font-mono text-white">V (40 kV to 400 kV)</span> is applied across the cathode (<span class="text-cyan-400 font-bold">−</span>) and the cylindrical anode (<span class="text-rose-400 font-bold">+</span>). Electric potential energy is converted into kinetic energy:
+                            <div class="mt-2 p-2 rounded bg-slate-900 font-mono text-center text-emerald-300 border border-slate-800">
+                                KE = eV = ½ m<sub>e</sub>v² &nbsp;⇒&nbsp; p = √(2m<sub>e</sub>eV)
+                            </div>
+                        </li>
+                        <li class="p-3 rounded-xl bg-slate-950/80 border border-slate-800/80">
+                            <strong class="text-cyan-400 block mb-0.5">3. Why High Voltage Gives High Resolving Power</strong>
+                            By de Broglie's relation <span class="font-mono text-white">λ = h / p</span>, faster electrons have a much shorter wavelength than visible light (<span class="font-mono">~550 nm</span>). According to the Rayleigh criterion (<span class="font-mono">θ<sub>min</sub> ≈ 1.22 λ / d</span>), a shorter wavelength produces much weaker diffraction and a much higher resolving power!
+                        </li>
+                    </ol>
+                </div>
+
+                <!-- Wavelength Comparison Meter -->
+                <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                    <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Live Wavelength & Resolution Comparison</h4>
+                    <div class="space-y-3 text-xs font-mono">
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-slate-300">Visible Green Light (Optical Microscope):</span>
+                                <span class="text-amber-400 font-bold">550,000 pm (550 nm)</span>
+                            </div>
+                            <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-amber-500 to-green-500 w-full"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-slate-300">TEM Electron Beam (<span id="gun-comp-v">200 kV</span>):</span>
+                                <span id="gun-comp-lambda" class="text-emerald-400 font-bold">2.73 pm (0.00273 nm)</span>
+                            </div>
+                            <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
+                                <div id="gun-lambda-bar" class="h-full bg-emerald-400 transition-all duration-300" style="width: 12%"></div>
+                            </div>
+                        </div>
+                        <p id="gun-ratio-text" class="text-[11px] text-slate-400 font-sans pt-1">
+                            At <strong>200 kV</strong>, the electron de Broglie wavelength is about <strong>200,000 times shorter</strong> than visible light!
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 3: MAGNETIC LENS VS CONVEX LENS (3.2l) -->
+        <!-- ========================================== -->
+        <section id="tab-lens" class="hidden grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <div class="lg:col-span-8 bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                    <div>
+                        <span class="text-xs font-mono uppercase px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">Section b • Fig 3.2l</span>
+                        <h2 class="text-base font-bold text-white mt-1">Comparing a Magnetic Lens with an Optical Convex Lens</h2>
+                    </div>
+                    <span class="text-xs font-mono text-emerald-400">Helical Electron Trajectory vs Straight Light Ray</span>
+                </div>
+
+                <!-- Side-by-side comparison Canvas -->
+                <div class="w-full bg-slate-950 rounded-xl border border-slate-800 overflow-hidden" style="height: 450px;">
+                    <canvas id="lensComparisonCanvas" class="w-full h-full"></canvas>
+                </div>
+
+                <!-- Interactive Coil Current Control -->
+                <div class="mt-4 bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col sm:flex-row items-center gap-6">
+                    <div class="w-full sm:w-2/3">
+                        <div class="flex justify-between mb-1">
+                            <label class="text-xs font-semibold text-cyan-400">Copper Coil Current (I) in Electromagnet</label>
+                            <span id="lens-current-val" class="text-xs font-mono font-bold text-white bg-cyan-500/20 border border-cyan-500/40 px-2 py-0.5 rounded">4.5 A (Medium B-field)</span>
+                        </div>
+                        <input type="range" id="slider-lens-current" class="cyan-slider" min="1.5" max="8.0" step="0.1" value="4.5" oninput="updateLensSim()">
+                        <div class="flex justify-between text-[10px] font-mono text-slate-500 mt-1">
+                            <span>Small Current (Longer Focal Length f)</span>
+                            <span>Large Current (Shorter Focal Length f & More Rotation)</span>
+                        </div>
+                    </div>
+                    <div class="w-full sm:w-1/3 flex flex-col gap-1.5 text-xs font-mono border-t sm:border-t-0 sm:border-l border-slate-800 pt-3 sm:pt-0 sm:pl-4">
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Focal Length f:</span>
+                            <span id="lens-focal-readout" class="text-emerald-400 font-bold">14.2 mm</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Image Orientation:</span>
+                            <span id="lens-rot-readout" class="text-amber-400 font-bold">Inverted + 128° Rot</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Key Comparison Table & Notes (4 cols) -->
+            <div class="lg:col-span-4 flex flex-col gap-4">
+                <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                    <h3 class="text-sm font-bold text-white mb-3">Why Magnetic Lenses Rotate the Image</h3>
+                    <p class="text-xs text-slate-300 leading-relaxed mb-3">
+                        A magnetic lens consists of <strong class="text-amber-400">copper coils</strong> enclosed in a <strong class="text-slate-200">soft-iron</strong> casing with N and S pole pieces.
+                    </p>
+                    <p class="text-xs text-slate-300 leading-relaxed mb-3">
+                        Because the magnetic field inside the gap has both axial and radial components, an electron entering off-axis experiences a magnetic Lorentz force <span class="font-mono text-emerald-400">F = −e(v × B)</span> that pushes it into a <strong class="text-emerald-400">helical (spiral) path</strong> while converging toward the axis.
+                    </p>
+
+                    <!-- Textbook Comparison Table -->
+                    <div class="overflow-hidden rounded-xl border border-slate-800 mt-4">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-950 text-slate-300 border-b border-slate-800">
+                                    <th class="p-2.5 font-semibold">Feature</th>
+                                    <th class="p-2.5 font-semibold text-emerald-400">Magnetic Lens (TEM)</th>
+                                    <th class="p-2.5 font-semibold text-amber-400">Convex Lens (Optical)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800/80 bg-slate-950/40 text-slate-300">
+                                <tr>
+                                    <td class="p-2.5 font-medium text-slate-400">Construction</td>
+                                    <td class="p-2.5">Copper coils inside soft-iron electromagnet</td>
+                                    <td class="p-2.5">Transparent glass / plastic with fixed curvature</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2.5 font-medium text-slate-400">Ray Path</td>
+                                    <td class="p-2.5 text-emerald-300">Spiral / helical path around axis</td>
+                                    <td class="p-2.5 text-amber-300">Straight rays refracted in same plane</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2.5 font-medium text-slate-400">Image Formed</td>
+                                    <td class="p-2.5 font-semibold text-white">Inverted AND Rotated</td>
+                                    <td class="p-2.5 font-semibold text-white">Inverted ONLY</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2.5 font-medium text-slate-400">Changing Focal Length</td>
+                                    <td class="p-2.5">Adjust <strong class="text-cyan-300">coil current I</strong> (no moving parts needed)</td>
+                                    <td class="p-2.5">Fixed focal length (must move lens physically)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 4: HKDSE CONCEPT CHECK QUIZ            -->
+        <!-- ========================================== -->
+        <section id="tab-quiz" class="hidden max-w-4xl mx-auto">
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-5">
+                    <div>
+                        <span class="text-xs font-mono uppercase px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">Interactive Assessment</span>
+                        <h2 class="text-lg font-bold text-white mt-1">TEM Operation & Physics Concept Check</h2>
+                    </div>
+                    <button onclick="resetQuiz()" class="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition">Reset Answers</button>
+                </div>
+
+                <div id="quiz-container" class="space-y-5"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // ============================================================================
+        // GLOBAL STATE & SPECIMEN DEFINITIONS (Matching Fig 3.2i - 3.2l)
+        // ============================================================================
+        let currentTab = 'column';
+        let screenMode = 'grey'; // 'grey' matches textbook Fig 3.2i, 'green' matches fluorescent screen
+
+        const specimens = [
+            {
+                id: 0,
+                name: 'Brain tissue of mouse',
+                defaultMag: 35000,
+                scaleBarNm: 270,
+                targetFocusCurrent: 5.00,
+                description: 'Shows cellular cytoplasm and a circular dark organelle (35,000×).'
+            },
+            {
+                id: 1,
+                name: 'Al–Cu alloy',
+                defaultMag: 68000,
+                scaleBarNm: 140,
+                targetFocusCurrent: 5.35,
+                description: 'Shows crystalline grain structure and dark needle-like precipitate dislocations (68,000×).'
+            },
+            {
+                id: 2,
+                name: 'H5N1 bird flu virion',
+                defaultMag: 150000,
+                scaleBarNm: 70,
+                targetFocusCurrent: 4.65,
+                description: 'Shows an elongated rod-shaped viral particle with protein envelope spikes (150,000×).'
+            },
+            {
+                id: 3,
+                name: 'Gold atomic lattice',
+                defaultMag: 200000,
+                scaleBarNm: 0.5,
+                targetFocusCurrent: 5.15,
+                description: 'Tests the 0.1 nm practical resolution limit of TEM. Requires high accelerating voltage (≥200 kV).'
+            }
+        ];
+
+        let selectedSpecimenIndex = 0;
+        let selectedColumnPart = 'objective';
+
+        // Column interactive hotspots
+        const columnParts = {
+            gun: {
+                title: 'Electron Gun (Cathode & Anode)',
+                desc: 'Heats the cathode filament via an a.c. supply to emit electrons (thermionic emission), then accelerates them through a high voltage V (40–400 kV) toward the anode.'
+            },
+            condenser: {
+                title: 'Condenser Lens (Magnetic Lens 1)',
+                desc: 'Deflects the diverging electron beam from the electron gun into a concentrated, parallel beam illuminating the thin sample.'
+            },
+            sample: {
+                title: 'Ultra-Thin Sample Stage',
+                desc: 'Holds an ultra-thin specimen (<100 nm thick) so fast-moving electrons can transmit through it with different scattering intensities.'
+            },
+            objective: {
+                title: 'Objective Lens (Magnetic Lens 2)',
+                desc: 'Forms the first magnified intermediate image of the sample. Adjusting the current through its copper coils changes its focal length to focus the image.'
+            },
+            projector: {
+                title: 'Projector Lens (Magnetic Lens 3)',
+                desc: 'Projects and further magnifies the intermediate image onto the viewing screen. Changing its coil current controls the final magnification of the TEM.'
+            },
+            screen: {
+                title: 'Fluorescent Viewing Screen',
+                desc: 'Coated with phosphor that emits visible light when struck by high-speed electrons, converting the electron intensity pattern into a visible image.'
+            }
+        };
+
+        // Particles for animated electron flow
+        const columnParticles = Array.from({ length: 42 }, () => ({
+            yFrac: Math.random(),
+            lane: (Math.random() - 0.5) * 2
+        }));
+
+        const gunParticles = Array.from({ length: 28 }, () => ({
+            progress: Math.random(),
+            offsetX: (Math.random() - 0.5) * 26
+        }));
+
+        let animTime = 0;
+
+        // ============================================================================
+        // PHYSICS CALCULATIONS (Relativistic & Classical de Broglie Wavelength)
+        // ============================================================================
+        function calculateElectronPhysics(voltageKV) {
+            const V = voltageKV * 1000; // Volts
+            const e = 1.60217663e-19;
+            const m0 = 9.10938356e-31;
+            const c = 2.99792458e8;
+            const h = 6.62607015e-34;
+
+            const keJoules = e * V;
+            // Relativistic speed and wavelength for 40-400 kV electrons
+            const gamma = 1 + (keJoules / (m0 * c * c));
+            const v = c * Math.sqrt(1 - 1 / (gamma * gamma));
+            const p = gamma * m0 * v;
+            const lambdaMeters = h / p;
+            const lambdaPm = lambdaMeters * 1e12;
+
+            // Practical resolution (ranges from ~0.25 nm at 40 kV down to 0.10 nm at 400 kV)
+            const practicalResNm = 0.10 * Math.pow(400 / voltageKV, 0.42);
+
+            return {
+                keKV: voltageKV,
+                keJoules,
+                v,
+                cFrac: v / c,
+                lambdaPm,
+                practicalResNm
+            };
+        }
+
+        // ============================================================================
+        // TAB SWITCHING LOGIC
+        // ============================================================================
+        function switchTab(tabId) {
+            currentTab = tabId;
+            ['column', 'gun', 'lens', 'quiz'].forEach(id => {
+                const sec = document.getElementById(`tab-${id}`);
+                const btn = document.getElementById(`tab-btn-${id}`);
+                if (id === tabId) {
+                    sec.classList.remove('hidden');
+                    if (id !== 'quiz') sec.classList.add('grid');
+                    btn.classList.add('tab-active');
+                    btn.classList.remove('bg-slate-900/60', 'text-slate-300', 'border-slate-800');
+                } else {
+                    sec.classList.add('hidden');
+                    sec.classList.remove('grid');
+                    btn.classList.remove('tab-active');
+                    btn.classList.add('bg-slate-900/60', 'text-slate-300', 'border-slate-800');
+                }
+            });
+            resizeAllCanvases();
+        }
+
+        // ============================================================================
+        // SPECIMEN & FOCUS CONTROLS (TAB 1)
+        // ============================================================================
+        function selectSpecimen(index) {
+            selectedSpecimenIndex = index;
+            const spec = specimens[index];
+
+            // Highlight active specimen card
+            specimens.forEach((_, i) => {
+                const btn = document.getElementById(`spec-btn-${i}`);
+                if (i === index) {
+                    btn.className = 'specimen-btn text-left p-2.5 rounded-xl border border-emerald-500 bg-emerald-500/10 transition-all';
+                } else {
+                    btn.className = 'specimen-btn text-left p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800/60 transition-all';
+                }
+            });
+
+            // Set projector magnification to match textbook Fig 3.2i
+            document.getElementById('slider-projector').value = spec.defaultMag;
+            // Set objective slightly off-focus or on-focus so user can experience focusing
+            document.getElementById('slider-objective').value = spec.targetFocusCurrent.toFixed(2);
+            document.getElementById('target-focus-label').textContent = `Sharp Focus: ${spec.targetFocusCurrent.toFixed(2)} A`;
+
+            updateTEMSimulation();
+        }
+
+        function autoFocusObjective() {
+            const spec = specimens[selectedSpecimenIndex];
+            document.getElementById('slider-objective').value = spec.targetFocusCurrent;
+            updateTEMSimulation();
+        }
+
+        function setScreenMode(mode) {
+            screenMode = mode;
+            const btnGrey = document.getElementById('mode-grey');
+            const btnGreen = document.getElementById('mode-green');
+            if (mode === 'grey') {
+                btnGrey.className = 'px-2 py-0.5 rounded text-[11px] bg-slate-700 text-white font-medium';
+                btnGreen.className = 'px-2 py-0.5 rounded text-[11px] bg-slate-800 text-emerald-400 hover:bg-slate-700';
+            } else {
+                btnGreen.className = 'px-2 py-0.5 rounded text-[11px] bg-emerald-500/30 border border-emerald-500/50 text-emerald-200 font-medium';
+                btnGrey.className = 'px-2 py-0.5 rounded text-[11px] bg-slate-800 text-slate-400 hover:bg-slate-700';
+            }
+            renderMicrograph();
+        }
+
+        function updateTEMSimulation() {
+            const V = parseFloat(document.getElementById('slider-voltage').value);
+            const cond = parseFloat(document.getElementById('slider-condenser').value);
+            const obj = parseFloat(document.getElementById('slider-objective').value);
+            const proj = parseFloat(document.getElementById('slider-projector').value);
+
+            document.getElementById('val-voltage').textContent = `${V} kV`;
+            document.getElementById('val-condenser').textContent = `${cond}%`;
+            document.getElementById('val-objective').textContent = `${obj.toFixed(2)} A`;
+            document.getElementById('val-projector').textContent = `${proj.toLocaleString()}×`;
+
+            const phys = calculateElectronPhysics(V);
+            document.getElementById('stat-ke').textContent = `${V} keV`;
+            document.getElementById('stat-joules').textContent = `${(phys.keJoules * 1e14).toFixed(2)} × 10⁻¹⁴ J`;
+            document.getElementById('stat-speed').textContent = `${(phys.v / 1e8).toFixed(2)} × 10⁸ m/s`;
+            document.getElementById('stat-c-frac').textContent = `${phys.cFrac.toFixed(3)} c (Fast-moving)`;
+            document.getElementById('stat-lambda').textContent = `${phys.lambdaPm.toFixed(2)} pm`;
+            document.getElementById('stat-res').textContent = `~${phys.practicalResNm.toFixed(2)} nm`;
+
+            // Calculate focus status
+            const spec = specimens[selectedSpecimenIndex];
+            const focusError = Math.abs(obj - spec.targetFocusCurrent);
+            const badge = document.getElementById('focusStatusBadge');
+            if (focusError < 0.12) {
+                badge.textContent = 'SHARP FOCUS';
+                badge.className = 'text-xs font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+            } else if (focusError < 0.45) {
+                badge.textContent = 'SLIGHTLY BLURRED';
+                badge.className = 'text-xs font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40';
+            } else {
+                badge.textContent = 'OUT OF FOCUS (TUNE OBJECTIVE)';
+                badge.className = 'text-xs font-mono px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40';
+            }
+
+            // Image rotation depends on magnetic lens currents (Fig 3.2l principle)
+            const rotationDeg = Math.round(180 + (obj - 2.5) * 28 + (proj / 200000) * 45);
+            document.getElementById('screenRotationReadout').textContent = `Image Rotation: ${rotationDeg}° (Inverted & Rotated)`;
+            document.getElementById('screenMagReadout').textContent = `${proj.toLocaleString()}×`;
+
+            renderMicrograph();
+        }
+
+        // ============================================================================
+        // RENDER LIVE MICROGRAPH ON VIEWING SCREEN (Matching Fig 3.2i)
+        // ============================================================================
+        function renderMicrograph() {
+            const canvas = document.getElementById('micrographCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+
+            const V = parseFloat(document.getElementById('slider-voltage').value);
+            const cond = parseFloat(document.getElementById('slider-condenser').value);
+            const obj = parseFloat(document.getElementById('slider-objective').value);
+            const proj = parseFloat(document.getElementById('slider-projector').value);
+            const spec = specimens[selectedSpecimenIndex];
+
+            // Compute focus blur + low-voltage resolution blur
+            const focusError = Math.abs(obj - spec.targetFocusCurrent);
+            const voltageBlur = selectedSpecimenIndex === 3
+                ? Math.max(0, (220 - V) / 35)
+                : Math.max(0, (100 - V) / 55);
+            const totalBlurPx = focusError * 6.5 + voltageBlur;
+
+            // Image rotation caused by magnetic lenses
+            const angleRad = ((obj - 5.0) * 0.45) + ((proj - spec.defaultMag) / 150000) * 0.5;
+            const zoomScale = proj / spec.defaultMag;
+
+            // Brightness from condenser lens
+            const brightness = 0.45 + (cond / 100) * 0.65;
+
+            ctx.save();
+            ctx.clearRect(0, 0, w, h);
+
+            // Background tone
+            const baseBg = Math.min(245, Math.round(215 * brightness));
+            if (screenMode === 'green') {
+                ctx.fillStyle = `rgb(${Math.round(baseBg * 0.15)}, ${Math.round(baseBg * 0.92)}, ${Math.round(baseBg * 0.45)})`;
+            } else {
+                ctx.fillStyle = `rgb(${baseBg}, ${baseBg}, ${baseBg})`;
+            }
+            ctx.fillRect(0, 0, w, h);
+
+            // Apply optical blur & rotation for the specimen layer
+            ctx.save();
+            if (totalBlurPx > 0.3) {
+                ctx.filter = `blur(${totalBlurPx.toFixed(1)}px)`;
+            }
+            ctx.translate(w / 2, h / 2);
+            ctx.rotate(angleRad);
+            ctx.scale(zoomScale, zoomScale);
+
+            const ink = (alpha) => screenMode === 'green'
+                ? `rgba(4, 38, 18, ${alpha})`
+                : `rgba(25, 28, 32, ${alpha})`;
+
+            // Draw procedural specimen matching textbook Fig 3.2i
+            if (selectedSpecimenIndex === 0) {
+                // (i) Brain tissue of mouse (35 000x): mottled cytoplasm + dark rosette organelle at bottom-right
+                for (let i = 0; i < 240; i++) {
+                    const rx = Math.sin(i * 78.233) * 150;
+                    const ry = Math.cos(i * 45.164) * 150;
+                    const rad = 3 + (i % 9) * 1.8;
+                    ctx.fillStyle = ink(0.08 + (i % 5) * 0.03);
+                    ctx.beginPath();
+                    ctx.arc(rx, ry, rad, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                // Dark circular organelle (mitochondrion / synaptic vesicle cluster)
+                const ox = 28, oy = 42, orad = 30;
+                ctx.fillStyle = ink(0.55);
+                ctx.beginPath();
+                ctx.arc(ox, oy, orad, 0, Math.PI * 2);
+                ctx.fill();
+                // Dark radiating cristae/granules around organelle perimeter
+                for (let a = 0; a < 28; a++) {
+                    const ang = (a / 28) * Math.PI * 2;
+                    const x1 = ox + Math.cos(ang) * (orad - 8);
+                    const y1 = oy + Math.sin(ang) * (orad - 8);
+                    const x2 = ox + Math.cos(ang) * (orad + 5);
+                    const y2 = oy + Math.sin(ang) * (orad + 5);
+                    ctx.strokeStyle = ink(0.75);
+                    ctx.lineWidth = 2.5;
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                }
+            } else if (selectedSpecimenIndex === 1) {
+                // (ii) Al-Cu alloy (68 000x): metallic crystalline background + sharp needle precipitates
+                ctx.strokeStyle = ink(0.12);
+                ctx.lineWidth = 14;
+                for (let i = -140; i <= 140; i += 35) {
+                    ctx.beginPath();
+                    ctx.moveTo(-160, i);
+                    ctx.lineTo(160, i + 45);
+                    ctx.stroke();
+                }
+                // Precipitate dislocation lines (matching Fig 3.2i ii)
+                const lines = [
+                    [-95, -20, 45, 45, 3.2],
+                    [-60, 25, 30, 68, 2.5],
+                    [-110, -85, -35, -50, 2.8],
+                    [20, -95, 110, -55, 3.0],
+                    [55, -75, 25, -10, 2.6],
+                    [95, 10, 60, 95, 3.0],
+                    [-20, -130, -55, -70, 2.4]
+                ];
+                lines.forEach(([x1, y1, x2, y2, lw]) => {
+                    // Strain field halo
+                    ctx.strokeStyle = ink(0.22);
+                    ctx.lineWidth = lw * 3.2;
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                    // Core dislocation line
+                    ctx.strokeStyle = ink(0.82);
+                    ctx.lineWidth = lw;
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                });
+            } else if (selectedSpecimenIndex === 2) {
+                // (iii) H5N1 virion (150 000x): dark negative-stain halo + elongated rod-shaped virus
+                ctx.rotate(-0.62);
+                // Negative stain dark cloud around rod
+                const grad = ctx.createRadialGradient(0, 0, 18, 0, 0, 120);
+                grad.addColorStop(0, ink(0.75));
+                grad.addColorStop(0.6, ink(0.38));
+                grad.addColorStop(1, ink(0.0));
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 52, 130, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Rod-shaped virion body
+                ctx.fillStyle = screenMode === 'green' ? '#4ade80' : '#bdbdbd';
+                ctx.strokeStyle = ink(0.85);
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.roundRect(-16, -105, 32, 210, 16);
+                ctx.fill();
+                ctx.stroke();
+
+                // Surface glycoprotein spikes along capsid
+                ctx.fillStyle = ink(0.6);
+                for (let y = -95; y <= 95; y += 7) {
+                    ctx.fillRect(-20, y, 4, 3);
+                    ctx.fillRect(16, y, 4, 3);
+                }
+            } else if (selectedSpecimenIndex === 3) {
+                // (iv) High-resolution Atomic Lattice (0.1 nm practical resolution test)
+                const spacing = 18;
+                for (let gx = -130; gx <= 130; gx += spacing) {
+                    for (let gy = -130; gy <= 130; gy += spacing) {
+                        const offset = (Math.round(gy / spacing) % 2) * (spacing / 2);
+                        ctx.fillStyle = ink(0.72);
+                        ctx.beginPath();
+                        ctx.arc(gx + offset, gy, 5.2, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+
+            ctx.restore(); // End blurred specimen layer
+
+            // Draw Scale Bar at bottom-left (matching textbook Fig 3.2i)
+            const barWidthPx = Math.min(110, Math.max(38, 62 * zoomScale));
+            const bx = 44;
+            const by = h - 42;
+
+            ctx.strokeStyle = screenMode === 'green' ? '#022c22' : '#0f172a';
+            ctx.fillStyle = screenMode === 'green' ? '#022c22' : '#0f172a';
+            ctx.lineWidth = 2.5;
+
+            ctx.beginPath();
+            ctx.moveTo(bx, by);
+            ctx.lineTo(bx + barWidthPx, by);
+            ctx.moveTo(bx, by - 5);
+            ctx.lineTo(bx, by + 5);
+            ctx.moveTo(bx + barWidthPx, by - 5);
+            ctx.lineTo(bx + barWidthPx, by + 5);
+            ctx.stroke();
+
+            ctx.font = 'bold 12px Inter, sans-serif';
+            ctx.fillText(`${spec.scaleBarNm} nm`, bx + 4, by - 8);
+
+            ctx.restore();
+        }
+
+        // ============================================================================
+        // RENDER INTERACTIVE TEM COLUMN DIAGRAM (Fig 3.2j)
+        // ============================================================================
+        function drawTEMColumn() {
+            const canvas = document.getElementById('temColumnCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+
+            ctx.clearRect(0, 0, w, h);
+
+            const cx = w * 0.44; // Center axis of microscope column
+            const V = parseFloat(document.getElementById('slider-voltage').value);
+            const cond = parseFloat(document.getElementById('slider-condenser').value);
+            const obj = parseFloat(document.getElementById('slider-objective').value);
+            const proj = parseFloat(document.getElementById('slider-projector').value);
+
+            // Y positions of components
+            const yGunTop = 22;
+            const yAnode = 76;
+            const yCondenser = 135;
+            const ySample = 205;
+            const yObjective = 270;
+            const yProjector = 385;
+            const yScreen = 468;
+
+            // 1. Draw Outer Vacuum Column Casing (matching Fig 3.2j grey casing)
+            ctx.fillStyle = '#1e293b';
+            ctx.strokeStyle = '#64748b';
+            ctx.lineWidth = 2;
+
+            // Main column tube
+            ctx.fillRect(cx - 48, 52, 96, 385);
+            ctx.strokeRect(cx - 48, 52, 96, 385);
+
+            // Inner dark vacuum bore
+            ctx.fillStyle = '#090d16';
+            ctx.fillRect(cx - 38, 54, 76, 383);
+
+            // Flared viewing chamber base at bottom
+            ctx.fillStyle = '#1e293b';
+            ctx.beginPath();
+            ctx.moveTo(cx - 48, 437);
+            ctx.lineTo(cx - 72, 480);
+            ctx.lineTo(cx + 72, 480);
+            ctx.lineTo(cx + 48, 437);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Inner viewing chamber
+            ctx.fillStyle = '#090d16';
+            ctx.beginPath();
+            ctx.moveTo(cx - 38, 437);
+            ctx.lineTo(cx - 58, 475);
+            ctx.lineTo(cx + 58, 475);
+            ctx.lineTo(cx + 38, 437);
+            ctx.closePath();
+            ctx.fill();
+
+            // 2. Calculate Beam Envelope Widths at key stations
+            const wCond = 26 - (cond / 100) * 10; // Beam width at condenser
+            const wSample = 16 - (cond / 100) * 9; // Concentrated spot on sample
+            const wObj = 22;
+
+            // Intermediate image crossover between Objective and Projector
+            const spec = specimens[selectedSpecimenIndex];
+            const focusDelta = (obj - spec.targetFocusCurrent) * 18;
+            const yCrossover1 = 330 - focusDelta;
+
+            // Projector crossover determined by magnification
+            const yCrossover2 = 415 - ((proj - 15000) / 185000) * 18;
+            const wScreenSpread = 16 + ((proj - 15000) / 185000) * 18;
+
+            // 3. Draw Dual-Tone Electron Beam Cones (Green + Yellow rays matching Fig 3.2j)
+            const drawBeamSection = (y1, w1, y2, w2, color) => {
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.moveTo(cx - w1, y1);
+                ctx.lineTo(cx + w1, y1);
+                ctx.lineTo(cx + w2, y2);
+                ctx.lineTo(cx - w2, y2);
+                ctx.closePath();
+                ctx.fill();
+            };
+
+            // Outer yellow-green ray envelope
+            drawBeamSection(yAnode, 3, yCondenser, wCond, 'rgba(163, 230, 53, 0.35)');
+            drawBeamSection(yCondenser, wCond, ySample, wSample, 'rgba(163, 230, 53, 0.42)');
+            drawBeamSection(ySample, wSample, yObjective, wObj, 'rgba(132, 204, 22, 0.40)');
+            drawBeamSection(yObjective, wObj, yCrossover1, 2, 'rgba(234, 179, 8, 0.45)');
+            drawBeamSection(yCrossover1, 2, yProjector, 25, 'rgba(234, 179, 8, 0.45)');
+            drawBeamSection(yProjector, 25, yCrossover2, 2, 'rgba(16, 185, 129, 0.48)');
+            drawBeamSection(yCrossover2, 2, yScreen, wScreenSpread, 'rgba(234, 179, 8, 0.50)');
+
+            // Ray boundary lines (crisp ray optics diagram)
+            ctx.strokeStyle = '#84cc16';
+            ctx.lineWidth = 1.4;
+            ctx.beginPath();
+            ctx.moveTo(cx, yAnode);
+            ctx.lineTo(cx - wCond, yCondenser);
+            ctx.lineTo(cx - wSample, ySample);
+            ctx.lineTo(cx - wObj, yObjective);
+            ctx.lineTo(cx + 25, yProjector);
+            ctx.lineTo(cx - wScreenSpread, yScreen);
+            ctx.moveTo(cx, yAnode);
+            ctx.lineTo(cx + wCond, yCondenser);
+            ctx.lineTo(cx + wSample, ySample);
+            ctx.lineTo(cx + wObj, yObjective);
+            ctx.lineTo(cx - 25, yProjector);
+            ctx.lineTo(cx + wScreenSpread, yScreen);
+            ctx.stroke();
+
+            // 4. Draw Animated Fast-Moving Electrons along the beam
+            const speedFactor = 0.004 + (V / 400) * 0.008;
+            ctx.fillStyle = '#ecfccb';
+            columnParticles.forEach(p => {
+                p.yFrac = (p.yFrac + speedFactor) % 1;
+                const py = yAnode + p.yFrac * (yScreen - yAnode);
+                let halfW = 10;
+                if (py < yCondenser) halfW = ((py - yAnode) / (yCondenser - yAnode)) * wCond;
+                else if (py < ySample) halfW = wCond + ((py - yCondenser) / (ySample - yCondenser)) * (wSample - wCond);
+                else if (py < yObjective) halfW = wSample + ((py - ySample) / (yObjective - ySample)) * (wObj - wSample);
+                else if (py < yProjector) halfW = Math.abs((py - yCrossover1) / (yProjector - yCrossover1)) * 24;
+                else halfW = Math.abs((py - yCrossover2) / (yScreen - yCrossover2)) * wScreenSpread;
+
+                const px = cx + p.lane * halfW;
+                ctx.beginPath();
+                ctx.arc(px, py, 1.7, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // 5. Draw Electron Gun at Top
+            ctx.fillStyle = '#cbd5e1';
+            ctx.strokeStyle = '#475569';
+            ctx.lineWidth = 2;
+            ctx.fillRect(cx - 20, yGunTop, 40, 44);
+            ctx.strokeRect(cx - 20, yGunTop, 40, 44);
+            // V-shaped filament tip
+            ctx.beginPath();
+            ctx.moveTo(cx - 10, yGunTop + 44);
+            ctx.lineTo(cx, yAnode);
+            ctx.lineTo(cx + 10, yGunTop + 44);
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            // 6. Draw Magnetic Lenses (Condenser, Objective, Projector rings matching Fig 3.2j)
+            const drawLensRing = (y, key, label) => {
+                const isSelected = selectedColumnPart === key;
+                ctx.save();
+                ctx.strokeStyle = isSelected ? '#10b981' : '#94a3b8';
+                ctx.fillStyle = isSelected ? 'rgba(16, 185, 129, 0.22)' : 'rgba(148, 163, 184, 0.15)';
+                ctx.lineWidth = isSelected ? 2.8 : 2;
+                ctx.beginPath();
+                ctx.ellipse(cx, y, 34, 8, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+            };
+
+            drawLensRing(yCondenser, 'condenser');
+            drawLensRing(yObjective, 'objective');
+            drawLensRing(yProjector, 'projector');
+
+            // 7. Draw Sample Disc (Cyan disc with red specimen in center matching Fig 3.2j)
+            ctx.save();
+            ctx.fillStyle = 'rgba(56, 189, 248, 0.55)';
+            ctx.strokeStyle = selectedColumnPart === 'sample' ? '#38bdf8' : '#0284c7';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.ellipse(cx, ySample, 26, 6, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            // Red specimen dot in middle
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.ellipse(cx, ySample, 7, 2.8, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            // 8. Draw Viewing Screen Disc at Bottom
+            ctx.save();
+            ctx.fillStyle = '#064e3b';
+            ctx.strokeStyle = selectedColumnPart === 'screen' ? '#10b981' : '#94a3b8';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.ellipse(cx, yScreen, 36, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            // Glowing green spot on screen
+            ctx.fillStyle = '#34d399';
+            ctx.beginPath();
+            ctx.ellipse(cx, yScreen, Math.min(32, wScreenSpread), 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            // 9. Draw Textbook Callout Labels & Leader Lines (Fig 3.2j)
+            ctx.font = '600 11.5px Inter, sans-serif';
+            const drawCallout = (y, text, side, key) => {
+                const isSel = selectedColumnPart === key;
+                ctx.strokeStyle = isSel ? '#10b981' : '#64748b';
+                ctx.fillStyle = isSel ? '#34d399' : '#e2e8f0';
+                ctx.lineWidth = 1.5;
+
+                if (side === 'left') {
+                    ctx.beginPath();
+                    ctx.moveTo(cx - 12, y);
+                    ctx.lineTo(18, y);
+                    ctx.stroke();
+                    ctx.textAlign = 'left';
+                    ctx.fillText(text, 18, y - 5);
+                } else {
+                    ctx.beginPath();
+                    ctx.moveTo(cx + 34, y);
+                    ctx.lineTo(w - 95, y);
+                    ctx.stroke();
+                    ctx.textAlign = 'left';
+                    ctx.fillText(text, w - 90, y + 4);
+                }
+            };
+
+            drawCallout(yAnode - 8, 'electron gun', 'left', 'gun');
+            drawCallout(168, 'electron beam', 'left', 'gun');
+            drawCallout(ySample, 'sample', 'left', 'sample');
+            drawCallout(yScreen, 'viewing screen', 'left', 'screen');
+
+            drawCallout(yCondenser, 'condenser lens', 'right', 'condenser');
+            drawCallout(yObjective, 'objective lens', 'right', 'objective');
+            drawCallout(yProjector, 'projector lens', 'right', 'projector');
+        }
+
+        // Click handler on TEM Column Canvas to inspect parts
+        document.getElementById('temColumnCanvas').addEventListener('click', (e) => {
+            const canvas = e.currentTarget;
+            const rect = canvas.getBoundingClientRect();
+            const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+
+            let picked = 'objective';
+            if (y < 105) picked = 'gun';
+            else if (y < 175) picked = 'condenser';
+            else if (y < 235) picked = 'sample';
+            else if (y < 330) picked = 'objective';
+            else if (y < 430) picked = 'projector';
+            else picked = 'screen';
+
+            selectedColumnPart = picked;
+            document.getElementById('inspectorTitle').textContent = columnParts[picked].title;
+            document.getElementById('inspectorDesc').textContent = columnParts[picked].desc;
+        });
+
+        // ============================================================================
+        // TAB 2: ELECTRON GUN SIMULATOR (Fig 3.2k)
+        // ============================================================================
+        function updateGunSim() {
+            const heater = parseFloat(document.getElementById('slider-gun-heater').value);
+            const V = parseFloat(document.getElementById('slider-gun-volt').value);
+
+            const tempK = Math.round(300 + (heater / 100) * 2500);
+            document.getElementById('gun-heater-val').textContent = heater > 10
+                ? `${tempK} K (Emitting)`
+                : `${tempK} K (Too Cold)`;
+            document.getElementById('gun-volt-val').textContent = `${V} kV`;
+
+            // Also sync main tab voltage slider so user sees consistency
+            document.getElementById('slider-voltage').value = V;
+            updateTEMSimulation();
+
+            const phys = calculateElectronPhysics(V);
+            document.getElementById('gun-comp-v').textContent = `${V} kV`;
+            document.getElementById('gun-comp-lambda').textContent = `${phys.lambdaPm.toFixed(2)} pm (${(phys.lambdaPm / 1000).toFixed(5)} nm)`;
+
+            const barWidth = Math.max(4, (phys.lambdaPm / 6.5) * 40);
+            document.getElementById('gun-lambda-bar').style.width = `${barWidth}%`;
+
+            const ratio = Math.round((550000 / phys.lambdaPm) / 1000) * 1000;
+            document.getElementById('gun-ratio-text').innerHTML =
+                `At <strong>${V} kV</strong>, the electron de Broglie wavelength is about <strong>${ratio.toLocaleString()} times shorter</strong> than visible light!`;
+        }
+
+        function drawElectronGun() {
+            const canvas = document.getElementById('electronGunCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+
+            ctx.clearRect(0, 0, w, h);
+
+            const heater = parseFloat(document.getElementById('slider-gun-heater').value);
+            const V = parseFloat(document.getElementById('slider-gun-volt').value);
+
+            const cx = w * 0.54;
+            const yTop = 55;
+            const yCathode = 145;
+            const yAnodeTop = 270;
+            const yAnodeBot = 375;
+
+            // 1. A.C. Filament Heating Circuit (top loop matching Fig 3.2k)
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(cx - 80, yCathode);
+            ctx.lineTo(cx - 80, yTop);
+            ctx.lineTo(cx - 22, yTop);
+            ctx.moveTo(cx + 22, yTop);
+            ctx.lineTo(cx + 80, yTop);
+            ctx.lineTo(cx + 80, yCathode);
+            ctx.stroke();
+
+            // A.C. Terminals & Sine Wave Symbol (~)
+            ctx.fillStyle = '#0f172a';
+            ctx.beginPath();
+            ctx.arc(cx - 22, yTop, 4.5, 0, Math.PI * 2);
+            ctx.arc(cx + 22, yTop, 4.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Sine wave between terminals
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2.2;
+            ctx.beginPath();
+            ctx.moveTo(cx - 12, yTop);
+            ctx.bezierCurveTo(cx - 6, yTop - 12, cx, yTop - 12, cx, yTop);
+            ctx.bezierCurveTo(cx, yTop + 12, cx + 6, yTop + 12, cx + 12, yTop);
+            ctx.stroke();
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '11px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('a.c. heating supply', cx, yTop - 16);
+
+            // 2. Heated Cathode Coil Loops (glowing with heater current)
+            const glowAlpha = heater / 100;
+            if (glowAlpha > 0.1) {
+                ctx.save();
+                ctx.shadowColor = '#f59e0b';
+                ctx.shadowBlur = 18 * glowAlpha;
+            }
+            ctx.strokeStyle = heater > 10
+                ? `rgb(251, ${Math.round(140 + glowAlpha * 80)}, 36)`
+                : '#64748b';
+            ctx.lineWidth = 3;
+
+            const numLoops = 9;
+            const startX = cx - 72;
+            const stepX = 144 / numLoops;
+            ctx.beginPath();
+            for (let i = 0; i < numLoops; i++) {
+                const lx = startX + i * stepX + stepX / 2;
+                ctx.arc(lx, yCathode, stepX * 0.62, 0, Math.PI * 2);
+            }
+            ctx.stroke();
+            if (glowAlpha > 0.1) ctx.restore();
+
+            ctx.fillStyle = '#f8fafc';
+            ctx.font = 'bold 13px Inter, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('cathode', cx + 92, yCathode + 5);
+
+            // 3. Accelerating Voltage V Circuit on Left (matching Fig 3.2k)
+            const vx = cx - 155;
+            const vyMid = (yCathode + yAnodeTop) / 2 + 15;
+
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            // Upper wire to cathode
+            ctx.moveTo(cx - 80, yCathode + 6);
+            ctx.lineTo(vx, yCathode + 6);
+            ctx.lineTo(vx, vyMid - 20);
+            // Lower wire to anode
+            ctx.moveTo(vx, vyMid + 20);
+            ctx.lineTo(vx, yAnodeTop + 45);
+            ctx.lineTo(cx - 32, yAnodeTop + 45);
+            ctx.stroke();
+
+            // Voltage terminals
+            ctx.fillStyle = '#0f172a';
+            ctx.beginPath();
+            ctx.arc(vx, vyMid - 20, 4.5, 0, Math.PI * 2);
+            ctx.arc(vx, vyMid + 20, 4.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Polarity signs (- and +) matching textbook Fig 3.2k
+            ctx.font = 'bold 18px JetBrains Mono, monospace';
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillText('−', cx - 102, yCathode);
+            ctx.fillText('−', vx + 12, vyMid - 15);
+
+            ctx.fillStyle = '#f43f5e';
+            ctx.fillText('+', vx + 12, vyMid + 26);
+            ctx.fillText('+', cx - 50, yAnodeTop + 65);
+
+            ctx.fillStyle = '#e2e8f0';
+            ctx.font = '600 12px Inter, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText('accelerating', vx - 14, vyMid - 4);
+            ctx.fillText(`voltage V (${V} kV)`, vx - 14, vyMid + 13);
+
+            // 4. Electric Field Lines between Cathode (-) and Anode (+)
+            ctx.strokeStyle = 'rgba(16, 185, 129, 0.16)';
+            ctx.setLineDash([4, 4]);
+            for (let offset = -45; offset <= 45; offset += 30) {
+                if (offset === 0) continue;
+                ctx.beginPath();
+                ctx.moveTo(cx + offset, yAnodeTop - 8);
+                ctx.lineTo(cx + offset, yCathode + 18);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+
+            // 5. Cylindrical Anode at Bottom (matching Fig 3.2k)
+            ctx.fillStyle = 'rgba(30, 41, 59, 0.85)';
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.lineWidth = 2;
+
+            ctx.fillRect(cx - 32, yAnodeTop, 64, yAnodeBot - yAnodeTop);
+            ctx.strokeRect(cx - 32, yAnodeTop, 64, yAnodeBot - yAnodeTop);
+
+            // Top & bottom cylinder ellipses
+            ctx.fillStyle = '#334155';
+            ctx.beginPath();
+            ctx.ellipse(cx, yAnodeTop, 32, 9, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.ellipse(cx, yAnodeBot, 32, 9, 0, 0, Math.PI);
+            ctx.stroke();
+
+            // Central hole in anode
+            ctx.fillStyle = '#090d16';
+            ctx.beginPath();
+            ctx.ellipse(cx, yAnodeTop, 9, 3.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#f8fafc';
+            ctx.font = 'bold 13px Inter, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('anode', cx + 45, (yAnodeTop + yAnodeBot) / 2);
+
+            // 6. Electron Beam & Animated Accelerating Electrons
+            if (heater > 10) {
+                // Green central electron beam line (solid above anode, dashed inside anode, solid exiting)
+                ctx.strokeStyle = '#84cc16';
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.moveTo(cx, yCathode + 14);
+                ctx.lineTo(cx, yAnodeTop);
+                ctx.stroke();
+
+                ctx.setLineDash([6, 5]);
+                ctx.beginPath();
+                ctx.moveTo(cx, yAnodeTop);
+                ctx.lineTo(cx, yAnodeBot);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                ctx.beginPath();
+                ctx.moveTo(cx, yAnodeBot);
+                ctx.lineTo(cx, h - 18);
+                ctx.stroke();
+
+                // Arrowhead at bottom
+                ctx.fillStyle = '#84cc16';
+                ctx.beginPath();
+                ctx.moveTo(cx, h - 12);
+                ctx.lineTo(cx - 5, h - 22);
+                ctx.lineTo(cx + 5, h - 22);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.fillStyle = '#bef264';
+                ctx.font = '600 12px Inter, sans-serif';
+                ctx.fillText('electron', cx + 12, (yCathode + yAnodeTop) / 2);
+
+                // Animate individual electrons accelerating downward
+                const accelSpeed = 0.006 + (V / 400) * 0.016;
+                gunParticles.forEach(p => {
+                    p.progress = (p.progress + accelSpeed) % 1;
+                    // Quadratic spacing to visually show acceleration!
+                    const yPos = (yCathode + 14) + Math.pow(p.progress, 1.7) * (h - 28 - (yCathode + 14));
+                    const converge = yPos < yAnodeTop
+                        ? (1 - (yPos - yCathode) / (yAnodeTop - yCathode)) * p.offsetX
+                        : 0;
+
+                    ctx.fillStyle = '#ecfccb';
+                    ctx.beginPath();
+                    ctx.arc(cx + converge, yPos, 2.6, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+        }
+
+        // ============================================================================
+        // TAB 3: MAGNETIC LENS VS OPTICAL LENS (Fig 3.2l)
+        // ============================================================================
+        function updateLensSim() {
+            const I = parseFloat(document.getElementById('slider-lens-current').value);
+            document.getElementById('lens-current-val').textContent = `${I.toFixed(1)} A`;
+
+            const focalMm = (64 / I).toFixed(1);
+            const rotDeg = Math.round(90 + I * 14);
+            document.getElementById('lens-focal-readout').textContent = `${focalMm} mm`;
+            document.getElementById('lens-rot-readout').textContent = `Inverted + ${rotDeg}° Rot`;
+        }
+
+        function drawLensComparison() {
+            const canvas = document.getElementById('lensComparisonCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+
+            ctx.clearRect(0, 0, w, h);
+
+            const I = parseFloat(document.getElementById('slider-lens-current').value);
+
+            const leftX = w * 0.28;
+            const rightX = w * 0.75;
+            const yObjPlane = 62;
+            const yLens = 220;
+            // Focal length & image plane position respond to coil current I
+            const yImgMag = Math.min(390, Math.max(310, 415 - I * 9));
+            const yImgOpt = 365;
+
+            // Helper to draw object/image plane disc & red vector arrow
+            const drawPlaneDisc = (cx, y, arrowAngleRad, subtitle) => {
+                ctx.strokeStyle = '#94a3b8';
+                ctx.fillStyle = 'rgba(30, 41, 59, 0.5)';
+                ctx.lineWidth = 1.8;
+                ctx.beginPath();
+                ctx.ellipse(cx, y, 48, 13, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // Red arrow from center to tip on ellipse
+                const tipX = cx + Math.cos(arrowAngleRad) * 44;
+                const tipY = y + Math.sin(arrowAngleRad) * 11.5;
+
+                ctx.strokeStyle = '#ef4444';
+                ctx.fillStyle = '#ef4444';
+                ctx.lineWidth = 2.6;
+                ctx.beginPath();
+                ctx.moveTo(cx, y);
+                ctx.lineTo(tipX, tipY);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.arc(tipX, tipY, 3.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                if (subtitle) {
+                    ctx.fillStyle = '#e2e8f0';
+                    ctx.font = 'bold 12px Inter, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(subtitle[0], cx, y + 30);
+                    if (subtitle[1]) {
+                        ctx.fillStyle = '#34d399';
+                        ctx.fillText(subtitle[1], cx, y + 46);
+                    }
+                }
+                return { tipX, tipY };
+            };
+
+            // ----------------------------------------------------
+            // LEFT SIDE: MAGNETIC LENS (Fig 3.2l Left)
+            // ----------------------------------------------------
+            ctx.fillStyle = '#10b981';
+            ctx.font = 'bold 13px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('MAGNETIC LENS (TEM)', leftX, 26);
+
+            // Central optical axis
+            ctx.strokeStyle = '#64748b';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(leftX, yObjPlane);
+            ctx.lineTo(leftX, yImgMag);
+            ctx.stroke();
+
+            // Left & Right Soft-Iron Casing & Copper Coils Cross-Section (matching Fig 3.2l)
+            const drawElectromagnetBlock = (bx, side) => {
+                // Soft-iron C-shaped casing
+                ctx.fillStyle = '#64748b';
+                ctx.strokeStyle = '#cbd5e1';
+                ctx.lineWidth = 1.8;
+                ctx.fillRect(bx, yLens - 42, 74, 84);
+                ctx.strokeRect(bx, yLens - 42, 74, 84);
+
+                // Copper coil matrix (orange circles with dots/crosses)
+                const coilX = side === 'left' ? bx + 14 : bx + 8;
+                ctx.fillStyle = '#ea580c';
+                for (let r = 0; r < 4; r++) {
+                    for (let c = 0; c < 4; c++) {
+                        const cxDot = coilX + c * 12 + 6;
+                        const cyDot = yLens - 24 + r * 14;
+                        ctx.beginPath();
+                        ctx.arc(cxDot, cyDot, 5.2, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+
+                // Pole piece gap (N and S poles)
+                const gapX = side === 'left' ? bx + 62 : bx;
+                ctx.fillStyle = '#070b14';
+                ctx.fillRect(gapX, yLens - 10, 12, 20);
+
+                ctx.fillStyle = '#f8fafc';
+                ctx.font = 'bold 10px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('N', gapX + 6, yLens - 13);
+                ctx.fillText('S', gapX + 6, yLens + 20);
+            };
+
+            drawElectromagnetBlock(leftX - 115, 'left');
+            drawElectromagnetBlock(leftX + 41, 'right');
+
+            // Labels for copper coils, soft-iron, electromagnet
+            ctx.fillStyle = '#cbd5e1';
+            ctx.font = '11px Inter, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText('copper coils', leftX - 122, yLens - 12);
+            ctx.fillText('soft-iron', leftX - 122, yLens - 32);
+            ctx.fillText('electromagnet', leftX - 122, yLens + 18);
+
+            // Top Object Disc (Arrow pointing right: angle = 0)
+            const startObj = drawPlaneDisc(leftX, yObjPlane, 0, null);
+
+            // Bottom Image Disc (Inverted AND Rotated: angle = PI + rotation from current I)
+            const rotAngle = Math.PI + (I * 0.26);
+            const endImg = drawPlaneDisc(leftX, yImgMag, rotAngle, [
+                'image is inverted',
+                'and rotated'
+            ]);
+
+            // Draw Helical / Spiral Electron Beam Trajectory (matching Fig 3.2l green spiral curve)
+            ctx.strokeStyle = '#22c55e';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            const steps = 90;
+            for (let s = 0; s <= steps; s++) {
+                const t = s / steps;
+                const py = yObjPlane + t * (yImgMag - yObjPlane);
+                // Envelope radius shrinks through lens then expands to image plane
+                const env = (1 - t) * 44 * Math.cos(t * Math.PI * 0.5) + t * 44;
+                // Spiral phase increases inside magnetic lens region
+                const spiralPhase = t * (Math.PI + I * 0.26) + Math.sin(t * Math.PI) * (I * 0.35);
+                const px = leftX + Math.cos(spiralPhase) * (44 * (1 - 1.45 * t * (1 - t)));
+
+                if (s === 0) ctx.moveTo(startObj.tipX, startObj.tipY);
+                else if (s === steps) ctx.lineTo(endImg.tipX, endImg.tipY);
+                else ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+
+            // Animated electron moving along the spiral trajectory
+            const ePhase = (animTime * 0.012) % 1;
+            const ey = yObjPlane + ePhase * (yImgMag - yObjPlane);
+            const eSpiral = ePhase * (Math.PI + I * 0.26) + Math.sin(ePhase * Math.PI) * (I * 0.35);
+            const ex = leftX + Math.cos(eSpiral) * (44 * (1 - 1.45 * ePhase * (1 - ePhase)));
+            ctx.fillStyle = '#bbf7d0';
+            ctx.beginPath();
+            ctx.arc(ex, ey, 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#4ade80';
+            ctx.font = '600 12px Inter, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('electron beam', leftX + 24, yObjPlane + 42);
+
+            // ----------------------------------------------------
+            // RIGHT SIDE: OPTICAL CONVEX LENS (Fig 3.2l Right)
+            // ----------------------------------------------------
+            ctx.fillStyle = '#f59e0b';
+            ctx.font = 'bold 13px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('OPTICAL CONVEX LENS', rightX, 26);
+
+            // Central optical axis
+            ctx.strokeStyle = '#64748b';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(rightX, yObjPlane);
+            ctx.lineTo(rightX, yImgOpt);
+            ctx.stroke();
+
+            // Glass Convex Lens Disc
+            ctx.fillStyle = 'rgba(132, 204, 22, 0.32)';
+            ctx.strokeStyle = '#65a30d';
+            ctx.lineWidth = 2.2;
+            ctx.beginPath();
+            ctx.ellipse(rightX, yLens + 25, 68, 18, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#e2e8f0';
+            ctx.font = '12px Inter, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('convex lens', rightX + 55, yLens + 55);
+
+            // Top Object Disc (Arrow pointing right: angle = 0)
+            const optStart = drawPlaneDisc(rightX, yObjPlane, 0, null);
+            // Bottom Image Disc (Inverted ONLY: angle = PI)
+            const optEnd = drawPlaneDisc(rightX, yImgOpt, Math.PI, [
+                'image is inverted',
+                '(no rotation)'
+            ]);
+
+            // Straight Light Ray Path (Orange line matching Fig 3.2l right)
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(optStart.tipX, optStart.tipY);
+            ctx.lineTo(rightX + 44, yLens + 25);
+            ctx.lineTo(optEnd.tipX, optEnd.tipY);
+            ctx.stroke();
+
+            ctx.fillStyle = '#fbbf24';
+            ctx.font = '600 12px Inter, sans-serif';
+            ctx.fillText('light', rightX + 50, yObjPlane + 42);
+        }
+
+        // ============================================================================
+        // TAB 4: INTERACTIVE QUIZ QUESTIONS
+        // ============================================================================
+        const quizData = [
+            {
+                q: "1. According to the Rayleigh criterion, why does a TEM have a much higher resolving power than an optical microscope?",
+                options: [
+                    "Electrons move faster than light in a vacuum.",
+                    "Fast-moving electrons have a much shorter de Broglie wavelength (λ = h/p) than visible light, resulting in much weaker diffraction.",
+                    "Magnetic lenses have a larger diameter than glass convex lenses.",
+                    "The fluorescent screen amplifies the brightness of the electrons."
+                ],
+                correct: 1,
+                explanation: "Correct! High-speed electrons accelerated through 40–400 kV have de Broglie wavelengths (~0.003 nm) around 100,000 times shorter than visible light (~550 nm). By θ_min ≈ 1.22 λ / d, a shorter wavelength gives a much higher resolving power (down to 0.1 nm)."
+            },
+            {
+                q: "2. How are the focal length of a magnetic lens and the magnification of a TEM adjusted during operation?",
+                options: [
+                    "By physically moving the heavy magnetic lenses up and down the column.",
+                    "By changing the frequency of the a.c. filament supply.",
+                    "By varying the size of the electric current flowing through the copper coils of the magnetic lenses.",
+                    "By tilting the fluorescent viewing screen."
+                ],
+                correct: 2,
+                explanation: "Correct! As stated in Section b (Fig 3.2l), the size of the current through the copper coil determines the magnetic field strength, which controls the focal length of the magnetic lens and the magnification of the TEM."
+            },
+            {
+                q: "3. When comparing the image formed by a magnetic lens with that of an optical convex lens (Fig 3.2l), what is the key difference?",
+                options: [
+                    "A magnetic lens produces an upright image, while a convex lens produces an inverted image.",
+                    "A magnetic lens produces an image that is BOTH inverted and rotated due to the helical path of electrons.",
+                    "A magnetic lens only rotates the image without inverting it.",
+                    "Both lenses form identical images with no rotation."
+                ],
+                correct: 1,
+                explanation: "Correct! In a magnetic lens, electrons follow a spiral/helical trajectory through the magnetic field, so the final image is both inverted AND rotated."
+            },
+            {
+                q: "4. In the electron gun (Fig 3.2k), what are the respective functions of the a.c. supply and the high voltage V (40–400 kV)?",
+                options: [
+                    "The a.c. supply accelerates the electrons; the high voltage V heats the anode.",
+                    "The a.c. supply heats the cathode filament to emit electrons (thermionic emission); the high voltage V creates an electric field between the cathode (−) and anode (+) to accelerate them to high speeds.",
+                    "Both supplies are used to generate magnetic fields inside the electron gun.",
+                    "The high voltage V slows down the electrons so they don't damage the sample."
+                ],
+                correct: 1,
+                explanation: "Correct! The cathode is heated up by an a.c. current to emit electrons, which are then accelerated to high speeds by the strong electric field across the cathode (−) and anode (+) produced by V (40–400 kV)."
+            }
+        ];
+
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = quizData.map((item, qIdx) => `
+                <div class="p-4 rounded-xl bg-slate-950/90 border border-slate-800">
+                    <p class="text-sm font-semibold text-white mb-3">${item.q}</p>
+                    <div class="space-y-2">
+                        ${item.options.map((opt, oIdx) => `
+                            <button onclick="answerQuiz(${qIdx}, ${oIdx})" id="q-${qIdx}-opt-${oIdx}"
+                                class="w-full text-left text-xs p-3 rounded-lg border border-slate-800 bg-slate-900/70 hover:bg-slate-800 text-slate-300 transition flex items-center justify-between">
+                                <span>${opt}</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                    <div id="q-${qIdx}-feedback" class="hidden mt-3 p-3 rounded-lg text-xs"></div>
+                </div>
+            `).join('');
+        }
+
+        function answerQuiz(qIdx, selectedOpt) {
+            const item = quizData[qIdx];
+            const feedback = document.getElementById(`q-${qIdx}-feedback`);
+            feedback.classList.remove('hidden');
+
+            item.options.forEach((_, oIdx) => {
+                const btn = document.getElementById(`q-${qIdx}-opt-${oIdx}`);
+                if (oIdx === item.correct) {
+                    btn.className = 'w-full text-left text-xs p-3 rounded-lg border border-emerald-500 bg-emerald-500/15 text-emerald-200 font-semibold flex items-center justify-between';
+                } else if (oIdx === selectedOpt) {
+                    btn.className = 'w-full text-left text-xs p-3 rounded-lg border border-rose-500 bg-rose-500/15 text-rose-200 flex items-center justify-between';
+                }
+            });
+
+            if (selectedOpt === item.correct) {
+                feedback.className = 'mt-3 p-3 rounded-lg text-xs bg-emerald-500/10 border border-emerald-500/30 text-emerald-300';
+                feedback.textContent = item.explanation;
+            } else {
+                feedback.className = 'mt-3 p-3 rounded-lg text-xs bg-rose-500/10 border border-rose-500/30 text-rose-300';
+                feedback.textContent = `Not quite. ${item.explanation}`;
+            }
+        }
+
+        function resetQuiz() {
+            renderQuiz();
+        }
+
+        // ============================================================================
+        // RESPONSIVE CANVAS SIZING & MAIN ANIMATION LOOP
+        // ============================================================================
+        function resizeAllCanvases() {
+            ['temColumnCanvas', 'electronGunCanvas', 'lensComparisonCanvas'].forEach(id => {
+                const c = document.getElementById(id);
+                if (c && c.parentElement && c.parentElement.clientWidth > 0) {
+                    c.width = c.parentElement.clientWidth;
+                    c.height = c.parentElement.clientHeight;
+                }
+            });
+            renderMicrograph();
+        }
+
+        function animateLoop() {
+            animTime++;
+            if (currentTab === 'column') {
+                drawTEMColumn();
+            } else if (currentTab === 'gun') {
+                drawElectronGun();
+            } else if (currentTab === 'lens') {
+                drawLensComparison();
+            }
+            requestAnimationFrame(animateLoop);
+        }
+
+        window.addEventListener('resize', resizeAllCanvases);
+
+        window.onload = function () {
+            resizeAllCanvases();
+            selectSpecimen(0);
+            updateGunSim();
+            updateLensSim();
+            renderQuiz();
+            animateLoop();
+        };
+    </script>
+</body>
+</html>
