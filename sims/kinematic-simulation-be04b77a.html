@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kinematics Simulator</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React and ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  
+  <!-- Babel for in-browser JSX compilation -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useRef, useEffect, useCallback } = React;
+
+    // --- ICON COMPONENTS ---
+    const Activity = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 12h-4l-3 9L9 3l-3 9H2" /></svg>
+    );
+    const LineChart = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 3v18h18" /><path d="m19 9-5 5-4-4-3 3" /></svg>
+    );
+    const TrendingUp = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /><polyline points="16 7 22 7 22 13" /></svg>
+    );
+    const BookOpen = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>
+    );
+    const Calculator = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="16" height="20" x="4" y="2" rx="2" /><line x1="8" x2="16" y1="6" y2="6" /><line x1="16" x2="16" y1="14" y2="18" /><path d="M16 10h.01" /><path d="M12 10h.01" /><path d="M8 10h.01" /><path d="M12 14h.01" /><path d="M8 14h.01" /><path d="M12 18h.01" /><path d="M8 18h.01" /></svg>
+    );
+    const Move = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="5 9 2 12 5 15" /><polyline points="9 5 12 2 15 5" /><polyline points="19 9 22 12 19 15" /><polyline points="9 19 12 22 15 19" /><line x1="2" x2="22" y1="12" y2="12" /><line x1="12" x2="12" y1="2" y2="22" /></svg>
+    );
+    const RefreshCw = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+    );
+    const Play = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><polygon points="5 3 19 12 5 21 5 3" /></svg>
+    );
+    const Pause = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg>
+    );
+    const Car = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
+    );
+
+    // --- APP COMPONENT ---
+    function App() {
+      const [activeTab, setActiveTab] = useState('simulator'); 
+      const [inputMode, setInputMode] = useState('st'); // 'st', 'vt', or 'at'
+      const [displayMode, setDisplayMode] = useState('st-vt'); // 'all', 'st-vt', or 'vt-at'
+      
+      const timePoints = [0, 2, 4, 6, 8, 10];
+      const [sValues, setSValues] = useState([0, 0, 0, 0, 0, 0]);
+      const [vValues, setVValues] = useState([0, 0, 0, 0, 0, 0]);
+      const [aValues, setAValues] = useState([0, 0, 0, 0, 0, 0]);
+
+      return (
+        <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-blue-200 pb-12">
+          <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
+            <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Activity className="text-blue-600" size={28} />
+                <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-600">
+                  Advanced Kinematics
+                </h1>
+              </div>
+              <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+                <button onClick={() => setActiveTab('learn')} className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'learn' ? 'bg-white shadow-sm text-blue-700' : 'text-slate-600 hover:text-slate-900'}`}>
+                  <BookOpen size={16} /> Concepts
+                </button>
+                <button onClick={() => setActiveTab('simulator')} className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'simulator' ? 'bg-white shadow-sm text-blue-700' : 'text-slate-600 hover:text-slate-900'}`}>
+                  <LineChart size={16} /> Simulator
+                </button>
+              </div>
+            </div>
+          </header>
+
+          <main className="max-w-7xl mx-auto px-4 py-8">
+            {activeTab === 'learn' ? (
+              <LearnSection />
+            ) : (
+              <SimulatorSection 
+                inputMode={inputMode} setInputMode={setInputMode}
+                displayMode={displayMode} setDisplayMode={setDisplayMode}
+                timePoints={timePoints}
+                sValues={sValues} setSValues={setSValues}
+                vValues={vValues} setVValues={setVValues}
+                aValues={aValues} setAValues={setAValues}
+              />
+            )}
+          </main>
+        </div>
+      );
+    }
+
+    // --- LEARN SECTION ---
+    function LearnSection() {
+      return (
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4 text-slate-800">The Big Three of Motion</h2>
+            <p className="text-slate-600 text-lg">
+              Kinematics is driven by the relationship between <strong>Displacement (s)</strong>, <strong>Velocity (v)</strong>, and <strong>Acceleration (a)</strong>.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-blue-100">
+              <h3 className="text-xl font-bold text-blue-800 mb-4 flex items-center gap-2"><LineChart size={20} /> s-t Graph</h3>
+              <ul className="space-y-3 text-sm">
+                <li><strong className="text-slate-800 block">Slope = Velocity</strong> The steeper the line, the faster the object.</li>
+                <li><strong className="text-slate-800 block">Curve = Acceleration</strong> A bending line means velocity is changing. (Our engine smoothly curves your points!)</li>
+              </ul>
+            </div>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-red-100">
+              <h3 className="text-xl font-bold text-red-800 mb-4 flex items-center gap-2"><Activity size={20} /> v-t Graph</h3>
+              <ul className="space-y-3 text-sm">
+                <li><strong className="text-slate-800 block">Slope = Acceleration</strong> Changing speed creates a diagonal slope.</li>
+                <li><strong className="text-slate-800 block">Area = Displacement (Δs)</strong> Area under the curve calculates how far it moved.</li>
+              </ul>
+            </div>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-purple-100">
+              <h3 className="text-xl font-bold text-purple-800 mb-4 flex items-center gap-2"><TrendingUp size={20} /> a-t Graph</h3>
+              <ul className="space-y-3 text-sm">
+                <li><strong className="text-slate-800 block">Area = Change in Vel (Δv)</strong> Calculates how much speed was gained/lost.</li>
+                <li><strong className="text-slate-800 block">Flat Line</strong> Constant acceleration.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // --- SIMULATOR SECTION ---
+    function SimulatorSection({ inputMode, setInputMode, displayMode, setDisplayMode, timePoints, sValues, setSValues, vValues, setVValues, aValues, setAValues }) {
+      const [time, setTime] = useState(0);
+      const [isPlaying, setIsPlaying] = useState(false);
+      const [showVisualizer, setShowVisualizer] = useState(false);
+
+      const handleReset = () => {
+        if (inputMode === 'st') setSValues([0, 0, 0, 0, 0, 0]);
+        if (inputMode === 'vt') setVValues([0, 0, 0, 0, 0, 0]);
+        if (inputMode === 'at') setAValues([0, 0, 0, 0, 0, 0]);
+      };
+
+      const handleDisplayModeChange = (mode) => {
+        setDisplayMode(mode);
+        // Prevent editing a graph that is hidden from view
+        if (mode === 'vt-at' && inputMode === 'st') setInputMode('vt');
+        if (mode === 'st-vt' && inputMode === 'at') setInputMode('vt');
+      };
+
+      let derivedS = [...sValues];
+      let derivedV = [...vValues];
+      let derivedA = [...aValues];
+      let sEqs = [];
+      let vEqs = [];
+      let explanations = [];
+
+      if (inputMode === 'st') {
+        // Smooth s-t curve using central finite difference to extract continuous velocity
+        derivedV = timePoints.map((t, i) => {
+          if (i === 0) return (sValues[1] - sValues[0]) / (timePoints[1] - timePoints[0]);
+          if (i === timePoints.length - 1) return (sValues[i] - sValues[i-1]) / (timePoints[i] - timePoints[i-1]);
+          return (sValues[i+1] - sValues[i-1]) / (timePoints[i+1] - timePoints[i-1]);
+        });
+
+        derivedA = [];
+        for (let i = 0; i < timePoints.length - 1; i++) {
+          const dt = timePoints[i+1] - timePoints[i];
+          const a = (derivedV[i+1] - derivedV[i]) / dt;
+          derivedA.push(a);
+          vEqs.push((t) => derivedV[i] + a * t);
+
+          explanations.push({
+            interval: `${timePoints[i]}s - ${timePoints[i+1]}s`,
+            calc1Label: `Velocity (Smoothed Curve)`,
+            calc1: `v transitions ${derivedV[i].toFixed(1)} → ${derivedV[i+1].toFixed(1)} m/s`,
+            calc2Label: `Acceleration (Slope of v)`,
+            calc2: `a = Δv / Δt = ${a.toFixed(1)} m/s²`,
+          });
+        }
+      } else if (inputMode === 'vt') {
+        // v-t is piecewise linear. s is parabolic. a is step.
+        derivedS = [0];
+        derivedA = [];
+        let currentS = 0;
+        for (let i = 0; i < timePoints.length - 1; i++) {
+          const dt = timePoints[i+1] - timePoints[i];
+          const a = (vValues[i+1] - vValues[i]) / dt;
+          derivedA.push(a);
+          
+          const area = 0.5 * (vValues[i] + vValues[i+1]) * dt;
+          currentS += area;
+          derivedS.push(currentS);
+          
+          sEqs.push((t) => derivedS[i] + vValues[i]*t + 0.5*a*t*t);
+
+          explanations.push({
+            interval: `${timePoints[i]}s - ${timePoints[i+1]}s`,
+            calc1Label: `Acceleration (Slope of v-t)`,
+            calc1: `Δv / Δt = (${vValues[i+1]} - ${vValues[i]}) / ${dt} = ${a.toFixed(1)} m/s²`,
+            calc2Label: `Δ Displacement (Area of v-t)`,
+            calc2: `Trapezoid Area = ${area.toFixed(1)} m`,
+          });
+        }
+      } else if (inputMode === 'at') {
+        // a-t is piecewise linear. v is parabolic. s is cubic.
+        derivedV = [0];
+        derivedS = [0];
+        let currentV = 0;
+        let currentS = 0;
+        for (let i = 0; i < timePoints.length - 1; i++) {
+          const dt = timePoints[i+1] - timePoints[i];
+          const dv = 0.5 * (aValues[i] + aValues[i+1]) * dt;
+          currentV += dv;
+          derivedV.push(currentV);
+          
+          const j = (aValues[i+1] - aValues[i]) / dt; // Jerk
+          const ds = derivedV[i]*dt + 0.5*aValues[i]*dt*dt + (1/6)*j*dt*dt*dt;
+          currentS += ds;
+          derivedS.push(currentS);
+          
+          vEqs.push((t) => derivedV[i] + aValues[i]*t + 0.5*j*t*t);
+          sEqs.push((t) => derivedS[i] + derivedV[i]*t + 0.5*aValues[i]*t*t + (1/6)*j*t*t*t);
+
+          explanations.push({
+            interval: `${timePoints[i]}s - ${timePoints[i+1]}s`,
+            calc1Label: `Δ Velocity (Area of a-t)`,
+            calc1: `0.5 × (${aValues[i]} + ${aValues[i+1]}) × ${dt} = ${dv.toFixed(1)} m/s`,
+            calc2Label: `Δ Displacement`,
+            calc2: `Integral of v-t curve = ${ds.toFixed(1)} m`,
+          });
+        }
+      }
+
+      // Playback Animation Loop
+      useEffect(() => {
+        let animationFrameId;
+        let lastTimestamp;
+        const animate = (timestamp) => {
+          if (!lastTimestamp) lastTimestamp = timestamp;
+          const deltaTime = (timestamp - lastTimestamp) / 1000;
+          lastTimestamp = timestamp;
+          setTime((prev) => {
+            let next = prev + deltaTime;
+            if (next >= 10) {
+              setIsPlaying(false);
+              return 10;
+            }
+            return next;
+          });
+          animationFrameId = requestAnimationFrame(animate);
+        };
+        if (isPlaying) {
+          animationFrameId = requestAnimationFrame(animate);
+        }
+        return () => cancelAnimationFrame(animationFrameId);
+      }, [isPlaying]);
+
+      // Calculate instantaneous kinematics for the visualizer car
+      const getCurrentKinematics = (t) => {
+        if (t >= 10) t = 9.999;
+        const i = Math.floor(t / 2);
+        if (i < 0 || i >= 5) return { s: 0, v: 0, a: 0 };
+        const dt = t - timePoints[i];
+
+        if (inputMode === 'st') {
+          // Use Cubic Hermite Spline for perfectly smooth position tracking without boundary jumps
+          const dtInterval = 2; // timePoints[i+1] - timePoints[i]
+          const vi = derivedV[i];
+          const vip1 = derivedV[i+1];
+          const si = sValues[i];
+          const sip1 = sValues[i+1];
+          
+          // Calculate spline coefficients
+          const a = (vip1 + vi - 2 * (sip1 - si) / dtInterval) / (dtInterval * dtInterval);
+          const b = (vip1 - vi - 3 * a * dtInterval * dtInterval) / (2 * dtInterval);
+          
+          const currentS = a * Math.pow(dt, 3) + b * Math.pow(dt, 2) + vi * dt + si;
+          const currentV = 3 * a * Math.pow(dt, 2) + 2 * b * dt + vi;
+          const currentA = 6 * a * dt + 2 * b;
+
+          return { s: currentS, v: currentV, a: currentA };
+        } else if (inputMode === 'vt') {
+          const v0 = vValues[i];
+          const a = derivedA[i];
+          return { s: derivedS[i] + v0 * dt + 0.5 * a * dt * dt, v: v0 + a * dt, a: a };
+        } else {
+          const a0 = aValues[i];
+          const j = (aValues[i+1] - aValues[i]) / 2;
+          const v0 = derivedV[i];
+          return { s: derivedS[i] + v0 * dt + 0.5 * a0 * dt * dt + (1/6) * j * dt * dt * dt, v: v0 + a0 * dt + 0.5 * j * dt * dt, a: a0 + j * dt };
+        }
+      };
+      
+      const currentK = getCurrentKinematics(time);
+      // Map displacement (-100 to 100) to percentage (10% to 90%) for the UI track
+      const carLeftPosition = `${50 + (currentK.s / 100) * 45}%`;
+
+      const VectorArrow = ({ value, color, label, offsetTop, labelPos = 'top' }) => {
+        if (Math.abs(value) < 0.1) return null;
+        const isNegative = value < 0;
+        // Scale proportionally, but guarantee a minimum and maximum visible size
+        const length = Math.min(Math.max(Math.abs(value) * 2.5, 30), 120);
+        const labelClass = labelPos === 'top' ? '-top-8' : '-bottom-8';
+        
+        return (
+          <div className={`absolute flex items-center ${isNegative ? 'flex-row-reverse right-[50%]' : 'left-[50%]'}`} style={{ width: `${length}px`, top: offsetTop, zIndex: 20 }}>
+            <div className="flex-1 h-2 rounded-full shadow-lg" style={{ backgroundColor: color, boxShadow: `0 0 8px ${color}80` }}></div>
+            <div className="w-0 h-0 border-y-[7px] border-y-transparent drop-shadow-lg" style={{ [isNegative ? 'borderRight' : 'borderLeft']: `12px solid ${color}` }}></div>
+            <div className={`absolute ${labelClass} ${isNegative ? 'right-0' : 'left-0'} bg-slate-900 border border-slate-700 rounded-md px-2 py-1 whitespace-nowrap shadow-lg flex items-center gap-1.5`}>
+               <span className="font-bold text-[11px] uppercase tracking-wider" style={{ color }}>{label}</span>
+               <span className="text-white font-mono text-xs font-bold">{value > 0 ? '+' : ''}{value.toFixed(1)}</span>
+            </div>
+          </div>
+        );
+      };
+
+      return (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-bold text-slate-800">Graph Generator</h2>
+              <p className="text-sm text-slate-500">Select a primary graph to edit. The math engine derives the other two instantly.</p>
+            </div>
+            <div className="flex flex-col gap-3 w-full md:w-auto items-start md:items-end">
+              <div className="flex flex-wrap items-center justify-between md:justify-end gap-2 sm:gap-3 w-full">
+                <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">View</span>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setShowVisualizer(!showVisualizer)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${showVisualizer ? 'bg-indigo-50 text-indigo-700 border-indigo-200 shadow-sm' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}>
+                    <Car size={14} /> {showVisualizer ? 'Track: ON' : 'Track: OFF'}
+                  </button>
+                  <div className="hidden sm:block w-px h-6 bg-slate-200 mx-1"></div>
+                  <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+                    <button onClick={() => handleDisplayModeChange('st-vt')} className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${displayMode === 'st-vt' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-800'}`}>s-t & v-t</button>
+                    <button onClick={() => handleDisplayModeChange('vt-at')} className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${displayMode === 'vt-at' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-800'}`}>v-t & a-t</button>
+                    <button onClick={() => handleDisplayModeChange('all')} className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${displayMode === 'all' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-800'}`}>All 3 Graphs</button>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between md:justify-end gap-3 w-full">
+                <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Edit</span>
+                <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200 w-full md:w-auto">
+                  <button onClick={() => setInputMode('st')} disabled={displayMode === 'vt-at'} className={`flex-1 md:flex-none px-4 py-2 rounded-md text-sm font-semibold transition-all ${inputMode === 'st' ? 'bg-white shadow-sm text-blue-700' : 'text-slate-600 hover:text-slate-900'} disabled:opacity-30 disabled:cursor-not-allowed`}>s-t</button>
+                  <button onClick={() => setInputMode('vt')} className={`flex-1 md:flex-none px-4 py-2 rounded-md text-sm font-semibold transition-all ${inputMode === 'vt' ? 'bg-white shadow-sm text-red-700' : 'text-slate-600 hover:text-slate-900'}`}>v-t</button>
+                  <button onClick={() => setInputMode('at')} disabled={displayMode === 'st-vt'} className={`flex-1 md:flex-none px-4 py-2 rounded-md text-sm font-semibold transition-all ${inputMode === 'at' ? 'bg-white shadow-sm text-purple-700' : 'text-slate-600 hover:text-slate-900'} disabled:opacity-30 disabled:cursor-not-allowed`}>a-t</button>
+                  <div className="w-px bg-slate-300 mx-1 my-1"></div>
+                  <button onClick={handleReset} className="flex items-center justify-center px-3 py-2 rounded-md text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all" title="Reset Active Graph to Zero">
+                    <RefreshCw size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* VISUALIZER TRACK */}
+          {showVisualizer && (
+            <div className="bg-slate-900 text-white p-5 rounded-xl shadow-inner border border-slate-800 flex flex-col gap-4 overflow-hidden relative max-w-5xl mx-auto w-full">
+              <div className="flex justify-between items-center text-xs font-mono text-slate-400 px-4">
+                 <span>-100m</span>
+                 <span>0m (Origin)</span>
+                 <span>100m</span>
+              </div>
+              
+              <div className="relative h-32 border-b-2 border-dashed border-slate-700 mx-4 mt-2">
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-slate-700/80"></div>
+                
+                {/* Removed 'transition-all duration-75' to allow pure 60fps JS animation without CSS stutter */}
+                <div className="absolute transform -translate-x-1/2 top-8" style={{ left: carLeftPosition }}>
+                  <div className="relative flex flex-col items-center justify-center">
+                     <VectorArrow value={currentK.v} color="#4ade80" label="v" offsetTop="-20px" labelPos="top" />
+                     <div className="bg-slate-800 p-2 rounded-lg border border-slate-700 shadow-xl relative z-10 mt-2">
+                       <Car size={32} className="text-blue-400" />
+                     </div>
+                     <VectorArrow value={currentK.a} color="#c084fc" label="a" offsetTop="60px" labelPos="bottom" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 mt-2 bg-slate-800/50 p-3 rounded-lg border border-slate-700/50">
+                 <button onClick={() => { if(time >= 10) setTime(0); setIsPlaying(!isPlaying); }} className="w-10 h-10 flex flex-shrink-0 items-center justify-center bg-blue-600 hover:bg-blue-500 text-white rounded-full transition-colors shadow-lg shadow-blue-900/50">
+                    {isPlaying ? <Pause size={18} /> : <Play size={18} />}
+                 </button>
+                 <input 
+                   type="range" min="0" max="10" step="0.01" 
+                   value={time} onChange={(e) => { setTime(parseFloat(e.target.value)); setIsPlaying(false); }} 
+                   className="flex-1 accent-blue-500 h-2 bg-slate-950 rounded-lg appearance-none cursor-pointer"
+                 />
+                 <div className="text-sm font-mono font-bold w-12 text-right text-blue-300">{time.toFixed(1)}s</div>
+              </div>
+            </div>
+          )}
+
+          <div className={`grid gap-6 ${displayMode === 'all' ? 'lg:grid-cols-3' : 'lg:grid-cols-2 max-w-5xl mx-auto'}`}>
+            {/* S-T GRAPH */}
+            {(displayMode === 'all' || displayMode === 'st-vt') && (
+              <div className={`bg-white p-4 rounded-xl shadow-sm border flex flex-col ${inputMode === 'st' ? 'border-blue-400 ring-2 ring-blue-100' : 'border-slate-200'}`}>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-bold text-blue-800 flex items-center gap-2"><LineChart size={18} /> s-t Graph</h3>
+                  {inputMode === 'st' ? <Badge color="blue" icon={<Move size={12}/>}>Editable</Badge> : <Badge color="slate">Derived (Integral)</Badge>}
+                </div>
+                <div className="aspect-square sm:aspect-video lg:aspect-square w-full bg-slate-50 rounded-lg relative touch-none mt-auto">
+                  {inputMode === 'st' ? (
+                    <DraggableGraph timePoints={timePoints} values={sValues} onChange={setSValues} yMin={-100} yMax={100} color="#2563eb" yLabel="s (m)" smooth={true} showSlope={true} slopePrefix="v" slopeUnit="m/s" currentTime={time} />
+                  ) : (
+                    <SmoothGraph timePoints={timePoints} nodeValues={derivedS} integralValues={null} equations={sEqs} yMin={-100} yMax={100} color="#2563eb" yLabel="s (m)" showSlope={true} slopePrefix="v" slopeUnit="m/s" currentTime={time} />
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* V-T GRAPH */}
+            <div className={`bg-white p-4 rounded-xl shadow-sm border flex flex-col ${inputMode === 'vt' ? 'border-red-400 ring-2 ring-red-100' : 'border-slate-200'}`}>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-red-800 flex items-center gap-2"><Activity size={18} /> v-t Graph</h3>
+                {inputMode === 'vt' ? <Badge color="red" icon={<Move size={12}/>}>Editable</Badge> : inputMode === 'st' ? <Badge color="slate">Derived (Slope)</Badge> : <Badge color="slate">Derived (Integral)</Badge>}
+              </div>
+              <div className="aspect-square sm:aspect-video lg:aspect-square w-full bg-slate-50 rounded-lg relative touch-none mt-auto">
+                {inputMode === 'st' ? (
+                  <SmoothGraph timePoints={timePoints} nodeValues={derivedV} integralValues={sValues} equations={vEqs} yMin={-50} yMax={50} color="#dc2626" yLabel="v (m/s)" areaPrefix="Δs" areaUnit="m" showSlope={true} slopePrefix="a" slopeUnit="m/s²" currentTime={time} />
+                ) : inputMode === 'vt' ? (
+                  <DraggableGraph timePoints={timePoints} values={vValues} onChange={setVValues} yMin={-50} yMax={50} color="#dc2626" yLabel="v (m/s)" showSlope={true} slopePrefix="a" slopeUnit="m/s²" showArea={true} areaPrefix="Δs" areaUnit="m" currentTime={time} />
+                ) : (
+                  <SmoothGraph timePoints={timePoints} nodeValues={derivedV} integralValues={derivedS} equations={vEqs} yMin={-50} yMax={50} color="#dc2626" yLabel="v (m/s)" areaPrefix="Δs" areaUnit="m" showSlope={true} slopePrefix="a" slopeUnit="m/s²" currentTime={time} />
+                )}
+              </div>
+            </div>
+
+            {/* A-T GRAPH */}
+            {(displayMode === 'all' || displayMode === 'vt-at') && (
+              <div className={`bg-white p-4 rounded-xl shadow-sm border flex flex-col ${inputMode === 'at' ? 'border-purple-400 ring-2 ring-purple-100' : 'border-slate-200'}`}>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-bold text-purple-800 flex items-center gap-2"><TrendingUp size={18} /> a-t Graph</h3>
+                  {inputMode === 'at' ? <Badge color="purple" icon={<Move size={12}/>}>Editable</Badge> : <Badge color="slate">Derived (Slope)</Badge>}
+                </div>
+                <div className="aspect-square sm:aspect-video lg:aspect-square w-full bg-slate-50 rounded-lg relative touch-none mt-auto">
+                  {inputMode === 'at' ? (
+                    <DraggableGraph timePoints={timePoints} values={aValues} onChange={setAValues} yMin={-30} yMax={30} color="#9333ea" yLabel="a (m/s²)" showArea={true} areaPrefix="Δv" areaUnit="m/s" currentTime={time} />
+                  ) : (
+                    <StepGraph timePoints={timePoints} stepValues={derivedA} yMin={-30} yMax={30} yLabel="a (m/s²)" prefix="a" unit="m/s²" currentTime={time} />
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="bg-slate-50 border-b border-slate-200 px-5 py-4">
+              <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                <Calculator size={20} className="text-slate-500" /> Math Engine Output
+              </h3>
+            </div>
+            <div className="p-0 overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-slate-50 text-slate-600 text-xs uppercase border-b border-slate-200">
+                  <tr>
+                    <th className="px-5 py-3 font-semibold">Interval</th>
+                    <th className="px-5 py-3 font-semibold">Calculation 1</th>
+                    <th className="px-5 py-3 font-semibold">Calculation 2</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {explanations.map((exp, idx) => (
+                    <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-5 py-3 font-medium text-slate-900 whitespace-nowrap">{exp.interval}</td>
+                      <td className="px-5 py-3">
+                        <div className="font-semibold text-slate-800">{exp.calc1Label}</div>
+                        <div className="font-mono text-xs mt-1 text-slate-600 bg-slate-100 p-1 rounded inline-block">{exp.calc1}</div>
+                      </td>
+                      <td className="px-5 py-3">
+                        <div className="font-semibold text-slate-800">{exp.calc2Label}</div>
+                        <div className="font-mono text-xs mt-1 text-slate-600">{exp.calc2}</div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const Badge = ({ color, icon, children }) => (
+      <span className={`text-xs bg-${color}-100 text-${color}-700 px-2 py-1 rounded-full font-bold flex items-center gap-1`}>
+        {icon} {children}
+      </span>
+    );
+
+    // --- GRAPH COMPONENTS ---
+    const GRAPH_MARGIN = { top: 20, right: 20, bottom: 30, left: 45 };
+
+    function GraphGrid({ width, height, xMax, yMin, yMax, yLabel }) {
+      const innerWidth = width - GRAPH_MARGIN.left - GRAPH_MARGIN.right;
+      const innerHeight = height - GRAPH_MARGIN.top - GRAPH_MARGIN.bottom;
+      const yTicks = [];
+      const yStep = (yMax - yMin) / 4;
+      for (let i = 0; i <= 4; i++) yTicks.push(yMin + i * yStep);
+      const xTicks = [0, 2, 4, 6, 8, 10];
+
+      return (
+        <g>
+          {yTicks.map(val => {
+            const y = height - GRAPH_MARGIN.bottom - ((val - yMin) / (yMax - yMin)) * innerHeight;
+            return (
+              <g key={`y-${val}`}>
+                <line x1={GRAPH_MARGIN.left} y1={y} x2={width - GRAPH_MARGIN.right} y2={y} stroke={val === 0 ? "#94a3b8" : "#f1f5f9"} strokeWidth={val === 0 ? 2 : 1} />
+                <text x={GRAPH_MARGIN.left - 5} y={y} dominantBaseline="middle" textAnchor="end" fontSize="10" fill="#64748b">{val}</text>
+              </g>
+            );
+          })}
+          {xTicks.map(val => {
+            const x = GRAPH_MARGIN.left + (val / xMax) * innerWidth;
+            return (
+              <g key={`x-${val}`}>
+                <line x1={x} y1={GRAPH_MARGIN.top} x2={x} y2={height - GRAPH_MARGIN.bottom} stroke="#f1f5f9" strokeWidth="1" />
+                <text x={x} y={height - GRAPH_MARGIN.bottom + 15} textAnchor="middle" fontSize="10" fill="#64748b">{val}s</text>
+              </g>
+            );
+          })}
+          <text x={GRAPH_MARGIN.left / 2} y={GRAPH_MARGIN.top - 5} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#475569">{yLabel}</text>
+          <text x={width - GRAPH_MARGIN.right + 15} y={height - GRAPH_MARGIN.bottom + 4} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#475569">t (s)</text>
+        </g>
+      );
+    }
+
+    function DraggableGraph({ timePoints, values, onChange, yMin, yMax, color, yLabel, showArea, areaPrefix, areaUnit, showSlope, slopePrefix, slopeUnit, smooth, currentTime }) {
+      const svgRef = useRef(null);
+      const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+      const [draggingIdx, setDraggingIdx] = useState(null);
+
+      useEffect(() => {
+        const observer = new ResizeObserver(entries => {
+          setDimensions({ width: entries[0].contentRect.width, height: entries[0].contentRect.height });
+        });
+        if (svgRef.current) observer.observe(svgRef.current);
+        return () => observer.disconnect();
+      }, []);
+
+      const { width, height } = dimensions;
+      const mapX = useCallback((t) => width ? GRAPH_MARGIN.left + (t / 10) * (width - GRAPH_MARGIN.left - GRAPH_MARGIN.right) : 0, [width]);
+      const mapY = useCallback((y) => height ? height - GRAPH_MARGIN.bottom - ((y - yMin) / (yMax - yMin)) * (height - GRAPH_MARGIN.top - GRAPH_MARGIN.bottom) : 0, [height, yMin, yMax]);
+      const unmapY = useCallback((svgY) => {
+        if (!height) return 0;
+        const normalizedY = 1 - ((svgY - GRAPH_MARGIN.top) / (height - GRAPH_MARGIN.top - GRAPH_MARGIN.bottom));
+        let val = yMin + normalizedY * (yMax - yMin);
+        const range = yMax - yMin;
+        const snap = range > 100 ? 10 : range > 50 ? 5 : 2.5; 
+        return Math.max(yMin, Math.min(yMax, Math.round(val / snap) * snap));
+      }, [height, yMin, yMax]);
+
+      useEffect(() => {
+        const handleMouseMove = (e) => {
+          if (draggingIdx === null || !svgRef.current) return;
+          const rect = svgRef.current.getBoundingClientRect();
+          const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+          onChange(prev => {
+            const next = [...prev];
+            next[draggingIdx] = unmapY(clientY - rect.top);
+            return next;
+          });
+        };
+        const handleMouseUp = () => setDraggingIdx(null);
+        if (draggingIdx !== null) {
+          window.addEventListener('mousemove', handleMouseMove); window.addEventListener('mouseup', handleMouseUp);
+          window.addEventListener('touchmove', handleMouseMove, { passive: false }); window.addEventListener('touchend', handleMouseUp);
+        }
+        return () => {
+          window.removeEventListener('mousemove', handleMouseMove); window.removeEventListener('mouseup', handleMouseUp);
+          window.removeEventListener('touchmove', handleMouseMove); window.removeEventListener('touchend', handleMouseUp);
+        };
+      }, [draggingIdx, onChange, unmapY]);
+
+      if (!width || !height) return <svg ref={svgRef} className="w-full h-full absolute inset-0" />;
+
+      const getSmoothPath = () => {
+        const pts = timePoints.map((t, i) => ({ x: mapX(t), y: mapY(values[i]) }));
+        let d = `M ${pts[0].x} ${pts[0].y}`;
+        for (let i = 0; i < pts.length - 1; i++) {
+            const p0 = i > 0 ? pts[i-1] : pts[0];
+            const p1 = pts[i];
+            const p2 = pts[i+1];
+            const p3 = i < pts.length - 2 ? pts[i+2] : pts[pts.length - 1];
+            
+            const cp1x = p1.x + (p2.x - p0.x) / 6;
+            const cp1y = p1.y + (p2.y - p0.y) / 6;
+            const cp2x = p2.x - (p3.x - p1.x) / 6;
+            const cp2y = p2.y - (p3.y - p1.y) / 6;
+            d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+        }
+        return d;
+      };
+
+      return (
+        <svg ref={svgRef} className="w-full h-full absolute inset-0 cursor-crosshair">
+          <GraphGrid width={width} height={height} xMax={10} yMin={yMin} yMax={yMax} yLabel={yLabel} />
+          
+          {showArea && timePoints.map((t, i) => {
+            if (i === timePoints.length - 1) return null;
+            const area = 0.5 * (values[i] + values[i+1]) * (timePoints[i+1] - timePoints[i]);
+            if (Math.abs(area) < 0.1 && values[i] === 0 && values[i+1] === 0) return null;
+            const fillColor = area > 0 ? '#22c55e' : area < 0 ? '#ef4444' : '#94a3b8';
+            return (
+              <g key={`area-${i}`}>
+                <polygon points={`${mapX(timePoints[i])},${mapY(0)} ${mapX(timePoints[i])},${mapY(values[i])} ${mapX(timePoints[i+1])},${mapY(values[i+1])} ${mapX(timePoints[i+1])},${mapY(0)}`} fill={fillColor} fillOpacity="0.15" stroke={fillColor} strokeWidth="1" strokeOpacity="0.5" />
+                <text x={(mapX(timePoints[i]) + mapX(timePoints[i+1])) / 2} y={area >= 0 ? Math.min(mapY(values[i]), mapY(values[i+1]), mapY(0)) - 10 : Math.max(mapY(values[i]), mapY(values[i+1]), mapY(0)) + 15} textAnchor="middle" fontSize="10" fontWeight="bold" fill={fillColor} className="pointer-events-none select-none">
+                  {areaPrefix} = {area > 0 ? '+' : ''}{area}{areaUnit}
+                </text>
+              </g>
+            );
+          })}
+
+          {smooth ? (
+            <g>
+              <path d={getSmoothPath()} fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+              {showSlope && timePoints.map((t, i) => {
+                if (i === timePoints.length - 1) return null;
+                const slopeVal = (values[i+1] - values[i]) / (timePoints[i+1] - t);
+                const segColor = showSlope ? (slopeVal > 0 ? '#22c55e' : slopeVal < 0 ? '#ef4444' : '#94a3b8') : color;
+                return (
+                  <text key={`smooth-slope-${i}`} x={(mapX(t) + mapX(timePoints[i+1])) / 2} y={(mapY(values[i]) + mapY(values[i+1])) / 2 - 12} textAnchor="middle" fontSize="11" fontWeight="bold" fill={segColor} className="pointer-events-none select-none drop-shadow-sm">
+                    {slopePrefix} = {slopeVal > 0 ? '+' : ''}{slopeVal.toFixed(1)}{slopeUnit ? ` ${slopeUnit}` : ''}
+                  </text>
+                );
+              })}
+            </g>
+          ) : (
+            timePoints.map((t, i) => {
+              if (i === timePoints.length - 1) return null;
+              const slopeVal = (values[i+1] - values[i]) / (timePoints[i+1] - t);
+              const segColor = showSlope ? (slopeVal > 0 ? '#22c55e' : slopeVal < 0 ? '#ef4444' : '#94a3b8') : color;
+              return (
+                <g key={`seg-${i}`}>
+                  <line x1={mapX(t)} y1={mapY(values[i])} x2={mapX(timePoints[i+1])} y2={mapY(values[i+1])} stroke={segColor} strokeWidth="3" strokeLinecap="round" />
+                  {showSlope && (
+                    <text x={(mapX(t) + mapX(timePoints[i+1])) / 2} y={(mapY(values[i]) + mapY(values[i+1])) / 2 - 12} textAnchor="middle" fontSize="11" fontWeight="bold" fill={segColor} className="pointer-events-none select-none drop-shadow-sm">
+                      {slopePrefix} = {slopeVal > 0 ? '+' : ''}{slopeVal.toFixed(1)}
+                    </text>
+                  )}
+                </g>
+              );
+            })
+          )}
+          
+          {timePoints.map((t, i) => (
+             <circle key={`touch-${i}`} cx={mapX(t)} cy={mapY(values[i])} r="20" fill="transparent"
+                onMouseDown={(e) => { e.preventDefault(); setDraggingIdx(i); }} onTouchStart={(e) => { e.preventDefault(); setDraggingIdx(i); }} className="cursor-ns-resize" />
+          ))}
+
+          {timePoints.map((t, i) => (
+            <circle key={`knob-${i}`} cx={mapX(t)} cy={mapY(values[i])} r="6" fill={draggingIdx === i ? "#fff" : color} stroke={color} strokeWidth="3"
+              className="pointer-events-none transition-transform" style={{ transformOrigin: `${mapX(t)}px ${mapY(values[i])}px`, transform: draggingIdx === i ? 'scale(1.5)' : 'scale(1)' }} />
+          ))}
+          
+          {draggingIdx !== null && (
+            <text x={mapX(timePoints[draggingIdx])} y={mapY(values[draggingIdx]) - 20} textAnchor="middle" fill={color} fontSize="12" fontWeight="bold" className="pointer-events-none drop-shadow-md bg-white">
+              {values[draggingIdx]}
+            </text>
+          )}
+
+          {currentTime !== undefined && (
+             <g className="pointer-events-none">
+               <line x1={mapX(currentTime)} x2={mapX(currentTime)} y1={GRAPH_MARGIN.top} y2={height - GRAPH_MARGIN.bottom} stroke="rgba(15, 23, 42, 0.2)" strokeWidth="2" strokeDasharray="4 4" />
+               <circle cx={mapX(currentTime)} cy={GRAPH_MARGIN.top} r="4" fill="#3b82f6" />
+             </g>
+          )}
+        </svg>
+      );
+    }
+
+    function StepGraph({ timePoints, stepValues, yMin, yMax, yLabel, prefix, unit, currentTime }) {
+      const svgRef = useRef(null);
+      const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
+      useEffect(() => {
+        const observer = new ResizeObserver(entries => {
+          setDimensions({ width: entries[0].contentRect.width, height: entries[0].contentRect.height });
+        });
+        if (svgRef.current) observer.observe(svgRef.current);
+        return () => observer.disconnect();
+      }, []);
+
+      const { width, height } = dimensions;
+      if (!width || !height) return <svg ref={svgRef} className="w-full h-full absolute inset-0" />;
+      const mapX = (t) => GRAPH_MARGIN.left + (t / 10) * (width - GRAPH_MARGIN.left - GRAPH_MARGIN.right);
+      const mapY = (y) => height - GRAPH_MARGIN.bottom - ((y - yMin) / (yMax - yMin)) * (height - GRAPH_MARGIN.top - GRAPH_MARGIN.bottom);
+
+      return (
+        <svg ref={svgRef} className="w-full h-full absolute inset-0 pointer-events-none">
+          <GraphGrid width={width} height={height} xMax={10} yMin={yMin} yMax={yMax} yLabel={yLabel} />
+          
+          {stepValues.map((val, i) => {
+            const styleColor = val > 0 ? '#22c55e' : val < 0 ? '#ef4444' : '#94a3b8';
+            return (
+              <g key={`band-${i}`}>
+                <rect x={mapX(timePoints[i])} y={GRAPH_MARGIN.top} width={mapX(timePoints[i+1]) - mapX(timePoints[i])} height={height - GRAPH_MARGIN.top - GRAPH_MARGIN.bottom} fill={styleColor} fillOpacity="0.1" />
+                <text x={(mapX(timePoints[i]) + mapX(timePoints[i+1])) / 2} y={GRAPH_MARGIN.top + 15} textAnchor="middle" fontSize="11" fontWeight="bold" fill={styleColor}>
+                  {prefix} = {val > 0 ? '+' : ''}{val.toFixed(1)} {unit}
+                </text>
+              </g>
+            );
+          })}
+
+          {stepValues.map((val, i) => (
+            <line key={`hline-${i}`} x1={mapX(timePoints[i])} y1={mapY(val)} x2={mapX(timePoints[i+1])} y2={mapY(val)} stroke={val > 0 ? '#22c55e' : val < 0 ? '#ef4444' : '#94a3b8'} strokeWidth="3" strokeLinecap="round" />
+          ))}
+
+          {stepValues.map((val, i) => {
+            if (i === 0) return null;
+            return <line key={`vline-${i}`} x1={mapX(timePoints[i])} y1={mapY(stepValues[i-1])} x2={mapX(timePoints[i])} y2={mapY(val)} stroke="#94a3b8" strokeWidth="1" strokeDasharray="4" />;
+          })}
+          
+          {stepValues.map((val, i) => (
+            <circle key={`dot-${i}`} cx={mapX((timePoints[i] + timePoints[i+1])/2)} cy={mapY(val)} r="4" fill={val > 0 ? '#22c55e' : val < 0 ? '#ef4444' : '#94a3b8'} />
+          ))}
+
+          {currentTime !== undefined && (
+             <g className="pointer-events-none">
+               <line x1={mapX(currentTime)} x2={mapX(currentTime)} y1={GRAPH_MARGIN.top} y2={height - GRAPH_MARGIN.bottom} stroke="rgba(15, 23, 42, 0.2)" strokeWidth="2" strokeDasharray="4 4" />
+               <circle cx={mapX(currentTime)} cy={GRAPH_MARGIN.top} r="4" fill="#3b82f6" />
+             </g>
+          )}
+        </svg>
+      );
+    }
+
+    function SmoothGraph({ timePoints, nodeValues, integralValues, equations, yMin, yMax, color, yLabel, areaPrefix, areaUnit, showSlope, slopePrefix, slopeUnit, currentTime }) {
+      const svgRef = useRef(null);
+      const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
+      useEffect(() => {
+        const observer = new ResizeObserver(entries => {
+          setDimensions({ width: entries[0].contentRect.width, height: entries[0].contentRect.height });
+        });
+        if (svgRef.current) observer.observe(svgRef.current);
+        return () => observer.disconnect();
+      }, []);
+
+      const { width, height } = dimensions;
+      if (!width || !height) return <svg ref={svgRef} className="w-full h-full absolute inset-0" />;
+      const mapX = (t) => GRAPH_MARGIN.left + (t / 10) * (width - GRAPH_MARGIN.left - GRAPH_MARGIN.right);
+      const mapY = (y) => height - GRAPH_MARGIN.bottom - ((y - yMin) / (yMax - yMin)) * (height - GRAPH_MARGIN.top - GRAPH_MARGIN.bottom);
+
+      let pathD = `M ${mapX(timePoints[0])} ${mapY(nodeValues[0])}`;
+      for (let i = 0; i < timePoints.length - 1; i++) {
+        const dt = timePoints[i+1] - timePoints[i];
+        for (let j = 1; j <= 15; j++) {
+          const localT = (dt * j) / 15;
+          pathD += ` L ${mapX(timePoints[i] + localT)} ${mapY(equations[i](localT))}`;
+        }
+      }
+
+      return (
+        <svg ref={svgRef} className="w-full h-full absolute inset-0 pointer-events-none">
+          <GraphGrid width={width} height={height} xMax={10} yMin={yMin} yMax={yMax} yLabel={yLabel} />
+          
+          {timePoints.map((t, i) => {
+            if (i === timePoints.length - 1 || !integralValues) return null;
+            const area = integralValues[i+1] - integralValues[i];
+            if (Math.abs(area) < 0.1) return null;
+            const styleColor = area > 0 ? '#22c55e' : area < 0 ? '#ef4444' : '#94a3b8';
+
+            return (
+              <g key={`band-${i}`}>
+                <rect x={mapX(t)} y={GRAPH_MARGIN.top} width={mapX(timePoints[i+1]) - mapX(t)} height={height - GRAPH_MARGIN.top - GRAPH_MARGIN.bottom} fill={styleColor} fillOpacity="0.1" />
+                <text x={(mapX(t) + mapX(timePoints[i+1])) / 2} y={GRAPH_MARGIN.top + 15} textAnchor="middle" fontSize="10" fontWeight="bold" fill={styleColor}>
+                  {areaPrefix} = {area > 0 ? '+' : ''}{area.toFixed(1)}{areaUnit}
+                </text>
+              </g>
+            );
+          })}
+
+          <path d={pathD} fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+          
+          {showSlope && timePoints.map((t, i) => {
+            if (i === timePoints.length - 1) return null;
+            const slopeVal = (nodeValues[i+1] - nodeValues[i]) / (timePoints[i+1] - t);
+            const segColor = slopeVal > 0 ? '#22c55e' : slopeVal < 0 ? '#ef4444' : '#94a3b8';
+            return (
+              <text key={`slope-${i}`} x={(mapX(t) + mapX(timePoints[i+1])) / 2} y={(mapY(nodeValues[i]) + mapY(nodeValues[i+1])) / 2 - 12} textAnchor="middle" fontSize="11" fontWeight="bold" fill={segColor} className="pointer-events-none select-none drop-shadow-sm">
+                {slopePrefix} = {slopeVal > 0 ? '+' : ''}{slopeVal.toFixed(1)}{slopeUnit ? ` ${slopeUnit}` : ''}
+              </text>
+            );
+          })}
+
+          {nodeValues.map((val, i) => (
+            <circle key={`node-${i}`} cx={mapX(timePoints[i])} cy={mapY(val)} r="4" fill="#fff" stroke={color} strokeWidth="2" />
+          ))}
+
+          {currentTime !== undefined && (
+             <g className="pointer-events-none">
+               <line x1={mapX(currentTime)} x2={mapX(currentTime)} y1={GRAPH_MARGIN.top} y2={height - GRAPH_MARGIN.bottom} stroke="rgba(15, 23, 42, 0.2)" strokeWidth="2" strokeDasharray="4 4" />
+               <circle cx={mapX(currentTime)} cy={GRAPH_MARGIN.top} r="4" fill="#3b82f6" />
+             </g>
+          )}
+        </svg>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
