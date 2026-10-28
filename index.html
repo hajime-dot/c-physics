@@ -2123,31 +2123,7 @@ CE,2009,44,A`;
   ];
 
   /** Static TBD — not driven by Sheet */
-  var TBD_SIMS = [
-    { title: 'Angry projectile motion', topic: 'Mechanics', blurb: 'Projectile motion sim', url: null, status: 'tbd', icon: '🎯', sort: 1000 },
-    { title: 'Banked road', topic: 'Mechanics', blurb: 'Banked curve forces', url: null, status: 'tbd', icon: '🛣', sort: 1010 },
-    { title: 'Circular motion', topic: 'Mechanics', blurb: 'Uniform circular motion', url: null, status: 'tbd', icon: '🔄', sort: 1020 },
-    { title: 'Gravity', topic: 'Mechanics', blurb: 'Gravitational force / orbits', url: null, status: 'tbd', icon: '🌍', sort: 1030 },
-    { title: 'Kinematics simulation', topic: 'Mechanics', blurb: 'Displacement, velocity, acceleration', url: null, status: 'tbd', icon: '📈', sort: 1040 },
-    { title: 'Light refraction', topic: 'Waves', blurb: 'Snell’s law / refraction', url: null, status: 'tbd', icon: '💡', sort: 1050 },
-    { title: 'Path difference', topic: 'Waves', blurb: 'Interference path difference', url: null, status: 'tbd', icon: '〰️', sort: 1060 },
-    { title: "Faraday's law", topic: 'Electricity and Magnetism', blurb: 'Electromagnetic induction', url: null, status: 'tbd', icon: '🧲', sort: 1070 },
-    { title: 'Filament lamp', topic: 'Electricity and Magnetism', blurb: 'I–V characteristic (filament)', url: null, status: 'tbd', icon: '💡', sort: 1080 },
-    { title: 'LED', topic: 'Electricity and Magnetism', blurb: 'LED characteristic', url: null, status: 'tbd', icon: '🔴', sort: 1090 },
-    { title: 'Magnetic braking', topic: 'Electricity and Magnetism', blurb: 'Eddy current braking', url: null, status: 'tbd', icon: '🛑', sort: 1100 },
-    { title: 'Magnetic field line', topic: 'Electricity and Magnetism', blurb: 'Field line patterns', url: null, status: 'tbd', icon: '🧭', sort: 1110 },
-    { title: 'Resistor grid solver', topic: 'Electricity and Magnetism', blurb: 'Network of resistors', url: null, status: 'tbd', icon: '🔲', sort: 1120 },
-    { title: 'Resistor', topic: 'Electricity and Magnetism', blurb: 'Ohm’s law / resistor', url: null, status: 'tbd', icon: '➖', sort: 1130 },
-    { title: 'Temperature effect on resistor', topic: 'Electricity and Magnetism', blurb: 'Resistance vs temperature', url: null, status: 'tbd', icon: '🌡', sort: 1140 },
-    { title: 'Vrms', topic: 'Electricity and Magnetism', blurb: 'RMS voltage / AC', url: null, status: 'tbd', icon: '∿', sort: 1150 },
-    { title: 'Air pressure', topic: 'Heat and Gases', blurb: 'Gas pressure concepts', url: null, status: 'tbd', icon: '💨', sort: 1160 },
-    { title: 'Silver egg', topic: 'Heat and Gases', blurb: 'Heat transfer demo', url: null, status: 'tbd', icon: '🥚', sort: 1170 },
-    { title: 'Silver spoon', topic: 'Heat and Gases', blurb: 'Conduction demo', url: null, status: 'tbd', icon: '🥄', sort: 1180 },
-    { title: 'STM', topic: 'Atomic World', blurb: 'Scanning tunnelling microscope', url: null, status: 'tbd', icon: '🔬', sort: 1190 },
-    { title: 'TEM', topic: 'Atomic World', blurb: 'Transmission electron microscope', url: null, status: 'tbd', icon: '🔭', sort: 1200 },
-    { title: 'X-ray', topic: 'Atomic World', blurb: 'X-ray production / spectra', url: null, status: 'tbd', icon: '☢️', sort: 1210 },
-    { title: 'Solar panel', topic: 'Energy and Use of Energy', blurb: 'Solar cell / energy', url: null, status: 'tbd', icon: '☀', sort: 1220 }
-  ];
+  var TBD_SIMS = [];
 
   var TOOLS = [
     {
@@ -2521,7 +2497,6 @@ CE,2009,44,A`;
     var toolsStub = TOOLS.length - toolsReady;
     document.getElementById('homeStats').innerHTML =
       '<div class="stat"><div class="n">' + readyCount() + '</div><div class="l">Ready sims</div></div>' +
-      '<div class="stat"><div class="n">' + tbdCount() + '</div><div class="l">Sims · Link TBD</div></div>' +
       '<div class="stat"><div class="n">' + toolsReady + '</div><div class="l">Tools ready</div></div>' +
       '<div class="stat"><div class="n">' + toolsStub + '</div><div class="l">Tools stubbed</div></div>';
     renderHomeFact();
