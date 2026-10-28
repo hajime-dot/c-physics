@@ -140,39 +140,40 @@
     }
     .nav-btn .ico { width: 22px; text-align: center; font-size: 16px; }
 
-    .sidebar-tip {
-      margin-top: auto;
-      padding: 12px 12px 10px;
-      border-top: 1px solid var(--border);
-      background: var(--carmel-soft);
+    .sidebar-foot {
+      margin: auto 4px 4px;
+      padding: 10px 8px 8px;
+      background: #fff;
+      border: 1px solid var(--border);
       border-radius: 10px;
-      margin-left: 4px;
-      margin-right: 4px;
-      margin-bottom: 4px;
     }
-    .sidebar-tip .tip-label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
+    .hub-qr { display: block; width: 132px; height: 132px; margin: 0 auto; }
+    .qr-cap {
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      margin: 4px 0 8px;
+    }
+    .home-tab {
+      width: 100%;
+      min-height: 40px;
+      border: none;
+      background: var(--carmel);
+      color: #fff;
+      border-radius: 8px;
       font-size: 13px;
-      font-weight: 600;
-      color: var(--carmel);
-      margin-bottom: 6px;
+      font-weight: 650;
+      cursor: pointer;
     }
-    .sidebar-tip ol {
+    .home-steps { margin-top: 8px; }
+    .home-steps ol {
       margin: 0 0 0 16px;
       padding: 0;
       color: var(--muted);
       font-size: 12px;
       line-height: 1.45;
     }
-    .sidebar-tip ol li { margin-bottom: 2px; }
-    .sidebar-tip .tip-note {
-      margin-top: 6px;
-      font-size: 11px;
-      color: var(--muted);
-      line-height: 1.35;
-    }
+    .home-steps li { margin-bottom: 2px; }
 
     .main {
       flex: 1;
@@ -579,14 +580,17 @@
       <button type="button" class="nav-btn" data-view="tools"><span class="ico" aria-hidden="true">🛠</span> Tools</button>
       <button type="button" class="nav-btn" data-view="classroom"><span class="ico" aria-hidden="true">✋</span> Classroom</button>
       <button type="button" class="nav-btn" data-view="materials"><span class="ico" aria-hidden="true">📁</span> Materials</button>
-      <div class="sidebar-tip" aria-label="Add to Home Screen tip">
-        <div class="tip-label"><span aria-hidden="true">📲</span> Add to Home Screen</div>
-        <ol>
-          <li>Safari → Share (□↑)</li>
-          <li><strong>Add to Home Screen</strong></li>
-          <li>Tap <strong>Add</strong></li>
-        </ol>
-        <p class="tip-note">Best in landscape · iPad Safari</p>
+      <div class="sidebar-foot">
+        <svg class="hub-qr" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140" role="img" aria-label="QR code for the physics hub"><g transform="scale(4)"><path fill="#fff" d="M0 0h35v35h-35z"/><path fill="none" stroke="#990011" stroke-width="1" d="M1 1.5h7m2 0h3m2 0h1m2 0h1m3 0h2m3 0h7m-33 1h1m5 0h1m1 0h1m2 0h2m1 0h1m3 0h2m6 0h1m5 0h1m-33 1h1m1 0h3m1 0h1m3 0h1m1 0h1m1 0h2m2 0h2m1 0h2m3 0h1m1 0h3m1 0h1m-33 1h1m1 0h3m1 0h1m1 0h2m3 0h1m4 0h4m1 0h1m2 0h1m1 0h3m1 0h1m-33 1h1m1 0h3m1 0h1m1 0h3m1 0h1m1 0h1m1 0h3m1 0h2m4 0h1m1 0h3m1 0h1m-33 1h1m5 0h1m2 0h3m1 0h2m1 0h2m2 0h1m2 0h1m2 0h1m5 0h1m-33 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-25 1h2m1 0h1m1 0h1m2 0h1m1 0h1m3 0h1m-22 1h1m1 0h4m1 0h1m1 0h1m3 0h1m1 0h2m4 0h5m1 0h2m1 0h1m-32 1h1m2 0h2m3 0h4m1 0h3m1 0h3m1 0h3m4 0h3m-31 1h2m1 0h1m2 0h3m1 0h1m1 0h1m1 0h1m6 0h1m1 0h1m2 0h1m1 0h3m1 0h1m-31 1h2m4 0h1m3 0h1m5 0h3m1 0h4m1 0h1m2 0h1m1 0h1m-33 1h2m1 0h1m1 0h3m3 0h1m1 0h2m2 0h1m1 0h2m3 0h1m1 0h2m3 0h2m-32 1h1m1 0h1m4 0h2m1 0h3m2 0h1m1 0h1m1 0h5m2 0h1m1 0h1m-26 1h1m1 0h1m3 0h3m2 0h3m1 0h3m2 0h1m1 0h1m-27 1h1m3 0h2m2 0h1m1 0h4m2 0h5m4 0h1m2 0h3m1 0h1m-32 1h2m3 0h1m1 0h1m1 0h1m2 0h2m1 0h1m1 0h1m1 0h1m1 0h1m1 0h6m-29 1h2m2 0h1m5 0h3m4 0h5m3 0h1m1 0h1m1 0h1m1 0h1m-33 1h1m2 0h2m1 0h1m1 0h1m1 0h4m1 0h13m1 0h2m1 0h1m-33 1h1m4 0h1m1 0h2m1 0h3m3 0h3m3 0h4m2 0h3m1 0h1m-33 1h2m1 0h2m1 0h1m2 0h5m1 0h3m2 0h1m2 0h2m2 0h1m1 0h1m-30 1h2m3 0h1m5 0h1m1 0h5m1 0h1m3 0h1m3 0h2m-29 1h1m1 0h1m1 0h1m1 0h2m1 0h1m2 0h1m1 0h2m2 0h1m2 0h3m4 0h1m1 0h3m-33 1h1m1 0h3m3 0h1m2 0h1m1 0h2m3 0h2m2 0h2m3 0h1m2 0h1m-31 1h2m1 0h4m2 0h1m4 0h4m1 0h2m2 0h7m-22 1h1m2 0h2m2 0h1m4 0h1m3 0h1m3 0h1m1 0h1m-31 1h7m2 0h1m1 0h1m1 0h4m2 0h1m2 0h3m1 0h1m1 0h1m1 0h1m-31 1h1m5 0h1m1 0h1m3 0h4m7 0h2m3 0h3m1 0h1m-33 1h1m1 0h3m1 0h1m1 0h3m5 0h2m2 0h1m1 0h7m-29 1h1m1 0h3m1 0h1m1 0h1m1 0h2m5 0h1m1 0h4m1 0h2m1 0h1m4 0h1m-33 1h1m1 0h3m1 0h1m3 0h1m2 0h1m3 0h3m3 0h3m1 0h2m2 0h2m-33 1h1m5 0h1m1 0h2m4 0h1m2 0h4m1 0h1m4 0h2m1 0h3m-33 1h7m2 0h1m2 0h1m1 0h1m2 0h2m1 0h1m2 0h2m2 0h2"/></g></svg>
+        <p class="qr-cap">Scan to open this hub</p>
+        <button type="button" class="home-tab" id="homeTab" aria-expanded="false" aria-controls="homeSteps">Add to Home Screen</button>
+        <div class="home-steps" id="homeSteps" hidden>
+          <ol>
+            <li>Tap <strong>Share</strong></li>
+            <li>Tap <strong>Add to Home Screen</strong></li>
+            <li>Tap <strong>Add</strong></li>
+          </ol>
+        </div>
       </div>
     </nav>
 
@@ -2635,6 +2639,15 @@ CE,2009,44,A`;
       if (sb.classList.contains('open')) closeMenu(); else openMenu();
     });
     document.getElementById('backdrop').addEventListener('click', closeMenu);
+    var homeTab = document.getElementById('homeTab');
+    var homeSteps = document.getElementById('homeSteps');
+    if (homeTab && homeSteps) {
+      homeTab.addEventListener('click', function () {
+        var open = homeSteps.hidden;
+        homeSteps.hidden = !open;
+        homeTab.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+    }
   }
 
   function initSimsUI() {
