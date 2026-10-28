@@ -72,7 +72,7 @@ function addSim(code, title, topic, blurb, html) {
   }
 
   var pageUrl = PAGES_BASE + name;
-  sheet_().appendRow(["yes", title, topic, blurb, pageUrl, "", "", new Date(), ""]);
+  sheet_().appendRow(["", title, topic, blurb, pageUrl, "", "", new Date(), ""]);
   return pageUrl;
 }
 
@@ -104,7 +104,7 @@ function formHtml_() {
     "textarea{min-height:220px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}" +
     "button{margin-top:14px;background:#990011;color:#fff;border:0;border-radius:10px;padding:12px 18px;font-weight:700;cursor:pointer}" +
     "button:disabled{background:#c9c9c9}#msg{min-height:1.4em}</style></head><body><main>" +
-    "<h1>Add a simulation</h1><p>Paste the HTML, then save. The hub updates after you reload it. GitHub needs about a minute.</p>" +
+    "<h1>Add a simulation</h1><p>Save first, then open the link and check the simulation. It stays off the hub until you type yes in the Sheet column approved.</p>" +
     "<label for='code'>Staff code</label><input id='code' type='password' autocomplete='current-password'>" +
     "<label for='title'>Title</label><input id='title'>" +
     "<label for='topic'>Topic</label><select id='topic'>" +
@@ -123,7 +123,7 @@ function formHtml_() {
     "function onSave(){var btn=document.getElementById('go');btn.disabled=true;" +
     "document.getElementById('msg').textContent='Saving…';" +
     "google.script.run.withSuccessHandler(function(url){btn.disabled=false;" +
-    "document.getElementById('msg').textContent='Saved. Reload the hub in about a minute. '+url;})" +
+    "document.getElementById('msg').textContent='Saved. Wait a minute, then open this link and check it. It is not on the hub yet. '+url+' — When it looks right, set approved to yes on that Sheet row.';})" +
     ".withFailureHandler(function(err){btn.disabled=false;document.getElementById('msg').textContent=err.message;})" +
     ".addSim(document.getElementById('code').value,document.getElementById('title').value," +
     "document.getElementById('topic').value,document.getElementById('blurb').value,document.getElementById('html').value);}" +
