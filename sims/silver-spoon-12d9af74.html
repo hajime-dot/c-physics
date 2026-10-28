@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Total Internal Reflection: The Silver Spoon</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* Slate 900 */
+            color: #f8fafc; /* Slate 50 */
+        }
+        
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            margin-top: -8px;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+        
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+            background: #334155;
+            border-radius: 3px;
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glow-text {
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col p-4 md:p-8">
+
+    <header class="mb-8 text-center max-w-4xl mx-auto">
+        <h1 class="text-3xl md:text-5xl font-bold mb-3 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">The "Silver" Soot Spoon</h1>
+        <p class="text-slate-400 text-lg">An interactive demonstration of Total Internal Reflection</p>
+    </header>
+
+    <main class="flex-grow flex flex-col lg:flex-row gap-6 max-w-7xl mx-auto w-full">
+        
+        <!-- Left Column: Simulation -->
+        <div class="flex-1 flex flex-col gap-6">
+            <!-- Canvas Container -->
+            <div class="relative w-full aspect-video rounded-2xl overflow-hidden glass-panel shadow-2xl">
+                <canvas id="simCanvas" class="w-full h-full block"></canvas>
+                
+                <!-- Floating Info Badges on Canvas -->
+                <div class="absolute top-4 left-4 flex flex-col gap-2 pointer-events-none">
+                    <div class="bg-black/50 px-3 py-1 rounded-full text-sm font-mono text-blue-300 border border-blue-500/30">
+                        Incident Angle (θi): <span id="angleReadout">0.0</span>°
+                    </div>
+                    <div class="bg-black/50 px-3 py-1 rounded-full text-sm font-mono text-emerald-300 border border-emerald-500/30">
+                        Critical Angle (θc): 48.8°
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="glass-panel p-6 rounded-2xl">
+                <h2 class="text-xl font-semibold mb-4 border-b border-slate-600 pb-2">Experiment Controls</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Environment Toggles -->
+                    <div class="flex flex-col gap-4">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <div class="relative">
+                                <input type="checkbox" id="waterToggle" class="sr-only" checked>
+                                <div class="block bg-slate-700 w-14 h-8 rounded-full transition-colors duration-300" id="waterBg"></div>
+                                <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-300 translate-x-6"></div>
+                            </div>
+                            <span class="font-medium text-slate-200">Submerge in Water</span>
+                        </label>
+                        
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <div class="relative">
+                                <input type="checkbox" id="sootToggle" class="sr-only" checked>
+                                <div class="block bg-slate-700 w-14 h-8 rounded-full transition-colors duration-300" id="sootBg"></div>
+                                <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-300 translate-x-6"></div>
+                            </div>
+                            <span class="font-medium text-slate-200">Coat Spoon in Carbon Soot</span>
+                        </label>
+                        
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <div class="relative">
+                                <input type="checkbox" id="anglesToggle" class="sr-only">
+                                <div class="block bg-slate-700 w-14 h-8 rounded-full transition-colors duration-300" id="anglesBg"></div>
+                                <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-300"></div>
+                            </div>
+                            <span class="font-medium text-slate-200">Show Angles on Diagram</span>
+                        </label>
+                    </div>
+
+                    <!-- Light Beam Slider -->
+                    <div class="flex flex-col justify-center">
+                        <label for="lightSlider" class="mb-2 font-medium text-slate-200 flex justify-between">
+                            <span>Laser Position (Angle)</span>
+                        </label>
+                        <input type="range" id="lightSlider" min="0" max="100" value="35">
+                        <p class="text-xs text-slate-400 mt-2 text-center">Move the laser to change the angle at which light hits the spoon's surface.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Explanation Panel -->
+        <div class="w-full lg:w-96 flex flex-col gap-4">
+            <div class="glass-panel p-6 rounded-2xl flex-grow flex flex-col">
+                <h2 class="text-2xl font-bold mb-2 text-white">Observation</h2>
+                <div id="observationStatus" class="text-emerald-400 font-semibold mb-4 text-lg">
+                    Perfect Silver Mirror (TIR)
+                </div>
+                
+                <h3 class="text-lg font-semibold text-slate-300 mt-2 mb-2 border-b border-slate-600 pb-1">The Physics</h3>
+                <div id="physicsExplanation" class="text-slate-300 space-y-3 text-sm leading-relaxed flex-grow">
+                    <!-- Content injected via JS -->
+                </div>
+
+                <div class="mt-6 bg-slate-800/50 p-4 rounded-xl border border-slate-600/50">
+                    <h4 class="font-semibold text-blue-300 mb-1">Optical Constants</h4>
+                    <ul class="text-xs text-slate-400 space-y-1 font-mono">
+                        <li>Refractive Index (Water): n = 1.33</li>
+                        <li>Refractive Index (Air): n = 1.00</li>
+                        <li>Snell's Law: n₁sin(θ₁) = n₂sin(θ₂)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- DOM Elements ---
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+        const waterToggle = document.getElementById('waterToggle');
+        const sootToggle = document.getElementById('sootToggle');
+        const lightSlider = document.getElementById('lightSlider');
+        const angleReadout = document.getElementById('angleReadout');
+        const observationStatus = document.getElementById('observationStatus');
+        const physicsExplanation = document.getElementById('physicsExplanation');
+        const waterBg = document.getElementById('waterBg');
+        const sootBg = document.getElementById('sootBg');
+        const anglesToggle = document.getElementById('anglesToggle');
+        const anglesBg = document.getElementById('anglesBg');
+
+        // --- State Variables ---
+        let width, height;
+        let isWater = true;
+        let isSoot = true;
+        let showAngles = false;
+        let sliderVal = parseInt(lightSlider.value); // 0 to 100
+        
+        // Physics constants
+        const N_WATER = 1.333;
+        const N_AIR = 1.000;
+        const CRITICAL_ANGLE = Math.asin(N_AIR / N_WATER); // Radians
+        const CRITICAL_ANGLE_DEG = CRITICAL_ANGLE * (180 / Math.PI); // ~48.6 degrees
+        const AIR_GAP = 14; // Visual size of the trapped air layer bubble
+
+        // Animation variables
+        let time = 0;
+
+        // --- Resize Handler ---
+        function resize() {
+            // Match internal resolution to display size for sharp rendering
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width * window.devicePixelRatio;
+            canvas.height = rect.height * window.devicePixelRatio;
+            width = canvas.width;
+            height = canvas.height;
+            draw();
+        }
+        window.addEventListener('resize', resize);
+
+        function updateToggleUI() {
+            if (isWater) {
+                waterBg.classList.replace('bg-slate-700', 'bg-blue-500');
+                waterToggle.nextElementSibling.nextElementSibling.classList.add('translate-x-6');
+            } else {
+                waterBg.classList.replace('bg-blue-500', 'bg-slate-700');
+                waterToggle.nextElementSibling.nextElementSibling.classList.remove('translate-x-6');
+            }
+
+            if (isSoot) {
+                sootBg.classList.replace('bg-slate-700', 'bg-emerald-500');
+                sootToggle.nextElementSibling.nextElementSibling.classList.add('translate-x-6');
+            } else {
+                sootBg.classList.replace('bg-emerald-500', 'bg-slate-700');
+                sootToggle.nextElementSibling.nextElementSibling.classList.remove('translate-x-6');
+            }
+
+            if (showAngles) {
+                anglesBg.classList.replace('bg-slate-700', 'bg-purple-500');
+                anglesToggle.nextElementSibling.nextElementSibling.classList.add('translate-x-6');
+            } else {
+                anglesBg.classList.replace('bg-purple-500', 'bg-slate-700');
+                anglesToggle.nextElementSibling.nextElementSibling.classList.remove('translate-x-6');
+            }
+        }
+
+        // --- Helper Functions ---
+        function drawArrowHead(ctx, x, y, angle, color) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(-15, 6);
+            ctx.lineTo(-15, -6);
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = color;
+            ctx.fill();
+            ctx.restore();
+        }
+
+        // Helper to draw the complex shape of the spoon (Bowl + Handle) correctly without breaking
+        function drawSpoon(ctx, cx, cy, phi, a, b, handleLen) {
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(phi);
+            
+            ctx.beginPath();
+            // Mathematical attachment angles for the handle
+            const a1 = -Math.PI * 0.58; // Left attachment
+            const a2 = -Math.PI * 0.42; // Right attachment
+            
+            // Start and End points of the ellipse arc
+            const startX = Math.cos(a2) * a;
+            const startY = Math.sin(a2) * b;
+            const endX = Math.cos(a1) * a;
+            const endY = Math.sin(a1) * b;
+
+            // Draw ellipse bowl from right attachment, around the bottom, to left attachment
+            ctx.ellipse(0, 0, a, b, 0, a2, a1, false);
+            
+            // Handle math ensures it dynamically attaches perfectly to the growing ellipse
+            const handleRadius = (startX - endX) / 2;
+            
+            // Draw handle pointing up (negative y)
+            ctx.lineTo(endX, -handleLen);
+            ctx.arc(0, -handleLen, handleRadius, Math.PI, 0, false); // Rounded handle top
+            ctx.lineTo(startX, startY);
+            
+            ctx.closePath();
+            ctx.restore();
+        }
+
+        // Core mathematics for ray intersecting an arbitrarily rotated ellipse
+        function intersectRayEllipse(px, py, dx, dy, cx, cy, a, b, phi) {
+            const Ox = px - cx;
+            const Oy = py - cy;
+            
+            // Rotate ray origin and direction by -phi to align with unrotated ellipse axes
+            const cosM = Math.cos(-phi);
+            const sinM = Math.sin(-phi);
+            const x0 = Ox * cosM - Oy * sinM;
+            const y0 = Ox * sinM + Oy * cosM;
+            const rdx = dx * cosM - dy * sinM;
+            const rdy = dx * sinM + dy * cosM;
+
+            const A = (rdx * rdx) / (a * a) + (rdy * rdy) / (b * b);
+            const B = 2 * ((x0 * rdx) / (a * a) + (y0 * rdy) / (b * b));
+            const C = (x0 * x0) / (a * a) + (y0 * y0) / (b * b) - 1;
+            const discriminant = B * B - 4 * A * C;
+
+            if (discriminant < 0) return null;
+
+            const t1 = (-B - Math.sqrt(discriminant)) / (2 * A);
+            const t2 = (-B + Math.sqrt(discriminant)) / (2 * A);
+            
+            let t = -1;
+            if (t1 > 1e-4 && t2 > 1e-4) t = Math.min(t1, t2);
+            else if (t1 > 1e-4) t = t1;
+            else if (t2 > 1e-4) t = t2;
+            
+            if (t < 0) return null;
+
+            const ix_u = x0 + t * rdx;
+            const iy_u = y0 + t * rdy;
+
+            let nx_u = 2 * ix_u / (a * a);
+            let ny_u = 2 * iy_u / (b * b);
+
+            const cosP = Math.cos(phi);
+            const sinP = Math.sin(phi);
+            
+            // Translate back
+            const ix = cx + ix_u * cosP - iy_u * sinP;
+            const iy = cy + ix_u * sinP + iy_u * cosP;
+            
+            // Rotate normal back
+            let nx = nx_u * cosP - ny_u * sinP;
+            let ny = nx_u * sinP + ny_u * cosP;
+            
+            const nLen = Math.sqrt(nx * nx + ny * ny);
+            nx /= nLen;
+            ny /= nLen;
+
+            return { x: ix, y: iy, nx, ny, t };
+        }
+
+        // --- Drawing Logic ---
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
+            
+            // Beaker Dimensions
+            const beakerW = Math.min(width * 0.9, 450);
+            const beakerH = Math.min(height * 0.6, 400);
+            const beakerX = width / 2 - beakerW / 2;
+            const beakerY = height * 0.85 - beakerH;
+
+            // Heavily tilt the spoon to expose grazing angles to horizontal light rays
+            const phi = Math.PI * 0.35; // ~63 degree tilt clockwise
+            
+            // Position the spoon dynamically relative to the *beaker*, not absolute screen width.
+            // Since the handle points up and right, place the bowl in the bottom left of the beaker.
+            const cx = beakerX + beakerW * 0.35; 
+            const cy = beakerY + beakerH * 0.80; 
+            
+            // Scale spoon bowl relative to beaker dimensions so it always fits
+            const a = Math.min(beakerW, beakerH) * 0.12; // Width of the bowl
+            const b = Math.min(beakerW, beakerH) * 0.24; // Height of the bowl
+            
+            // Calculate maximum handle length to prevent it from piercing the right side of the glass
+            const maxHandleLen = (beakerW * 0.55) / Math.sin(phi);
+            const handleLen = Math.min(beakerH * 0.85, maxHandleLen);
+
+            const waterLevelY = beakerY + beakerH * 0.25; // 75% full
+
+            // 1. Draw Environment (Air/Beaker/Water)
+            ctx.fillStyle = '#0f172a'; // Match body bg
+            ctx.fillRect(0, 0, width, height);
+
+            if (isWater) {
+                // Draw water gradient inside beaker
+                const waterGrad = ctx.createLinearGradient(0, waterLevelY, 0, beakerY + beakerH);
+                waterGrad.addColorStop(0, 'rgba(14, 165, 233, 0.3)'); // light blue
+                waterGrad.addColorStop(1, 'rgba(30, 58, 138, 0.6)'); // dark blue
+                ctx.fillStyle = waterGrad;
+                
+                ctx.beginPath();
+                ctx.moveTo(beakerX, waterLevelY);
+                ctx.lineTo(beakerX, beakerY + beakerH - 20);
+                ctx.quadraticCurveTo(beakerX, beakerY + beakerH, beakerX + 20, beakerY + beakerH);
+                ctx.lineTo(beakerX + beakerW - 20, beakerY + beakerH);
+                ctx.quadraticCurveTo(beakerX + beakerW, beakerY + beakerH, beakerX + beakerW, beakerY + beakerH - 20);
+                ctx.lineTo(beakerX + beakerW, waterLevelY);
+                ctx.fill();
+
+                // Water surface ellipse
+                ctx.fillStyle = 'rgba(255,255,255,0.15)';
+                ctx.beginPath();
+                ctx.ellipse(beakerX + beakerW/2, waterLevelY, beakerW/2, 10, 0, 0, Math.PI*2);
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+
+            // 2. Draw Trapped Air Layer Envelope (Visually Enlarged)
+            let hasAirLayer = isWater && isSoot;
+            
+            if (hasAirLayer) {
+                drawSpoon(ctx, cx, cy, phi, a + AIR_GAP, b + AIR_GAP, handleLen + AIR_GAP);
+                
+                // Fill it with a very faint distinct shade to show it is a bubble
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+                ctx.fill();
+
+                ctx.lineJoin = 'round';
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+                ctx.lineWidth = 2;
+                
+                // Outer glow for air
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = 'rgba(255,255,255,0.5)';
+                ctx.stroke();
+                ctx.shadowBlur = 0; // reset
+            }
+
+            // 3. Draw Solid Inner Spoon
+            drawSpoon(ctx, cx, cy, phi, a, b, handleLen);
+            
+            if (isSoot) {
+                ctx.fillStyle = '#171717'; // Pitch black soot
+            } else {
+                // Metallic gradient for a clean spoon
+                const metalGrad = ctx.createLinearGradient(cx - a*2, 0, cx + a*2, 0);
+                metalGrad.addColorStop(0, '#e2e8f0'); // light grey
+                metalGrad.addColorStop(0.3, '#f8fafc'); // highlight
+                metalGrad.addColorStop(0.7, '#94a3b8'); // mid grey
+                metalGrad.addColorStop(1, '#475569'); // dark grey
+                ctx.fillStyle = metalGrad;
+            }
+            ctx.fill();
+
+            // Draw Beaker Glass Outline (Overlays spoon and water)
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(beakerX, beakerY);
+            ctx.lineTo(beakerX, beakerY + beakerH - 20);
+            ctx.quadraticCurveTo(beakerX, beakerY + beakerH, beakerX + 20, beakerY + beakerH);
+            ctx.lineTo(beakerX + beakerW - 20, beakerY + beakerH);
+            ctx.quadraticCurveTo(beakerX + beakerW, beakerY + beakerH, beakerX + beakerW, beakerY + beakerH - 20);
+            ctx.lineTo(beakerX + beakerW, beakerY);
+            ctx.stroke();
+
+            // Beaker top opening
+            ctx.beginPath();
+            ctx.ellipse(beakerX + beakerW/2, beakerY, beakerW/2, 10, 0, 0, Math.PI*2);
+            ctx.stroke();
+            
+            // Beaker Spout (Left side)
+            ctx.beginPath();
+            ctx.moveTo(beakerX, beakerY);
+            ctx.quadraticCurveTo(beakerX - 15, beakerY - 5, beakerX - 20, beakerY - 10);
+            ctx.quadraticCurveTo(beakerX - 10, beakerY + 10, beakerX, beakerY + 15);
+            ctx.stroke();
+
+            // 4. Calculate Laser Physics & Complex Ray Tracing
+            // Set up slider to scan the lower and mid section of the heavily tilted spoon bowl
+            const H_bound = Math.sqrt(Math.pow(a * Math.sin(phi), 2) + Math.pow(b * Math.cos(phi), 2));
+            const laserY = cy + H_bound * 0.9 - (sliderVal / 100) * (H_bound * 1.55);
+
+            let hitSpoon = false;
+            let intersectX = cx, intersectY = laserY;
+            let nx = -1, ny = 0;
+            let angleIncidenceDeg = 0;
+
+            // Decide which boundary we are hitting first (Outer air layer OR direct solid spoon)
+            const targetA = hasAirLayer ? a + AIR_GAP : a;
+            const targetB = hasAirLayer ? b + AIR_GAP : b;
+
+            let hitOuter = intersectRayEllipse(0, laserY, 1, 0, cx, cy, targetA, targetB, phi);
+
+            let isTIR = false;
+            let refractedHit = null;
+            let hitsSurface = false;
+            let escapesWater = false;
+
+            if (hitOuter) {
+                hitSpoon = true;
+                intersectX = hitOuter.x;
+                intersectY = hitOuter.y;
+                nx = hitOuter.nx;
+                ny = hitOuter.ny;
+                
+                // Angle of Incidence
+                const dotProduct = (1 * -nx) + (0 * -ny); // Incident is (1,0)
+                const angleIncidence = Math.acos(Math.max(-1, Math.min(1, dotProduct)));
+                angleIncidenceDeg = angleIncidence * (180 / Math.PI);
+
+                // If traversing from Water to Air layer
+                if (hasAirLayer) {
+                    if (angleIncidenceDeg > CRITICAL_ANGLE_DEG) {
+                        isTIR = true;
+                    } else {
+                        // Light penetrates the air layer (Refraction Math)
+                        let I_x = 1, I_y = 0;
+                        let c1 = -(I_x * nx + I_y * ny); // cos(theta_i)
+                        let n_ratio = N_WATER / N_AIR; // Water into Air
+                        let c2 = Math.sqrt(1 - n_ratio * n_ratio * (1 - c1 * c1));
+                        
+                        // Refracted ray vector components (Snell's Law in vector form)
+                        let ref_dx = n_ratio * I_x + (n_ratio * c1 - c2) * nx;
+                        let ref_dy = n_ratio * I_y + (n_ratio * c1 - c2) * ny;
+                        
+                        let refLen = Math.sqrt(ref_dx * ref_dx + ref_dy * ref_dy);
+                        ref_dx /= refLen;
+                        ref_dy /= refLen;
+                        
+                        // Trace the refracted ray through the air layer to see where it hits the solid spoon
+                        refractedHit = intersectRayEllipse(intersectX + ref_dx * 0.1, intersectY + ref_dy * 0.1, ref_dx, ref_dy, cx, cy, a, b, phi);
+                    }
+                }
+            }
+
+            // Update UI Readout
+            angleReadout.innerText = hitSpoon ? angleIncidenceDeg.toFixed(1) : "0.0";
+
+            // Define dynamic helper to trace a bouncing/escaping ray back out of the water
+            function drawReflectedRay(startX, startY, rayX, rayY, isBright) {
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                
+                let endX = startX + rayX * width;
+                let endY = startY + rayY * width;
+                let wx = 0, wy = 0;
+
+                // Check if the reflection points up and hits the water boundary
+                if (isWater && rayY < 0 && startY > waterLevelY) {
+                    let ray_t = (waterLevelY - startY) / rayY;
+                    wx = startX + rayX * ray_t;
+                    wy = waterLevelY;
+                    if (wx >= beakerX && wx <= beakerX + beakerW) { // Hits water surface, not beaker wall
+                        endX = wx;
+                        endY = wy;
+                        hitsSurface = true;
+                    }
+                }
+                
+                ctx.lineTo(endX, endY);
+                ctx.strokeStyle = isBright ? '#ffffff' : 'rgba(239, 68, 68, 0.4)';
+                ctx.lineWidth = isBright ? 6 : 2;
+                if (isBright) {
+                    ctx.shadowBlur = 20;
+                    ctx.shadowColor = '#ffffff';
+                }
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+                
+                if (hitsSurface) {
+                    // Refraction calc at water surface
+                    let angle_i_horizontal = Math.atan2(-rayY, rayX);
+                    let theta_i_surface = Math.abs(Math.PI/2 - angle_i_horizontal);
+                    let sin_theta_r = (N_WATER / N_AIR) * Math.sin(theta_i_surface);
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(wx, wy);
+                    if (sin_theta_r <= 1) {
+                        escapesWater = true;
+                        let theta_r = Math.asin(sin_theta_r);
+                        let out_rx = (rayX >= 0 ? 1 : -1) * Math.sin(theta_r);
+                        let out_ry = -Math.cos(theta_r);
+                        
+                        ctx.lineTo(wx + out_rx * 300, wy + out_ry * 300);
+                        ctx.strokeStyle = isBright ? '#ffffff' : 'rgba(239, 68, 68, 0.4)';
+                        ctx.stroke();
+                        drawArrowHead(ctx, wx + out_rx * 150, wy + out_ry * 150, Math.atan2(out_ry, out_rx), isBright ? '#ffffff' : 'rgba(239, 68, 68, 0.6)');
+
+                        if (isBright) { // Add exit glow
+                            ctx.beginPath();
+                            ctx.ellipse(wx, wy, 15, 4, 0, 0, Math.PI*2);
+                            ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                            ctx.shadowBlur = 10;
+                            ctx.fill();
+                            ctx.shadowBlur = 0;
+                        }
+                    } else {
+                        // Rare: TIR from under the water surface
+                        let out_rx = rayX;
+                        let out_ry = -rayY;
+                        ctx.lineTo(wx + out_rx * 300, wy + out_ry * 300);
+                        ctx.strokeStyle = isBright ? '#ffffff' : 'rgba(239, 68, 68, 0.4)';
+                        ctx.stroke();
+                        drawArrowHead(ctx, wx + out_rx * 100, wy + out_ry * 100, Math.atan2(out_ry, out_rx), isBright ? '#ffffff' : 'rgba(239, 68, 68, 0.6)');
+                    }
+                } else {
+                    drawArrowHead(ctx, startX + rayX * 120, startY + rayY * 120, Math.atan2(rayY, rayX), isBright ? '#ffffff' : 'rgba(239, 68, 68, 0.6)');
+                }
+            }
+
+            // 5. Draw Rays
+            ctx.lineCap = 'round';
+            
+            if (hitSpoon) {
+                // Draw incoming laser beam to Spoon
+                ctx.beginPath();
+                ctx.moveTo(0, laserY);
+                ctx.lineTo(intersectX, intersectY);
+                ctx.strokeStyle = '#ef4444'; // Red laser
+                ctx.lineWidth = 4;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#ef4444';
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+                drawArrowHead(ctx, Math.max(20, intersectX - 80), laserY, 0, '#ef4444');
+
+                // Draw Normal line (dashed)
+                ctx.beginPath();
+                ctx.setLineDash([5, 5]);
+                ctx.moveTo(intersectX + nx * 80, intersectY + ny * 80); 
+                ctx.lineTo(intersectX - nx * 100, intersectY - ny * 100); 
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.setLineDash([]); // reset
+
+                // Standard Reflection Math (if needed): R = I - 2(I dot N)N
+                const d = (1 * nx) + (0 * ny);
+                const rx = 1 - 2 * d * nx;
+                const ry = 0 - 2 * d * ny;
+
+                if (hasAirLayer) {
+                    if (isTIR) {
+                        drawReflectedRay(intersectX, intersectY, rx, ry, true); // Bright TIR Ray
+                    } else {
+                        // Angle was too steep - light penetrates into the air layer!
+                        if (refractedHit) {
+                            ctx.beginPath();
+                            ctx.moveTo(intersectX, intersectY);
+                            ctx.lineTo(refractedHit.x, refractedHit.y);
+                            ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)'; // Less bright inside bubble
+                            ctx.lineWidth = 3;
+                            ctx.stroke();
+
+                            drawArrowHead(ctx, (intersectX + refractedHit.x) / 2, (intersectY + refractedHit.y) / 2, Math.atan2(refractedHit.y - intersectY, refractedHit.x - intersectX), 'rgba(239, 68, 68, 0.8)');
+
+                            // Absorbed by soot inside the gap
+                            ctx.beginPath();
+                            ctx.arc(refractedHit.x, refractedHit.y, 4, 0, Math.PI*2);
+                            ctx.fillStyle = '#ef4444';
+                            ctx.fill();
+                        }
+                    }
+                } else if (!isWater && isSoot) {
+                    ctx.beginPath();
+                    ctx.arc(intersectX, intersectY, 4, 0, Math.PI*2);
+                    ctx.fillStyle = '#ef4444';
+                    ctx.fill();
+                } else {
+                    // Clean Spoon Weak Reflection
+                    drawReflectedRay(intersectX, intersectY, rx, ry, false);
+                    ctx.beginPath();
+                    ctx.arc(intersectX, intersectY, 5, 0, Math.PI*2);
+                    ctx.fillStyle = 'rgba(239, 68, 68, 0.6)';
+                    ctx.fill();
+                }
+
+                // Draw Angles on diagram if enabled
+                if (showAngles) {
+                    const r = 50;
+                    let baseAngle = Math.atan2(ny, nx);
+                    if (baseAngle > 0) baseAngle -= Math.PI * 2; 
+                    
+                    ctx.save();
+                    ctx.translate(intersectX, intersectY);
+                    
+                    // Incident arc
+                    ctx.beginPath();
+                    ctx.arc(0, 0, r, -Math.PI, baseAngle, false);
+                    ctx.strokeStyle = '#ef4444';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    
+                    let midInc = (-Math.PI + baseAngle) / 2;
+                    ctx.fillStyle = '#fca5a5'; 
+                    ctx.font = "bold 16px monospace";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText("θi", (r+15)*Math.cos(midInc), (r+15)*Math.sin(midInc));
+
+                    if (isTIR || !isSoot) { 
+                        let refBase = Math.atan2(ry, rx);
+                        ctx.beginPath();
+                        ctx.arc(0, 0, r+5, baseAngle, refBase, false); 
+                        ctx.strokeStyle = isTIR ? '#ffffff' : '#fca5a5';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                        
+                        let midRef = (baseAngle + refBase) / 2;
+                        ctx.fillStyle = isTIR ? '#ffffff' : '#fca5a5';
+                        ctx.fillText("θr", (r+20)*Math.cos(midRef), (r+20)*Math.sin(midRef));
+                    }
+                    ctx.restore();
+                }
+            } else {
+                // Missed Spoon completely
+                ctx.beginPath();
+                ctx.moveTo(0, laserY);
+                ctx.lineTo(width, laserY);
+                ctx.strokeStyle = '#ef4444'; 
+                ctx.lineWidth = 4;
+                ctx.stroke();
+            }
+
+            // 6. Update Explanation Text
+            updateExplanation(hasAirLayer, isTIR, angleIncidenceDeg, hitsSurface, escapesWater);
+        }
+
+        function updateExplanation(hasAirLayer, isTIR, angle, hitsSurface, escapesWater) {
+            let statusText = "";
+            let statusColor = "";
+            let explanationText = "";
+
+            if (!isSoot) {
+                statusText = "Spoon is Visible (No TIR)";
+                statusColor = "text-yellow-400";
+                explanationText = "The spoon is clean. Light hits the metallic surface directly. Standard reflection occurs allowing you to see the true metallic grey color of the spoon.";
+            } else if (!isWater) {
+                statusText = "Black Spoon (Light Absorbed)";
+                statusColor = "text-slate-400";
+                explanationText = "The spoon is coated in carbon soot. Because it is surrounded by air, light travels through the air, hits the pitch-black carbon soot, and is almost entirely absorbed. The spoon appears black.";
+            } else if (hasAirLayer && !isTIR) {
+                statusText = "Black Spoon (Angle too steep)";
+                statusColor = "text-orange-400";
+                explanationText = `Because soot is hydrophobic, it traps a thin layer of air around the spoon under water.<br><br>The light passes from water to air. However, your incidence angle (<b>${angle.toFixed(1)}°</b>) is less than the critical angle (<b>48.8°</b>). The light penetrates the air bubble and is absorbed by the black soot beneath.`;
+            } else if (hasAirLayer && isTIR) {
+                statusText = "✨ Silver Mirror Effect! (TIR)";
+                statusColor = "text-emerald-400 glow-text";
+                explanationText = `<b>Magic achieved!</b> The soot traps a thin layer of air.<br><br>Because the light hits the water-air boundary at an angle (<b>${angle.toFixed(1)}°</b>) greater than the Critical Angle (<b>48.8°</b>), <b>Total Internal Reflection</b> occurs.<br><br>`;
+                
+                if (escapesWater) {
+                    explanationText += `Even better, the spoon's tilted orientation directs the reflected beam upwards, where it refracts <b>out of the water surface</b> and back into the air!`;
+                } else if (hitsSurface) {
+                    explanationText += `The reflected beam hits the water surface from below and undergoes a second TIR, bouncing back down!`;
+                } else {
+                    explanationText += `100% of the light bounces off the air boundary, acting as a perfect mirror.`;
+                }
+            }
+
+            observationStatus.className = `font-bold text-xl mb-4 ${statusColor}`;
+            observationStatus.innerHTML = statusText;
+            physicsExplanation.innerHTML = explanationText;
+        }
+
+        // --- Event Listeners & Animation Loop ---
+        waterToggle.addEventListener('change', (e) => {
+            isWater = e.target.checked;
+            updateToggleUI();
+        });
+
+        sootToggle.addEventListener('change', (e) => {
+            isSoot = e.target.checked;
+            updateToggleUI();
+        });
+
+        anglesToggle.addEventListener('change', (e) => {
+            showAngles = e.target.checked;
+            updateToggleUI();
+        });
+
+        lightSlider.addEventListener('input', (e) => {
+            sliderVal = parseInt(e.target.value);
+        });
+
+        function animate() {
+            time += 0.05;
+            draw();
+            requestAnimationFrame(animate);
+        }
+
+        // Initialize
+        isWater = waterToggle.checked;
+        isSoot = sootToggle.checked;
+        showAngles = anglesToggle.checked;
+        updateToggleUI();
+        resize();
+        animate(); // Start loop
+
+    </script>
+</body>
+</html>
