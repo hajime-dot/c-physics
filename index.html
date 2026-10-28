@@ -1,0 +1,2705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Carmel Physics · Department Hub</title>
+  <style>
+    :root {
+      --carmel: #990011;
+      --carmel-dark: #7a000e;
+      --carmel-soft: #f8e8ea;
+      --bg: #f4f5f7;
+      --card: #ffffff;
+      --text: #1a1a1a;
+      --muted: #5c5c5c;
+      --border: #e2e4e8;
+      --sidebar-w: 200px;
+      --header-h: 56px;
+      --radius: 12px;
+      --touch: 44px;
+      --shadow: 0 2px 8px rgba(0,0,0,.06);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: var(--header-h);
+      background: var(--carmel);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.15);
+    }
+    .header .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      flex: 1;
+    }
+    .header .brand-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(255,255,255,.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-size: 17px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #fff;
+    }
+    .header .sub {
+      font-size: 12px;
+      opacity: .85;
+      display: none;
+    }
+    .header .ver {
+      font-size: 11px;
+      opacity: .8;
+      flex-shrink: 0;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: rgba(255,255,255,.15);
+    }
+    @media (min-width: 700px) {
+      .header .sub { display: inline; margin-left: 8px; }
+    }
+
+    .menu-btn {
+      display: none;
+      min-width: var(--touch);
+      min-height: var(--touch);
+      border: none;
+      background: rgba(255,255,255,.15);
+      color: #fff;
+      border-radius: 8px;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .shell {
+      display: flex;
+      min-height: calc(100% - var(--header-h));
+    }
+
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: #fff;
+      border-right: 1px solid var(--border);
+      padding: 12px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: var(--touch);
+      padding: 8px 14px;
+      border: none;
+      background: transparent;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+      text-align: left;
+      width: 100%;
+      transition: background .15s, color .15s;
+    }
+    .nav-btn:hover { background: var(--carmel-soft); }
+    .nav-btn.active {
+      background: var(--carmel);
+      color: #fff;
+    }
+    .nav-btn .ico { width: 22px; text-align: center; font-size: 16px; }
+
+    .sidebar-tip {
+      margin-top: auto;
+      padding: 12px 12px 10px;
+      border-top: 1px solid var(--border);
+      background: var(--carmel-soft);
+      border-radius: 10px;
+      margin-left: 4px;
+      margin-right: 4px;
+      margin-bottom: 4px;
+    }
+    .sidebar-tip .tip-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--carmel);
+      margin-bottom: 6px;
+    }
+    .sidebar-tip ol {
+      margin: 0 0 0 16px;
+      padding: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .sidebar-tip ol li { margin-bottom: 2px; }
+    .sidebar-tip .tip-note {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .main {
+      flex: 1;
+      min-width: 0;
+      padding: 20px 20px 32px;
+      overflow-y: auto;
+    }
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .panel-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+    .panel-lead {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 18px;
+      line-height: 1.45;
+    }
+
+    .banner {
+      display: none;
+      margin-bottom: 14px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      line-height: 1.4;
+      border: 1px solid #f0c36d;
+      background: #fff8e6;
+      color: #7a5a00;
+    }
+    .banner.show { display: block; }
+    .banner.ok {
+      border-color: #a8d5b5;
+      background: #eef8f1;
+      color: #1a7a36;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin: 16px 0 24px;
+    }
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+    .stat .n {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--carmel);
+      line-height: 1.1;
+    }
+    .stat .l {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .fact-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
+      margin: 0 0 8px;
+      border-left: 4px solid var(--carmel);
+    }
+    .fact-card .fact-kicker {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: var(--carmel);
+      margin-bottom: 6px;
+    }
+    .fact-card .fact-date {
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: 0;
+      color: var(--muted);
+    }
+    .fact-card .fact-text {
+      font-size: 14px;
+      line-height: 1.45;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .fact-card .fact-wiki {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--carmel);
+      text-decoration: none;
+      display: inline-block;
+      margin-bottom: 4px;
+    }
+    .fact-card .fact-wiki:hover { text-decoration: underline; }
+    .fact-card .fact-credit {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 999px;
+      vertical-align: middle;
+    }
+    .badge-ready { background: #e6f6ea; color: #1a7a36; }
+    .badge-tbd { background: #f0f0f0; color: #666; }
+    .badge-soon { background: #fff3e0; color: #b36b00; }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .search {
+      flex: 1 1 200px;
+      min-height: var(--touch);
+      padding: 0 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 16px;
+      background: #fff;
+      outline: none;
+    }
+    .search:focus {
+      border-color: var(--carmel);
+      box-shadow: 0 0 0 3px rgba(153,0,17,.15);
+    }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .chip {
+      min-height: var(--touch);
+      padding: 0 14px;
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .chip:hover { border-color: var(--carmel); color: var(--carmel); }
+    .chip.active {
+      background: var(--carmel);
+      border-color: var(--carmel);
+      color: #fff;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    @media (max-width: 1100px) {
+      .grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .grid { grid-template-columns: 1fr; }
+      .menu-btn { display: flex; align-items: center; justify-content: center; }
+      .sidebar {
+        position: fixed;
+        left: 0; top: var(--header-h); bottom: 0;
+        z-index: 90;
+        transform: translateX(-105%);
+        transition: transform .2s ease;
+        box-shadow: 4px 0 16px rgba(0,0,0,.12);
+      }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-backdrop {
+        display: none;
+        position: fixed;
+        inset: var(--header-h) 0 0 0;
+        background: rgba(0,0,0,.35);
+        z-index: 80;
+      }
+      .sidebar-backdrop.show { display: block; }
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: var(--shadow);
+      min-height: 160px;
+    }
+    .card.dim { opacity: .72; }
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .icon-block {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: var(--carmel-soft);
+      color: var(--carmel);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+    .card h3 {
+      font-size: 16px;
+      font-weight: 650;
+      line-height: 1.3;
+      flex: 1;
+    }
+    .card .blurb {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.4;
+      flex: 1;
+    }
+    .card-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+    .topic-tag {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--carmel);
+      background: var(--carmel-soft);
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: auto;
+    }
+    .btn {
+      min-height: var(--touch);
+      padding: 0 18px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      flex: 1;
+    }
+    .btn-primary {
+      background: var(--carmel);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--carmel-dark); }
+    .btn-primary:disabled,
+    .btn-disabled {
+      background: #c9c9c9;
+      color: #fff;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    .btn-ghost {
+      background: #fff;
+      color: var(--carmel);
+      border: 1px solid var(--carmel);
+      flex: 0 0 auto;
+      min-width: var(--touch);
+      padding: 0 12px;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 40px 16px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .link-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .link-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      min-height: var(--touch);
+      text-decoration: none;
+      color: var(--text);
+      box-shadow: var(--shadow);
+    }
+    .link-row:hover { border-color: var(--carmel); }
+    .link-row .ico {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      background: var(--carmel-soft);
+      color: var(--carmel);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .link-row .txt { flex: 1; min-width: 0; }
+    .link-row .txt strong { display: block; font-size: 15px; }
+    .link-row .txt span { font-size: 12px; color: var(--muted); }
+    .link-row .arrow { color: var(--carmel); font-weight: 700; }
+
+    .footer {
+      margin-top: 28px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    @media (orientation: landscape) and (min-width: 900px) {
+      .main { padding: 18px 24px 28px; }
+      .grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    /* MCQ in-panel (blob iframe) */
+    .panel-mcq.active {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: calc(100vh - var(--header-h) - 48px);
+    }
+    .mcq-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .mcq-bar .panel-title { margin: 0; font-size: 18px; flex: 1; min-width: 0; }
+    .btn-back {
+      flex: 0 0 auto;
+      min-height: var(--touch);
+      padding: 0 14px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      border: 1px solid var(--carmel);
+      background: #fff;
+      color: var(--carmel);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-back:hover { background: var(--carmel-soft); }
+    #mcqFrame {
+      flex: 1 1 auto;
+      width: 100%;
+      min-height: min(78vh, 920px);
+      height: calc(100vh - var(--header-h) - 120px);
+      border: 0;
+      border-radius: var(--radius);
+      background: #0b1220;
+      box-shadow: var(--shadow);
+    }
+    @media (orientation: landscape) and (min-width: 900px) {
+      #mcqFrame { min-height: calc(100vh - var(--header-h) - 100px); }
+    }
+  </style>
+</head>
+<body>
+  <header class="header" role="banner">
+    <button type="button" class="menu-btn" id="menuBtn" aria-label="Open navigation">☰</button>
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">C</div>
+      <h1>Carmel Physics <span class="sub">· Department Hub</span></h1>
+    </div>
+    <span class="ver" title="Hub version">v0.5.15</span>
+  </header>
+
+  <div class="sidebar-backdrop" id="backdrop" hidden></div>
+
+  <div class="shell">
+    <nav class="sidebar" id="sidebar" aria-label="Main">
+      <button type="button" class="nav-btn active" data-view="home"><span class="ico" aria-hidden="true">🏠</span> Home</button>
+      <button type="button" class="nav-btn" data-view="sims"><span class="ico" aria-hidden="true">🔬</span> Sims</button>
+      <button type="button" class="nav-btn" data-view="tools"><span class="ico" aria-hidden="true">🛠</span> Tools</button>
+      <button type="button" class="nav-btn" data-view="classroom"><span class="ico" aria-hidden="true">✋</span> Classroom</button>
+      <button type="button" class="nav-btn" data-view="materials"><span class="ico" aria-hidden="true">📁</span> Materials</button>
+      <div class="sidebar-tip" aria-label="Add to Home Screen tip">
+        <div class="tip-label"><span aria-hidden="true">📲</span> Add to Home Screen</div>
+        <ol>
+          <li>Safari → Share (□↑)</li>
+          <li><strong>Add to Home Screen</strong></li>
+          <li>Tap <strong>Add</strong></li>
+        </ol>
+        <p class="tip-note">Best in landscape · iPad Safari</p>
+      </div>
+    </nav>
+
+    <main class="main" id="main">
+      <section class="panel active" id="panel-home" data-panel="home" aria-labelledby="home-title">
+        <h2 class="panel-title" id="home-title">Welcome</h2>
+        <p class="panel-lead">Carmel Secondary School · Physics department hub · v0.5.15</p>
+        <div class="stats" id="homeStats"></div>
+        <div class="fact-card" id="homeFact" aria-live="polite">
+          <div class="fact-kicker">Today in physics · <span class="fact-date" id="homeFactDate"></span></div>
+          <p class="fact-text" id="homeFactText"></p>
+          <a class="fact-wiki" id="homeFactWiki" href="#" target="_blank" rel="noopener noreferrer" hidden></a>
+          <p class="fact-credit">Sources: Wikipedia (CC BY-SA) · curated for teaching</p>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-sims" data-panel="sims" aria-labelledby="sims-title">
+        <h2 class="panel-title" id="sims-title">Physics Sims</h2>
+        <div class="toolbar">
+          <input type="search" class="search" id="simSearch" placeholder="Search sims…" aria-label="Search simulations" autocomplete="off" />
+          <div class="chips" id="topicChips" role="tablist" aria-label="Topic filter"></div>
+        </div>
+        <div class="grid" id="simGrid"></div>
+        <p class="empty" id="simEmpty" hidden>No sims match your search.</p>
+        <p class="panel-lead" style="margin-top:18px;margin-bottom:0;font-size:13px">External open-source physics sims linked from ai-science-sims (HK teachers) · teaching use · open in new tab</p>
+      </section>
+
+      <section class="panel" id="panel-tools" data-panel="tools" aria-labelledby="tools-title">
+        <h2 class="panel-title" id="tools-title">Subject Tools</h2>
+        <div class="grid" id="toolGrid"></div>
+      </section>
+
+      <section class="panel" id="panel-classroom" data-panel="classroom" aria-labelledby="class-title">
+        <h2 class="panel-title" id="class-title">In-class</h2>
+        <div class="grid" id="classGrid"></div>
+      </section>
+
+      <section class="panel" id="panel-materials" data-panel="materials" aria-labelledby="mat-title">
+        <h2 class="panel-title" id="mat-title">Class Materials</h2>
+        <p class="panel-lead">Drive folder · teaching use only · school domain.</p>
+        <div class="link-list" id="matList"></div>
+      </section>
+
+      <section class="panel panel-mcq" id="panel-mcq" data-panel="mcq" aria-labelledby="mcq-title">
+        <div class="mcq-bar">
+          <button type="button" class="btn-back" id="mcqBack" aria-label="Back to Tools">← Tools</button>
+          <h2 class="panel-title" id="mcq-title">DSE MCQ Answer Finder</h2>
+        </div>
+        <iframe id="mcqFrame" title="DSE MCQ Answer Finder" loading="lazy"></iframe>
+      </section>
+
+      <footer class="footer">Teaching use only · Carmel Secondary School · school domain · hub v0.5.15</footer>
+    </main>
+  </div>
+
+  <script type="text/plain" id="mcq-html">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>HK Physics MCQ Answer Finder</title>
+  <meta name="theme-color" content="#990011" />
+  <style>
+    :root{
+      --carmel:#990011;
+      --carmel-dark:#7a000e;
+      --carmel-soft:#f8e8ea;
+      --bg:#f4f5f7;
+      --panel:#ffffff;
+      --muted:#5c5c5c;
+      --text:#1a1a1a;
+      --accent:#990011;
+      --accent2:#7a000e;
+      --border:#e2e4e8;
+      --focus:#c45a66;
+      --radius:16px;
+      --shadow:0 2px 8px rgba(0,0,0,.06);
+      --badge-bg:linear-gradient(180deg,#34d399,#10b981);
+    }
+    *{box-sizing:border-box}
+    [hidden]{display:none!important}
+    html,body{height:100%;margin:0}
+    body{
+      color:var(--text);
+      font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Noto Sans,Arial,sans-serif;
+      background:var(--bg);
+      min-height:100%;
+    }
+    .wrap{
+      width:min(1180px,100%);
+      margin:0 auto;
+      padding:clamp(12px,2vw,20px);
+      display:grid;
+      gap:14px;
+    }
+    @media (orientation:landscape) and (min-width:900px){
+      .wrap{grid-template-columns:420px 1fr; align-items:start; gap:16px;}
+    }
+    .panel{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:16px;
+    }
+    .field{display:grid; grid-template-columns:92px 1fr; gap:10px; align-items:center; margin-bottom:10px}
+    .field label{color:var(--muted); font-size:14px; font-weight:600}
+    select,input{
+      font:inherit; width:100%;
+      border:1px solid var(--border); border-radius:12px;
+      padding:12px 14px; background:#fff; outline:none;
+      min-height:48px;
+    }
+    select:focus,input:focus{border-color:var(--carmel); box-shadow:0 0 0 3px rgba(153,0,17,.22)}
+    .actions{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:4px}
+    .btn{
+      border:0; border-radius:12px; padding:13px 10px; font-weight:800; cursor:pointer;
+      min-height:48px; touch-action:manipulation;
+    }
+    .btn.primary{background:linear-gradient(180deg,#b30018,var(--carmel)); color:#fff}
+    .btn.primary:hover{background:linear-gradient(180deg,var(--carmel),var(--carmel-dark))}
+    .btn.alt{background:linear-gradient(180deg,#a80014,var(--carmel-dark)); color:#fff}
+    .btn.alt:hover{background:var(--carmel-dark)}
+    .btn.neutral{background:var(--carmel-soft); color:var(--carmel-dark); border:1px solid #e8c5ca}
+    .list{display:grid; gap:8px; max-height:min(70vh,720px); overflow:auto; padding-right:2px}
+    .rowitem{
+      display:grid; grid-template-columns:1.1fr .9fr 1fr 64px; gap:8px; align-items:center;
+      background:linear-gradient(180deg,#fff,var(--carmel-soft));
+      border:1px solid var(--border); border-radius:14px; padding:12px 14px; min-height:58px;
+    }
+    @media (max-width:700px){
+      .rowitem{grid-template-columns:1fr 64px; gap:6px}
+      .rowitem .hide-sm{display:none}
+      .actions{grid-template-columns:1fr}
+    }
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:14px}
+    .answer-badge{
+      width:48px; height:48px; border-radius:14px; display:inline-flex; align-items:center; justify-content:center;
+      background:var(--badge-bg); color:#fff; font-weight:900; font-size:20px;
+      box-shadow:0 6px 14px rgba(16,185,129,.35);
+    }
+    .empty{color:var(--muted); font-size:14px; padding:8px 2px}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="panel" aria-label="Search">
+      <div class="field">
+        <label for="exam">Exam</label>
+        <select id="exam">
+          <option value="CE">HKCEE</option>
+          <option value="1A" selected>HKDSE PAPER 1A</option>
+          <option value="2">HKDSE PAPER 2</option>
+          <option value="AL">HKALE</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="year">Year</label>
+        <select id="year"><option value="">Select</option></select>
+      </div>
+
+      <div class="field" id="qTextField">
+        <label for="q">Question(s)</label>
+        <input id="q" type="text" inputmode="text" placeholder="e.g. 5 / 1–10 / 1,3,5" />
+      </div>
+
+      <div class="field" id="qP2Field" hidden>
+        <label for="qP2">Question</label>
+        <select id="qP2">
+          <option value="">All (1.1–4.8)</option>
+          <optgroup label="1.x · Astronomy">
+          <option value="1.1">1.1</option>
+          <option value="1.2">1.2</option>
+          <option value="1.3">1.3</option>
+          <option value="1.4">1.4</option>
+          <option value="1.5">1.5</option>
+          <option value="1.6">1.6</option>
+          <option value="1.7">1.7</option>
+          <option value="1.8">1.8</option>
+          </optgroup>
+          <optgroup label="2.x · Atomic World">
+          <option value="2.1">2.1</option>
+          <option value="2.2">2.2</option>
+          <option value="2.3">2.3</option>
+          <option value="2.4">2.4</option>
+          <option value="2.5">2.5</option>
+          <option value="2.6">2.6</option>
+          <option value="2.7">2.7</option>
+          <option value="2.8">2.8</option>
+          </optgroup>
+          <optgroup label="3.x · Energy">
+          <option value="3.1">3.1</option>
+          <option value="3.2">3.2</option>
+          <option value="3.3">3.3</option>
+          <option value="3.4">3.4</option>
+          <option value="3.5">3.5</option>
+          <option value="3.6">3.6</option>
+          <option value="3.7">3.7</option>
+          <option value="3.8">3.8</option>
+          </optgroup>
+          <optgroup label="4.x · Medical Physics">
+          <option value="4.1">4.1</option>
+          <option value="4.2">4.2</option>
+          <option value="4.3">4.3</option>
+          <option value="4.4">4.4</option>
+          <option value="4.5">4.5</option>
+          <option value="4.6">4.6</option>
+          <option value="4.7">4.7</option>
+          <option value="4.8">4.8</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <div class="actions">
+        <button class="btn primary" id="btnFind">Find</button>
+        <button class="btn alt" id="btnClear">Clear</button>
+        <button class="btn neutral" id="btnGoogle">Google it</button>
+      </div>
+    </section>
+
+    <section class="panel" aria-label="Results">
+      <div id="list" class="list" role="list"></div>
+    </section>
+  </main>
+
+  <script>
+  const dseData = {"2012":{"1":"C","2":"A","3":"A","4":"D","5":"A","6":"D","7":"A","8":"C","9":"B","10":"C","11":"A","12":"C","13":"D","14":"D","15":"B","16":"D","17":"B","18":"D","19":"A","20":"A","21":"A","22":"D","23":"C","24":"B","25":"B","26":"B","27":"B","28":"B","29":"D","30":"C","31":"B","32":"A","33":"C","34":"C","35":"C","36":"D"},"2013":{"1":"B","2":"B","3":"C","4":"D","5":"A","6":"D","7":"A","8":"D","9":"D","10":"D","11":"B","12":"A","13":"D","14":"A","15":"B","16":"B","17":"A","18":"D","19":"C","20":"C","21":"A","22":"C","23":"A","24":"D","25":"C","26":"C","27":"C","28":"C","29":"D","30":"B","31":"A","32":"C","33":"B","34":"A","35":"B","36":"B"},"2014":{"1":"D","2":"A","3":"C","4":"A","5":"B","6":"D","7":"C","8":"C","9":"B","10":"B","11":"B","12":"B","13":"B","14":"A","15":"C","16":"A","17":"B","18":"C","19":"A","20":"C","21":"D","22":"D","23":"B","24":"C","25":"D","26":"A","27":"D","28":"D","29":"B","30":"B","31":"D","32":"A","33":"C"},"2015":{"1":"C","2":"C","3":"A","4":"A","5":"C","6":"B","7":"B","8":"B","9":"D","10":"D","11":"B","12":"A","13":"A","14":"D","15":"B","16":"D","17":"A","18":"D","19":"C","20":"A","21":"B","22":"D","23":"A","24":"B","25":"C","26":"D","27":"C","28":"C","29":"D","30":"C","31":"A","32":"A","33":"D"},"2016":{"1":"A","2":"B","3":"C","4":"A","5":"D","6":"D","7":"C","8":"C","9":"A","10":"C","11":"A","12":"A","13":"B","14":"B","15":"B","16":"C","17":"B","18":"D","19":"D","20":"D","21":"A","22":"C","23":"C","24":"D","25":"B","26":"D","27":"B","28":"A","29":"B","30":"A","31":"D","32":"A","33":"C"},"2017":{"1":"D","2":"C","3":"A","4":"D","5":"A","6":"A","7":"C","8":"B","9":"B","10":"A","11":"B","12":"C","13":"C","14":"A","15":"D","16":"C","17":"B","18":"D","19":"D","20":"B","21":"C","22":"B","23":"D","24":"B","25":"D","26":"A","27":"B","28":"C","29":"A","30":"D","31":"A","32":"C","33":"B"},"2018":{"1":"cancelled","2":"A","3":"D","4":"A","5":"A","6":"C","7":"B","8":"A","9":"A","10":"D","11":"B","12":"A","13":"C","14":"D","15":"C","16":"B","17":"D","18":"C","19":"B","20":"D","21":"C","22":"A","23":"C","24":"B","25":"A","26":"C","27":"C","28":"D","29":"D","30":"B","31":"D","32":"B","33":"A"},"2019":{"1":"D","2":"B","3":"A","4":"D","5":"A","6":"C","7":"B","8":"D","9":"B","10":"A","11":"B","12":"A","13":"C","14":"C","15":"A","16":"C","17":"B","18":"A","19":"D","20":"A","21":"D","22":"A","23":"A","24":"C","25":"B","26":"C","27":"D","28":"D","29":"C","30":"B","31":"D","32":"B","33":"C"},"2020":{"1":"D","2":"C","3":"D","4":"A","5":"C","6":"B","7":"D","8":"C","9":"A","10":"C","11":"D","12":"C","13":"C","14":"A","15":"C","16":"A","17":"D","18":"A","19":"B","20":"B","21":"A","22":"B","23":"B","24":"D","25":"A","26":"A","27":"B","28":"D","29":"B","30":"D","31":"B","32":"D","33":"C"},"2021":{"1":"A","2":"A","3":"C","4":"B","5":"D","6":"D","7":"C","8":"A","9":"A","10":"C","11":"B","12":"C","13":"B","14":"D","15":"B","16":"B","17":"D","18":"C","19":"A","20":"C","21":"D","22":"A","23":"B","24":"A","25":"C","26":"C","27":"B","28":"A","29":"C","30":"D","31":"B","32":"D","33":"D"},"2022":{"1":"A","2":"B","3":"D","4":"C","5":"A","6":"B","7":"B","8":"B","9":"D","10":"D","11":"A","12":"D","13":"C","14":"A","15":"B","16":"C","17":"D","18":"B","19":"C","20":"A","21":"C","22":"D","23":"C","24":"D","25":"D","26":"B","27":"A","28":"C","29":"B","30":"A","31":"C","32":"A","33":"C"},"2023":{"1":"C","2":"D","3":"C","4":"A","5":"B","6":"D","7":"B","8":"C","9":"C","10":"A","11":"B","12":"C","13":"D","14":"C","15":"D","16":"B","17":"A","18":"B","19":"A","20":"A","21":"A","22":"D","23":"D","24":"C","25":"A","26":"D","27":"B","28":"C","29":"A","30":"B","31":"C","32":"D","33":"D"},"2024":{"2":"B","3":"B","4":"D","5":"B","6":"C","7":"C","8":"D","9":"A","10":"A","11":"C","12":"A","13":"D","14":"A","15":"D","16":"D","17":"C","18":"D","19":"A","20":"D","21":"B","22":"B","23":"C","24":"C","25":"A","26":"B","27":"C","28":"C","29":"B","30":"A","31":"A","32":"D","33":"B"}};
+  const paper2Data = {"2012":{"A":{"1":"D","2":"A","3":"A","4":"C","5":"B","6":"C","7":"D","8":"B"},"B":{"1":"D","2":"A","3":"B","4":"C","5":"C","6":"A","7":"B","8":"D"},"C":{"1":"A","2":"C","3":"D","4":"C","5":"B","6":"B","7":"C","8":"A"},"D":{"1":"A","2":"C","3":"B","4":"B","5":"C","6":"D","7":"D","8":"A"}},"2013":{"A":{"1":"B","2":"D","3":"A","4":"D","5":"A","6":"B","7":"C","8":"C"},"B":{"1":"D","2":"C","3":"C","4":"D","5":"A","6":"B","7":"B","8":"A"},"C":{"1":"A","2":"B","3":"C","4":"D","5":"C","6":"D","7":"A","8":"C"},"D":{"1":"A","2":"C","3":"C","4":"A","5":"D","6":"B","7":"D","8":"D"}},"2014":{"A":{"1":"D","2":"A","3":"C","4":"A","5":"B","6":"D","7":"C","8":"B"},"B":{"1":"A","2":"D","3":"C","4":"C","5":"D","6":"B","7":"A","8":"B"},"C":{"1":"A","2":"C","3":"D","4":"C","5":"B","6":"D","7":"B","8":"A"},"D":{"1":"A","2":"D","3":"B","4":"C","5":"C","6":"D","7":"B","8":"A"}},"2015":{"A":{"1":"A","2":"C","3":"D","4":"B","5":"B","6":"C","7":"A","8":"D"},"B":{"1":"D","2":"A","3":"D","4":"B","5":"C","6":"C","7":"A","8":"B"},"C":{"1":"A","2":"D","3":"B","4":"C","5":"B","6":"C","7":"C","8":"A"},"D":{"1":"B","2":"D","3":"D","4":"D","5":"B","6":"C","7":"A","8":"A"}},"2016":{"A":{"1":"B","2":"C","3":"A","4":"D","5":"D","6":"B","7":"A","8":"D"},"B":{"1":"C","2":"D","3":"C","4":"B","5":"B","6":"D","7":"A","8":"A"},"C":{"1":"B","2":"A","3":"C","4":"B","5":"A","6":"D","7":"C","8":"C"},"D":{"1":"A","2":"A","3":"D","4":"C","5":"B","6":"B","7":"D","8":"D"}},"2017":{"A":{"1":"C","2":"B","3":"C","4":"B","5":"D","6":"D","7":"A","8":"D"},"B":{"1":"B","2":"A","3":"C","4":"C","5":"B","6":"A","7":"D","8":"A"},"C":{"1":"B","2":"C","3":"B","4":"D","5":"C","6":"D","8":"A"},"D":{"1":"A","2":"C","3":"B","4":"D","5":"A","6":"B","7":"C","8":"D"}},"2018":{"A":{"1":"B","2":"A","3":"C","4":"A","5":"B","6":"C","7":"D","8":"D"},"B":{"1":"C","2":"D","3":"D","4":"A","5":"C","6":"B","7":"C","8":"B"},"C":{"1":"A","2":"B","3":"C","4":"D","5":"A","6":"D","7":"C","8":"B"},"D":{"1":"D","2":"D","3":"A","4":"C","5":"B","6":"A","7":"B","8":"A"}},"2019":{"A":{"1":"D","2":"B","3":"B","4":"A","5":"D","6":"A","7":"C","8":"C"},"B":{"1":"C","2":"D","3":"A","4":"B","5":"A","6":"D","7":"B","8":"A"},"C":{"1":"B","2":"B","3":"A","4":"D","5":"D","6":"A","7":"C","8":"C"},"D":{"1":"C","2":"B","3":"A","4":"D","5":"A","6":"C","7":"D","8":"B"}},"2020":{"A":{"1":"D","2":"D","3":"C","4":"B","5":"C","6":"B","7":"C","8":"A"},"B":{"1":"C","2":"C","3":"B","4":"D","5":"A","6":"A","7":"B","8":"D"},"C":{"1":"B","2":"A","3":"D","4":"C","5":"A","6":"B","7":"D","8":"A"},"D":{"1":"D","2":"C","3":"D","4":"A","5":"B","6":"C","7":"B","8":"A"}},"2021":{"A":{"1":"B","2":"B","3":"D","4":"C","5":"A","6":"D","7":"A","8":"D"},"B":{"1":"C","2":"A","3":"D","4":"B","5":"C","6":"A","7":"D","8":"B"},"C":{"1":"C","2":"D","3":"B","4":"C","5":"A","6":"C","7":"B","8":"A"},"D":{"1":"D","2":"B","3":"A","4":"C","5":"A","6":"C","7":"D","8":"B"}}};
+  const cealCsv = `Exam,Year,Question,Answer
+AL,1988,2,D
+AL,1988,6,E
+AL,1988,8,A
+AL,1988,12,E
+AL,1988,14,C
+AL,1988,15,D
+AL,1988,17,C
+AL,1988,18,E
+AL,1988,20,B
+AL,1988,26,B
+AL,1988,29,A
+AL,1988,30,B
+AL,1988,31,E
+AL,1988,32,D
+AL,1988,33,C
+AL,1988,36,A
+AL,1988,37,B
+AL,1988,38,A
+AL,1988,39,D
+AL,1988,42,C
+AL,1988,44,E
+AL,1989,5,B
+AL,1989,6,C
+AL,1989,7,E
+AL,1989,8,C
+AL,1989,11,C
+AL,1989,13,E
+AL,1989,16,D
+AL,1989,17,B
+AL,1989,28,D
+AL,1989,29,A
+AL,1989,30,A
+AL,1989,31,B
+AL,1989,32,D
+AL,1989,35,B
+AL,1989,36,D
+AL,1989,46,D
+AL,1990,4,C
+AL,1990,6,D
+AL,1990,13,C
+AL,1990,16,D
+AL,1990,22,E
+AL,1990,27,D
+AL,1990,29,D
+AL,1990,32,E
+AL,1990,33,E
+AL,1990,34,A
+AL,1990,40,A
+AL,1990,48,A
+AL,1991,1,E
+AL,1991,2,C
+AL,1991,3,D
+AL,1991,10,B
+AL,1991,17,D
+AL,1991,19,D
+AL,1991,25,A
+AL,1991,32,B
+AL,1991,34,C
+AL,1991,35,E
+AL,1991,38,C
+AL,1992,1,C
+AL,1992,3,A
+AL,1992,11,D
+AL,1992,14,B
+AL,1992,15,A
+AL,1992,20,C
+AL,1992,23,B
+AL,1992,27,D
+AL,1992,34,A
+AL,1992,35,D
+AL,1992,36,D
+AL,1992,38,D
+AL,1992,44,D
+AL,1992,45,E
+AL,1992,47,B
+AL,1992,48,A
+AL,1993,1,B
+AL,1993,3,B
+AL,1993,4,E
+AL,1993,11,E
+AL,1993,12,D
+AL,1993,16,A
+AL,1993,17,A
+AL,1993,18,A
+AL,1993,24,B
+AL,1993,35,C
+AL,1993,36,D
+AL,1993,39,B
+AL,1993,48,D
+AL,1994,1,D
+AL,1994,2,D
+AL,1994,6,D
+AL,1994,7,C
+AL,1994,14,A
+AL,1994,24,D
+AL,1994,25,B
+AL,1994,27,E
+AL,1994,31,C
+AL,1994,45,D
+AL,1995,1,B
+AL,1995,2,D
+AL,1995,5,C
+AL,1995,12,A
+AL,1995,20,A
+AL,1995,21,E
+AL,1995,23,D
+AL,1995,27,C
+AL,1995,30,D
+AL,1995,32,C
+AL,1995,34,A
+AL,1995,35,E
+AL,1995,39,E
+AL,1995,42,C
+AL,1995,44,A
+AL,1996,2,B
+AL,1996,3,A
+AL,1996,4,C
+AL,1996,6,C
+AL,1996,11,B
+AL,1996,12,D
+AL,1996,16,C
+AL,1996,23,C
+AL,1996,25,E
+AL,1996,26,A
+AL,1996,33,D
+AL,1996,41,D
+AL,1996,44,E
+AL,1997,1,C
+AL,1997,2,C
+AL,1997,3,D
+AL,1997,4,C
+AL,1997,6,D
+AL,1997,10,A
+AL,1997,11,E
+AL,1997,12,D
+AL,1997,14,C
+AL,1997,15,B
+AL,1997,19,A
+AL,1997,21,A
+AL,1997,23,D
+AL,1997,25,E
+AL,1997,28,B
+AL,1997,29,B
+AL,1997,31,A
+AL,1997,33,B
+AL,1997,35,B
+AL,1997,38,D
+AL,1997,43,A
+AL,1998,1,D
+AL,1998,2,E
+AL,1998,3,D
+AL,1998,5,C
+AL,1998,6,D
+AL,1998,11,A
+AL,1998,12,B
+AL,1998,13,A
+AL,1998,14,D
+AL,1998,18,A
+AL,1998,19,E
+AL,1998,25,C
+AL,1998,26,B
+AL,1998,27,D
+AL,1998,30,C
+AL,1998,31,B
+AL,1998,32,C
+AL,1998,35,E
+AL,1998,39,A
+AL,1998,41,C
+AL,1998,43,E
+AL,1999,2,C
+AL,1999,3,A
+AL,1999,5,C
+AL,1999,12,C
+AL,1999,13,B
+AL,1999,16,C
+AL,1999,17,D
+AL,1999,18,E
+AL,1999,19,E
+AL,1999,21,E
+AL,1999,23,D
+AL,1999,27,B
+AL,1999,30,D
+AL,1999,35,D
+AL,1999,37,B
+AL,1999,38,D
+AL,1999,43,D
+AL,1999,47,E
+AL,2000,1,D
+AL,2000,4,A
+AL,2000,5,C
+AL,2000,6,A
+AL,2000,8,A
+AL,2000,9,B
+AL,2000,11,C
+AL,2000,16,B
+AL,2000,17,E
+AL,2000,18,A
+AL,2000,21,E
+AL,2000,22,A
+AL,2000,23,A
+AL,2000,24,E
+AL,2000,25,D
+AL,2000,26,E
+AL,2000,27,B
+AL,2000,35,C
+AL,2000,39,E
+AL,2000,43,E
+AL,2000,44,A
+AL,2000,45,D
+AL,2001,1,E
+AL,2001,2,B
+AL,2001,3,C
+AL,2001,5,A
+AL,2001,8,C
+AL,2001,11,D
+AL,2001,12,E
+AL,2001,13,E
+AL,2001,20,A
+AL,2001,21,C
+AL,2001,22,D
+AL,2001,32,B
+AL,2001,42,B
+AL,2001,43,B
+AL,2001,45,D
+AL,2002,2,C
+AL,2002,7,A
+AL,2002,13,A
+AL,2002,15,D
+AL,2002,17,C
+AL,2002,20,C
+AL,2002,24,D
+AL,2002,27,D
+AL,2002,28,A
+AL,2002,29,A
+AL,2002,38,D
+AL,2002,39,B
+AL,2002,41,B
+AL,2003,14,A
+AL,2003,15,B
+AL,2003,19,C
+AL,2003,23,C
+AL,2003,24,C
+AL,2003,25,D
+AL,2003,27,C
+AL,2003,30,D
+AL,2003,31,B
+AL,2003,34,C
+AL,2003,44,B
+AL,2003,45,B
+AL,2004,3,A
+AL,2004,7,A
+AL,2004,9,B
+AL,2004,10,D
+AL,2004,11,A
+AL,2004,15,A
+AL,2004,16,B
+AL,2004,18,D
+AL,2004,20,B
+AL,2004,21,A
+AL,2004,26,B
+AL,2004,28,D
+AL,2004,29,D
+AL,2004,31,C
+AL,2004,42,C
+AL,2004,43,C
+AL,2004,44,A
+AL,2005,1,A
+AL,2005,2,B
+AL,2005,3,D
+AL,2005,4,C
+AL,2005,8,C
+AL,2005,10,D
+AL,2005,11,B
+AL,2005,13,B
+AL,2005,16,D
+AL,2005,17,B
+AL,2005,18,B
+AL,2005,19,A
+AL,2005,22,C
+AL,2005,23,D
+AL,2005,24,C
+AL,2005,28,C
+AL,2005,29,A
+AL,2005,31,A
+AL,2005,33,B
+AL,2005,34,B
+AL,2006,1,A
+AL,2006,2,C
+AL,2006,3,C
+AL,2006,4,A
+AL,2006,7,D
+AL,2006,8,B
+AL,2006,9,A
+AL,2006,11,B
+AL,2006,12,B
+AL,2006,15,D
+AL,2006,16,C
+AL,2006,18,B
+AL,2006,19,B
+AL,2006,20,B
+AL,2006,21,A
+AL,2006,23,C
+AL,2006,24,C
+AL,2006,28,B
+AL,2006,29,A
+AL,2006,30,D
+AL,2007,2,A
+AL,2007,3,C
+AL,2007,4,B
+AL,2007,5,A
+AL,2007,9,A
+AL,2007,10,B
+AL,2007,11,C
+AL,2007,13,B
+AL,2007,14,B
+AL,2007,15,C
+AL,2007,16,A
+AL,2007,18,D
+AL,2007,19,C
+AL,2007,21,C
+AL,2007,22,D
+AL,2007,24,D
+AL,2007,26,D
+AL,2007,28,B
+AL,2007,29,B
+AL,2007,31,B
+AL,2007,33,B
+AL,2007,36,A
+AL,2007,37,B
+AL,2008,7,B
+AL,2008,12,D
+AL,2008,13,A
+AL,2008,14,C
+AL,2008,15,A
+AL,2008,16,C
+AL,2008,18,D
+AL,2008,24,D
+AL,2008,27,D
+AL,2008,28,B
+AL,2008,29,B
+AL,2008,34,A
+AL,2008,35,C
+AL,2009,5,A
+AL,2009,7,D
+AL,2009,10,D
+AL,2009,15,C
+AL,2009,16,B
+AL,2009,18,A
+AL,2009,19,C
+AL,2009,24,B
+AL,2009,25,C
+AL,2009,28,C
+AL,2009,29,D
+AL,2009,30,A
+AL,2009,32,B
+AL,2009,33,C
+AL,2009,44,B
+AL,2010,4,D
+AL,2010,8,A
+AL,2010,12,B
+AL,2010,21,D
+AL,2010,22,C
+AL,2010,23,C
+AL,2010,24,D
+AL,2010,25,C
+AL,2010,26,C
+AL,2010,30,A
+AL,2010,42,A
+AL,2010,43,B
+CE,1990,1,B
+CE,1990,2,C
+CE,1990,3,B
+CE,1990,4,C
+CE,1990,6,E
+CE,1990,7,A
+CE,1990,8,E
+CE,1990,9,D
+CE,1990,21,A
+CE,1990,22,E
+CE,1990,23,E
+CE,1990,24,E
+CE,1990,25,D
+CE,1990,26,C
+CE,1990,27,B
+CE,1990,28,B
+CE,1990,29,A
+CE,1990,30,D
+CE,1990,31,D
+CE,1990,32,B
+CE,1990,34,E
+CE,1990,35,E
+CE,1990,36,C
+CE,1990,37,C
+CE,1990,39,B
+CE,1990,40,B
+CE,1990,41,B
+CE,1991,1,A
+CE,1991,2,B
+CE,1991,3,A
+CE,1991,4,D
+CE,1991,5,A
+CE,1991,6,A
+CE,1991,7,B
+CE,1991,8,A
+CE,1991,9,A
+CE,1991,10,B
+CE,1991,11,C
+CE,1991,18,C
+CE,1991,19,B
+CE,1991,21,C
+CE,1991,22,B
+CE,1991,23,B
+CE,1991,24,B
+CE,1991,25,E
+CE,1991,26,C
+CE,1991,27,E
+CE,1991,28,E
+CE,1991,29,D
+CE,1991,30,E
+CE,1991,31,C
+CE,1991,32,B
+CE,1991,33,A
+CE,1991,36,C
+CE,1991,38,E
+CE,1991,39,D
+CE,1991,40,E
+CE,1991,41,C
+CE,1992,1,C
+CE,1992,2,A
+CE,1992,4,B
+CE,1992,5,C
+CE,1992,6,E
+CE,1992,7,D
+CE,1992,8,D
+CE,1992,9,D
+CE,1992,10,B
+CE,1992,11,D
+CE,1992,17,C
+CE,1992,20,E
+CE,1992,22,D
+CE,1992,23,A
+CE,1992,24,C
+CE,1992,25,A
+CE,1992,26,A
+CE,1992,27,A
+CE,1992,28,A
+CE,1992,29,C
+CE,1992,30,B
+CE,1992,31,E
+CE,1992,32,B
+CE,1992,33,B
+CE,1992,34,E
+CE,1992,35,D
+CE,1992,36,D
+CE,1992,38,C
+CE,1992,39,D
+CE,1992,40,B
+CE,1993,1,C
+CE,1993,2,D
+CE,1993,3,C
+CE,1993,4,D
+CE,1993,5,C
+CE,1993,6,B
+CE,1993,16,B
+CE,1993,18,C
+CE,1993,22,D
+CE,1993,23,B
+CE,1993,24,B
+CE,1993,25,A
+CE,1993,26,D
+CE,1993,27,A
+CE,1993,28,D
+CE,1993,29,E
+CE,1993,30,B
+CE,1993,31,D
+CE,1993,32,C
+CE,1993,33,D
+CE,1993,34,C
+CE,1993,35,C
+CE,1993,37,B
+CE,1993,38,C
+CE,1993,39,B
+CE,1993,40,A
+CE,1993,41,C
+CE,1994,1,C
+CE,1994,2,A
+CE,1994,3,B
+CE,1994,4,E
+CE,1994,6,B
+CE,1994,7,D
+CE,1994,9,B
+CE,1994,10,A
+CE,1994,16,C
+CE,1994,17,A
+CE,1994,21,E
+CE,1994,22,E
+CE,1994,23,B
+CE,1994,24,C
+CE,1994,25,E
+CE,1994,26,D
+CE,1994,27,C
+CE,1994,28,A
+CE,1994,29,A
+CE,1994,30,C
+CE,1994,31,D
+CE,1994,32,D
+CE,1994,33,B
+CE,1994,34,B
+CE,1994,35,C
+CE,1994,36,A
+CE,1994,37,A
+CE,1994,38,E
+CE,1994,39,B
+CE,1994,41,D
+CE,1995,1,C
+CE,1995,2,A
+CE,1995,3,C
+CE,1995,4,E
+CE,1995,5,E
+CE,1995,6,C
+CE,1995,7,C
+CE,1995,8,C
+CE,1995,9,B
+CE,1995,10,E
+CE,1995,11,B
+CE,1995,18,D
+CE,1995,19,B
+CE,1995,22,B
+CE,1995,24,D
+CE,1995,25,D
+CE,1995,26,E
+CE,1995,27,A
+CE,1995,28,E
+CE,1995,29,C
+CE,1995,30,C
+CE,1995,31,E
+CE,1995,32,C
+CE,1995,33,D
+CE,1995,34,A
+CE,1995,35,E
+CE,1995,39,D
+CE,1995,40,C
+CE,1996,1,C
+CE,1996,2,C
+CE,1996,3,E
+CE,1996,4,D
+CE,1996,5,B
+CE,1996,6,B
+CE,1996,7,C
+CE,1996,8,B
+CE,1996,9,D
+CE,1996,10,A
+CE,1996,16,C
+CE,1996,18,E
+CE,1996,19,D
+CE,1996,20,B
+CE,1996,21,D
+CE,1996,24,C
+CE,1996,25,B
+CE,1996,26,C
+CE,1996,27,A
+CE,1996,28,A
+CE,1996,29,D
+CE,1996,30,A
+CE,1996,31,E
+CE,1996,32,D
+CE,1996,34,E
+CE,1996,35,B
+CE,1996,36,D
+CE,1996,37,B
+CE,1996,39,C
+CE,1996,41,D
+CE,1997,1,E
+CE,1997,2,B
+CE,1997,3,D
+CE,1997,4,E
+CE,1997,5,D
+CE,1997,6,C
+CE,1997,7,D
+CE,1997,8,B
+CE,1997,9,D
+CE,1997,10,B
+CE,1997,19,D
+CE,1997,20,D
+CE,1997,22,A
+CE,1997,25,B
+CE,1997,26,E
+CE,1997,27,C
+CE,1997,28,C
+CE,1997,29,A
+CE,1997,30,C
+CE,1997,31,C
+CE,1997,32,B
+CE,1997,34,B
+CE,1997,37,C
+CE,1997,39,A
+CE,1997,40,B
+CE,1998,1,E
+CE,1998,2,B
+CE,1998,3,B
+CE,1998,4,B
+CE,1998,5,D
+CE,1998,6,B
+CE,1998,7,D
+CE,1998,8,D
+CE,1998,9,A
+CE,1998,10,C
+CE,1998,11,B
+CE,1998,19,C
+CE,1998,20,E
+CE,1998,21,C
+CE,1998,22,E
+CE,1998,25,A
+CE,1998,26,E
+CE,1998,28,D
+CE,1998,29,A
+CE,1998,30,C
+CE,1998,31,A
+CE,1998,32,A
+CE,1998,33,B
+CE,1998,34,D
+CE,1998,35,B
+CE,1998,39,B
+CE,1998,40,A
+CE,1998,41,C
+CE,1999,1,D
+CE,1999,2,C
+CE,1999,3,E
+CE,1999,4,B
+CE,1999,5,C
+CE,1999,7,B
+CE,1999,8,C
+CE,1999,9,B
+CE,1999,16,D
+CE,1999,17,A
+CE,1999,20,C
+CE,1999,21,E
+CE,1999,22,D
+CE,1999,23,C
+CE,1999,24,C
+CE,1999,25,B
+CE,1999,26,C
+CE,1999,27,D
+CE,1999,28,A
+CE,1999,31,D
+CE,1999,34,B
+CE,1999,36,B
+CE,1999,37,D
+CE,1999,38,E
+CE,1999,39,E
+CE,1999,40,A
+CE,2000,1,D
+CE,2000,2,A
+CE,2000,3,B
+CE,2000,4,B
+CE,2000,5,A
+CE,2000,6,C
+CE,2000,7,E
+CE,2000,8,B
+CE,2000,9,E
+CE,2000,10,C
+CE,2000,11,C
+CE,2000,12,A
+CE,2000,19,A
+CE,2000,20,B
+CE,2000,21,C
+CE,2000,22,B
+CE,2000,24,B
+CE,2000,25,E
+CE,2000,26,B
+CE,2000,27,E
+CE,2000,28,D
+CE,2000,29,A
+CE,2000,30,D
+CE,2000,31,A
+CE,2000,34,D
+CE,2000,35,A
+CE,2000,36,A
+CE,2000,38,C
+CE,2000,40,E
+CE,2000,41,E
+CE,2001,1,B
+CE,2001,2,C
+CE,2001,3,B
+CE,2001,4,E
+CE,2001,5,A
+CE,2001,6,B
+CE,2001,7,C
+CE,2001,8,C
+CE,2001,9,A
+CE,2001,10,C
+CE,2001,11,D
+CE,2001,16,B
+CE,2001,17,C
+CE,2001,18,B
+CE,2001,19,B
+CE,2001,22,E
+CE,2001,23,B
+CE,2001,24,A
+CE,2001,25,A
+CE,2001,26,A
+CE,2001,27,C
+CE,2001,28,B
+CE,2001,29,A
+CE,2001,30,E
+CE,2001,31,D
+CE,2001,32,A
+CE,2001,34,E
+CE,2001,35,A
+CE,2001,36,C
+CE,2001,39,D
+CE,2001,40,D
+CE,2001,41,C
+CE,2002,1,A
+CE,2002,2,B
+CE,2002,3,C
+CE,2002,4,C
+CE,2002,5,B
+CE,2002,6,A
+CE,2002,7,B
+CE,2002,8,C
+CE,2002,9,A
+CE,2002,10,B
+CE,2002,11,A
+CE,2002,12,D
+CE,2002,19,C
+CE,2002,20,B
+CE,2002,21,A
+CE,2002,24,D
+CE,2002,25,D
+CE,2002,26,C
+CE,2002,27,B
+CE,2002,28,C
+CE,2002,29,B
+CE,2002,30,C
+CE,2002,31,D
+CE,2002,32,D
+CE,2002,33,B
+CE,2002,34,D
+CE,2002,36,D
+CE,2002,38,A
+CE,2002,40,B
+CE,2002,41,C
+CE,2002,42,C
+CE,2003,1,D
+CE,2003,2,A
+CE,2003,3,D
+CE,2003,4,B
+CE,2003,5,D
+CE,2003,6,A
+CE,2003,7,B
+CE,2003,8,C
+CE,2003,9,A
+CE,2003,10,B
+CE,2003,12,B
+CE,2003,19,A
+CE,2003,20,B
+CE,2003,21,C
+CE,2003,22,B
+CE,2003,25,A
+CE,2003,26,D
+CE,2003,27,D
+CE,2003,28,D
+CE,2003,29,C
+CE,2003,30,B
+CE,2003,31,C
+CE,2003,32,C
+CE,2003,33,D
+CE,2003,34,C
+CE,2003,35,B
+CE,2003,36,B
+CE,2003,37,D
+CE,2003,38,C
+CE,2003,40,B
+CE,2003,41,C
+CE,2003,42,A
+CE,2004,1,C
+CE,2004,2,B
+CE,2004,3,A
+CE,2004,4,C
+CE,2004,5,D
+CE,2004,6,D
+CE,2004,7,D
+CE,2004,8,A
+CE,2004,9,A
+CE,2004,10,B
+CE,2004,12,A
+CE,2004,18,B
+CE,2004,19,C
+CE,2004,20,B
+CE,2004,22,C
+CE,2004,23,C
+CE,2004,24,B
+CE,2004,25,C
+CE,2004,26,D
+CE,2004,27,D
+CE,2004,28,C
+CE,2004,29,D
+CE,2004,30,A
+CE,2004,31,B
+CE,2004,32,D
+CE,2004,33,B
+CE,2004,34,B
+CE,2004,35,C
+CE,2004,36,A
+CE,2004,40,D
+CE,2004,41,C
+CE,2004,42,A
+CE,2004,43,D
+CE,2004,44,A
+CE,2004,45,C
+CE,2005,1,B
+CE,2005,2,B
+CE,2005,3,C
+CE,2005,4,C
+CE,2005,5,C
+CE,2005,6,B
+CE,2005,7,B
+CE,2005,8,D
+CE,2005,9,A
+CE,2005,13,B
+CE,2005,14,D
+CE,2005,15,C
+CE,2005,16,A
+CE,2005,17,D
+CE,2005,18,D
+CE,2005,19,D
+CE,2005,20,C
+CE,2005,21,D
+CE,2005,22,A
+CE,2005,23,A
+CE,2005,24,B
+CE,2005,25,D
+CE,2005,26,C
+CE,2005,27,D
+CE,2005,28,C
+CE,2005,29,B
+CE,2005,30,B
+CE,2005,31,A
+CE,2005,32,D
+CE,2005,33,B
+CE,2005,34,A
+CE,2005,35,B
+CE,2005,36,C
+CE,2005,37,A
+CE,2005,38,D
+CE,2005,39,C
+CE,2005,40,B
+CE,2005,41,A
+CE,2005,42,A
+CE,2005,43,D
+CE,2005,44,C
+CE,2005,45,C
+CE,2006,1,B
+CE,2006,2,D
+CE,2006,3,B
+CE,2006,4,D
+CE,2006,5,C
+CE,2006,6,A
+CE,2006,7,C
+CE,2006,8,C
+CE,2006,9,A
+CE,2006,10,D
+CE,2006,11,D
+CE,2006,12,A
+CE,2006,15,A
+CE,2006,16,B
+CE,2006,17,A
+CE,2006,18,C
+CE,2006,20,A
+CE,2006,21,B
+CE,2006,22,B
+CE,2006,23,D
+CE,2006,24,A
+CE,2006,25,D
+CE,2006,26,C
+CE,2006,27,D
+CE,2006,28,A
+CE,2006,29,B
+CE,2006,30,D
+CE,2006,31,B
+CE,2006,33,A
+CE,2006,34,D
+CE,2006,35,B
+CE,2006,36,B
+CE,2006,37,C
+CE,2006,38,D
+CE,2006,39,C
+CE,2006,40,A
+CE,2006,41,A
+CE,2006,42,C
+CE,2006,43,D
+CE,2006,44,C
+CE,2006,45,D
+CE,2007,1,B
+CE,2007,2,D
+CE,2007,3,D
+CE,2007,4,D
+CE,2007,5,D
+CE,2007,6,A
+CE,2007,7,C
+CE,2007,8,C
+CE,2007,9,B
+CE,2007,10,C
+CE,2007,16,B
+CE,2007,17,B
+CE,2007,18,B
+CE,2007,19,A
+CE,2007,20,C
+CE,2007,21,A
+CE,2007,22,B
+CE,2007,23,D
+CE,2007,24,A
+CE,2007,25,C
+CE,2007,26,C
+CE,2007,27,D
+CE,2007,28,C
+CE,2007,29,B
+CE,2007,30,A
+CE,2007,31,B
+CE,2007,32,A
+CE,2007,33,A
+CE,2007,34,A
+CE,2007,36,D
+CE,2007,37,B
+CE,2007,39,A
+CE,2007,40,B
+CE,2007,41,A
+CE,2007,42,D
+CE,2007,43,D
+CE,2007,44,C
+CE,2007,45,C
+CE,2008,1,A
+CE,2008,2,A
+CE,2008,3,D
+CE,2008,4,A
+CE,2008,5,C
+CE,2008,6,D
+CE,2008,7,C
+CE,2008,8,B
+CE,2008,9,D
+CE,2008,10,A
+CE,2008,11,B
+CE,2008,16,B
+CE,2008,17,D
+CE,2008,18,B
+CE,2008,19,A
+CE,2008,20,A
+CE,2008,21,C
+CE,2008,22,B
+CE,2008,23,D
+CE,2008,24,D
+CE,2008,25,D
+CE,2008,26,A
+CE,2008,27,B
+CE,2008,28,C
+CE,2008,29,D
+CE,2008,30,C
+CE,2008,31,D
+CE,2008,32,A
+CE,2008,33,B
+CE,2008,34,D
+CE,2008,35,B
+CE,2008,36,C
+CE,2008,37,C
+CE,2008,38,B
+CE,2008,39,B
+CE,2008,40,C
+CE,2008,41,A
+CE,2008,43,C
+CE,2008,44,D
+CE,2008,45,D
+CE,2009,1,C
+CE,2009,2,A
+CE,2009,3,C
+CE,2009,4,A
+CE,2009,5,A
+CE,2009,6,B
+CE,2009,7,A
+CE,2009,8,C
+CE,2009,9,C
+CE,2009,10,B
+CE,2009,11,D
+CE,2009,12,D
+CE,2009,15,A
+CE,2009,16,C
+CE,2009,18,B
+CE,2009,19,C
+CE,2009,20,B
+CE,2009,21,D
+CE,2009,22,D
+CE,2009,23,D
+CE,2009,24,B
+CE,2009,25,B
+CE,2009,26,D
+CE,2009,27,B
+CE,2009,28,C
+CE,2009,29,C
+CE,2009,30,D
+CE,2009,31,C
+CE,2009,32,B
+CE,2009,33,A
+CE,2009,34,B
+CE,2009,35,A
+CE,2009,36,C
+CE,2009,37,B
+CE,2009,38,D
+CE,2009,39,D
+CE,2009,40,D
+CE,2009,41,A
+CE,2009,42,C
+CE,2009,43,D
+CE,2009,44,A`;
+
+  function postHeight(){
+    try{ parent.postMessage({type:'embed-size', height: document.documentElement.scrollHeight}, '*'); }catch(e){}
+  }
+  new ResizeObserver(postHeight).observe(document.documentElement);
+  window.addEventListener('load', postHeight);
+
+  const examEl = document.getElementById('exam');
+  const yearEl = document.getElementById('year');
+  const qEl = document.getElementById('q');
+  const qP2El = document.getElementById('qP2');
+  const qTextField = document.getElementById('qTextField');
+  const qP2Field = document.getElementById('qP2Field');
+  const list = document.getElementById('list');
+
+  const P2_SEC = {1:'A',2:'B',3:'C',4:'D'};
+  const P2_NAME = {A:'Astronomy',B:'Atomic World',C:'Energy',D:'Medical Physics'};
+
+  function parseCSVToIndex(text){
+    const lines = text.trim().split(/\r?\n/);
+    if(lines.length) lines.shift();
+    const idx = { CE: Object.create(null), AL: Object.create(null) };
+    for(const line of lines){
+      const parts = line.split(',');
+      if(parts.length < 4) continue;
+      const Exam = parts[0].trim(), Year = parts[1].trim(), Question = Number(parts[2].trim()), Answer = parts[3].trim();
+      if(Exam !== 'CE' && Exam !== 'AL') continue;
+      if(!idx[Exam][Year]) idx[Exam][Year] = Object.create(null);
+      idx[Exam][Year][Question] = Answer;
+    }
+    return idx;
+  }
+  const ceal = parseCSVToIndex(cealCsv);
+
+  function mode(){ return examEl.value; }
+
+  function parseRange(input){
+    if(!input) return [];
+    const full2half = s => s.replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
+    const cleaned = full2half(input).replace(/\s+/g,'').replace(/[—–−~～]/g,'-');
+    const parts = cleaned.split(',');
+    const nums = new Set();
+    for(const p of parts){
+      if(!p) continue;
+      const m = p.split('-');
+      if(m.length===1){
+        const n = Number(m[0]);
+        if(Number.isInteger(n) && n>0) nums.add(n);
+      } else if(m.length===2){
+        let a = Number(m[0]), b = Number(m[1]);
+        if(Number.isInteger(a) && Number.isInteger(b)){
+          if(a>b) [a,b]=[b,a];
+          for(let i=a;i<=b;i++) nums.add(i);
+        }
+      }
+    }
+    return Array.from(nums).sort((x,y)=>x-y);
+  }
+
+  function parseP2Selection(){
+    const v = qP2El.value;
+    if(!v){
+      // all 1.1–4.8
+      const all=[];
+      for(let s=1;s<=4;s++) for(let q=1;q<=8;q++) all.push({sec:P2_SEC[s], n:q, label:`${s}.${q}`});
+      return all;
+    }
+    const [sStr,qStr] = v.split('.');
+    const s = Number(sStr), q = Number(qStr);
+    return [{sec:P2_SEC[s], n:q, label:`${s}.${q}`}];
+  }
+
+  function setMode(){
+    const m = mode();
+    const isP2 = m === '2';
+    qTextField.hidden = isP2;
+    qTextField.style.display = isP2 ? 'none' : '';
+    qP2Field.hidden = !isP2;
+    qP2Field.style.display = isP2 ? '' : 'none';
+    if(isP2) qEl.value = '';
+    fillYears();
+    list.innerHTML='';
+    postHeight();
+  }
+
+  function fillYears(){
+    const m = mode();
+    let years=[];
+    if(m==='1A') years = Object.keys(dseData).map(Number).sort((a,b)=>a-b);
+    else if(m==='2') years = Object.keys(paper2Data).map(Number).sort((a,b)=>a-b);
+    else if(m==='CE') years = Object.keys(ceal.CE||{}).map(Number).sort((a,b)=>a-b);
+    else years = Object.keys(ceal.AL||{}).map(Number).sort((a,b)=>a-b);
+    yearEl.innerHTML = '<option value="">Select</option>' + years.map(y=>`<option>${y}</option>`).join('');
+  }
+
+  function findRows(){
+    const year = yearEl.value;
+    if(!year) return [];
+    const rows=[];
+    const m = mode();
+    if(m==='1A'){
+      const qs = parseRange(qEl.value);
+      const map = dseData[year]||{};
+      const nums = qs.length ? qs : Object.keys(map).map(Number).sort((a,b)=>a-b);
+      for(const n of nums) rows.push({label:`DSE ${year}`, sub:`Paper 1A`, q:`Q${n}`, ans: map[String(n)] ?? map[n] ?? null});
+    } else if(m==='2'){
+      const bySec = paper2Data[year]||{};
+      const picks = parseP2Selection();
+      for(const p of picks){
+        const map = bySec[p.sec]||{};
+        rows.push({
+          label:`DSE ${year}`,
+          sub:`P2 ${p.sec} · ${P2_NAME[p.sec]||''}`,
+          q:p.label,
+          ans: map[String(p.n)] ?? map[p.n] ?? null
+        });
+      }
+    } else {
+      const qs = parseRange(qEl.value);
+      const store = ((m==='CE' ? ceal.CE : ceal.AL)[year])||{};
+      const nums = qs.length ? qs : Object.keys(store).map(Number).sort((a,b)=>a-b);
+      for(const n of nums) rows.push({label: m, sub: String(year), q:`Q${n}`, ans: store[n] ?? null});
+    }
+    return rows;
+  }
+
+  function render(rows){
+    list.innerHTML='';
+    if(!rows.length){
+      list.innerHTML = '<div class="empty">No rows — pick a year.</div>';
+      postHeight(); return;
+    }
+    for(const r of rows){
+      const item=document.createElement('div');
+      item.className='rowitem';
+      item.innerHTML = `<div class="mono">${r.label}</div>
+        <div class="mono hide-sm">${r.sub}</div>
+        <div class="mono">${r.q}</div>
+        <div></div>`;
+      const ansWrap=item.lastElementChild;
+      if(r.ans && String(r.ans).toLowerCase()==='cancelled'){
+        ansWrap.innerHTML='<span style="color:#92400e;font-weight:800">Cancelled</span>';
+      } else if(r.ans){
+        const b=document.createElement('span'); b.className='answer-badge'; b.textContent=r.ans; ansWrap.appendChild(b);
+      } else {
+        ansWrap.innerHTML='<span style="color:#dc2626;font-weight:700">N/A</span>';
+      }
+      list.appendChild(item);
+    }
+    postHeight();
+  }
+
+  function doFind(){ render(findRows()); }
+
+  examEl.addEventListener('change', ()=>{ setMode(); });
+  document.getElementById('btnFind').addEventListener('click', doFind);
+  document.getElementById('btnClear').addEventListener('click', ()=>{
+    qEl.value=''; qP2El.value=''; yearEl.value=''; list.innerHTML=''; postHeight();
+  });
+  document.getElementById('btnGoogle').addEventListener('click', ()=>{
+    const year=yearEl.value; if(!year){ alert('Select a year first.'); return; }
+    const m = mode();
+    let query='';
+    if(m==='1A'){
+      let qs=parseRange(qEl.value); if(!qs.length) qs=[1];
+      query=`HKDSE PHYSICS PAPER 1A ${year} Q${qs[0]}`;
+    } else if(m==='2'){
+      const picks = parseP2Selection();
+      const first = picks[0] || {sec:'B', n:1, label:'2.1'};
+      query=`HKDSE PHYSICS PAPER 2 ${year} ${first.label}`;
+    } else if(m==='CE'){
+      let qs=parseRange(qEl.value); if(!qs.length) qs=[1];
+      query=`HKCEE PHYSICS ${year} Q${qs[0]}`;
+    } else {
+      let qs=parseRange(qEl.value); if(!qs.length) qs=[1];
+      query=`HKALE PHYSICS ${year} Q${qs[0]}`;
+    }
+    window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`,'_blank','noopener,noreferrer');
+  });
+  qEl.addEventListener('keydown', e=>{ if(e.key==='Enter') doFind(); });
+  yearEl.addEventListener('change', doFind);
+  qP2El.addEventListener('change', doFind);
+
+  setMode();
+  yearEl.value='2012'; qEl.value='21'; doFind();
+  <\/script>
+</body>
+</html>
+
+  </script>
+
+  <script>
+(function () {
+  'use strict';
+
+  /**
+   * After you publish the Catalog sheet as CSV, paste the URL here.
+   * See STAFF-SETUP.md. Leave as REPLACE_SHEET_CSV_URL to use built-in fallback.
+   */
+  var SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1MXX-mM_HFfo_gaP4yca4yO_u11LjIeih0lDI-JRiZ9g/export?format=csv&gid=620668479';
+
+  var TOPICS = ['All', 'Mechanics', 'Waves', 'Electricity and Magnetism', 'Heat and Gases', 'Atomic World', 'Energy and Use of Energy'];
+
+  var TOPIC_ICONS = {
+    Mechanics: '⚙',
+    Waves: '〰',
+    'Electricity and Magnetism': '⚡',
+    'Heat and Gases': '🌡',
+    'Atomic World': '⚛',
+    'Energy and Use of Energy': '☀'
+  };
+
+  /** Map legacy / alias topic labels → canonical 6 Carmel titles */
+  function normalizeTopic(t) {
+    t = String(t == null ? '' : t).trim();
+    if (!t) return 'Mechanics';
+    if (TOPICS.indexOf(t) !== -1 && t !== 'All') return t;
+    var lower = t.toLowerCase().replace(/&/g, 'and').replace(/\s+/g, ' ');
+    var aliases = {
+      'electricity': 'Electricity and Magnetism',
+      'electricity and magnetism': 'Electricity and Magnetism',
+      'e&m': 'Electricity and Magnetism',
+      'e and m': 'Electricity and Magnetism',
+      'electromagnetism': 'Electricity and Magnetism',
+      'magnetism': 'Electricity and Magnetism',
+      'heat': 'Heat and Gases',
+      'heat and gases': 'Heat and Gases',
+      'gases': 'Heat and Gases',
+      'gas': 'Heat and Gases',
+      'atomic': 'Atomic World',
+      'atomic world': 'Atomic World',
+      'atomics world': 'Atomic World',
+      'radioactivity': 'Atomic World',
+      'nuclear': 'Atomic World',
+      'quantum': 'Atomic World',
+      'other': 'Energy and Use of Energy',
+      'energy': 'Energy and Use of Energy',
+      'energy and use of energy': 'Energy and Use of Energy',
+      'mechanics': 'Mechanics',
+      'waves': 'Waves',
+      'optics': 'Waves',
+      'wave': 'Waves'
+    };
+    if (aliases[lower]) return aliases[lower];
+    if (lower.indexOf('energy') !== -1 || lower.indexOf('solar') !== -1) return 'Energy and Use of Energy';
+    if (lower.indexOf('elec') !== -1 || lower.indexOf('magnet') !== -1) return 'Electricity and Magnetism';
+    if (lower.indexOf('heat') !== -1 || lower.indexOf('gas') !== -1) return 'Heat and Gases';
+    if (lower.indexOf('atom') !== -1 || lower.indexOf('radio') !== -1 || lower.indexOf('nuclear') !== -1 || lower.indexOf('quantum') !== -1) return 'Atomic World';
+    if (lower.indexOf('wave') !== -1 || lower.indexOf('light') !== -1 || lower.indexOf('optic') !== -1 || lower.indexOf('sound') !== -1) return 'Waves';
+    if (lower.indexOf('mech') !== -1 || lower.indexOf('force') !== -1 || lower.indexOf('motion') !== -1) return 'Mechanics';
+    return 'Mechanics';
+  }
+
+  /** Built-in ready sims — used when Sheet URL unset or fetch fails */
+  var FALLBACK_READY = [
+    { title: 'Force Notes — Friction', topic: 'Mechanics', blurb: 'Static / kinetic friction', url: 'https://bird-glade-marble-thunder.grok.me/', status: 'ready', icon: '🧱', sort: 10 },
+    { title: 'Force Notes — Terminal', topic: 'Mechanics', blurb: 'Terminal speed / drag', url: 'https://bird-glade-marble-thunder.grok.me/terminal', status: 'ready', icon: '🪂', sort: 20 },
+    { title: 'Force Notes — Lift', topic: 'Mechanics', blurb: 'Lift and apparent weight', url: 'https://bird-glade-marble-thunder.grok.me/lift', status: 'ready', icon: '⬆', sort: 30 },
+    { title: 'Longitudinal Wave', topic: 'Waves', blurb: 'Compressions & rarefactions', url: 'https://flame-ever-crane-silver.grok.me', status: 'ready', icon: '〰', sort: 40 },
+    { title: 'Atomic world simulation', topic: 'Atomic World', blurb: 'Atomic models / Bohr hub', url: 'https://shadow-zephyr-ember-moon.grok.me/', status: 'ready', icon: '⚛', sort: 50 },
+    { title: 'Field Pair', topic: 'Electricity and Magnetism', blurb: 'E-field & force on a second charge', url: 'https://light-palm-king-cherry.grok.me', status: 'ready', icon: '⚡', sort: 60 },
+    { title: 'Window Air Conditioner Cycle', topic: 'Heat and Gases', blurb: 'Physics Simulation: Vapor Compression Cycle.', url: 'https://ai-science-sims.github.io/science-simulations/simulations/physics/heat-and-gases/air-conditioner.html', status: 'ready', icon: '🌡', sort: 70 },
+    { title: 'Convection in a Kettle', topic: 'Heat and Gases', blurb: 'Observe the cycle of rising hot water and sinking cold water after central heating.', url: 'https://ai-science-sims.github.io/science-simulations/simulations/physics/heat-and-gases/convection.html', status: 'ready', icon: '🌡', sort: 80 },
+    { title: 'Specific Heat Capacity', topic: 'Heat and Gases', blurb: 'Explore the concept of specific heat capacity with different materials.', url: 'https://ai-science-sims.github.io/science-simulations/simulations/physics/heat-and-gases/specific-heat-capacity.html', status: 'ready', icon: '🌡', sort: 90 },
+    { title: 'Diffraction Grating', topic: 'Waves', blurb: 'Simulate the interference pattern produced by a diffraction grating.', url: 'https://ai-science-sims.github.io/science-simulations/simulations/physics/optics-and-wave-motion/diffraction-grating.html', status: 'ready', icon: '〰', sort: 100 },
+    { title: 'Reflection of Light', topic: 'Waves', blurb: 'Demonstrate the laws of reflection with interactive light rays.', url: 'https://ai-science-sims.github.io/science-simulations/simulations/physics/optics-and-wave-motion/reflection-of-light.html', status: 'ready', icon: '〰', sort: 110 },
+    { title: 'Snell\'s Law', topic: 'Waves', blurb: 'Visualize refraction as light passes between different media.', url: 'https://ai-science-sims.github.io/science-simulations/simulations/physics/optics-and-wave-motion/snells-law.html', status: 'ready', icon: '〰', sort: 120 },
+    { title: 'Photoelectric Effect', topic: 'Atomic World', blurb: 'Explore how light knocks electrons off a metal surface.', url: 'https://ai-science-sims.github.io/science-simulations/simulations/physics/quantum-physics/photoelectric-effect.html', status: 'ready', icon: '⚛', sort: 130 },
+    { title: 'Newton\'s 2nd Law', topic: 'Mechanics', blurb: 'Simulate F=ma with a cart and hanging mass system.', url: 'https://ai-science-sims.github.io/science-simulations/simulations/physics/force-and-motion/newton-2nd-law.html', status: 'ready', icon: '⚙', sort: 140 },
+    { title: 'Acrobat Physics', topic: 'Mechanics', blurb: 'Learn about pendulum motion and projectile physics.', url: 'https://ai-science-sims.github.io/science-simulations/simulations/physics/force-and-motion/acrobat-game.html', status: 'ready', icon: '⚙', sort: 150 },
+    { title: 'Refraction Lab', topic: 'Waves', blurb: 'Explore how light bends between different media with realistic and ideal optics modes.', url: 'https://ai-science-sims.github.io/science-simulations/simulations/physics/optics-and-wave-motion/refraction.html', status: 'ready', icon: '〰', sort: 160 },
+    { title: 'Lens Ray Diagram', topic: 'Waves', blurb: 'Interactive ray diagram showing how lenses form images with convex and concave options.', url: 'https://ai-science-sims.github.io/science-simulations/simulations/physics/optics-and-wave-motion/ray-diagram-lens.html', status: 'ready', icon: '〰', sort: 170 },
+    { title: 'Wave Interference Lab', topic: 'Waves', blurb: 'Interactive wave interference simulation with AI-powered analysis and real-time visualization.', url: 'https://ai-science-sims.github.io/science-simulations/simulations/physics/optics-and-wave-motion/wave-interference.html', status: 'ready', icon: '〰', sort: 180 },
+    { title: 'Sound Interference Lab', topic: 'Waves', blurb: 'Explore sound wave interference by moving a microphone or plotting intensity along a line.', url: 'https://ai-science-sims.github.io/science-simulations/simulations/physics/optics-and-wave-motion/sound-interference.html', status: 'ready', icon: '〰', sort: 190 },
+    { title: '3D Magnetic Field Simulator', topic: 'Electricity and Magnetism', blurb: 'Interactive 3D visualization of magnetic fields from magnets, wires, solenoids, and coils.', url: 'https://ai-science-sims.github.io/science-simulations/simulations/physics/electricity-and-magnetism/magnetic-field-3d.html', status: 'ready', icon: '⚡', sort: 200 },
+    { title: 'Multi-Pivot Torque Balance Simulator', topic: 'Mechanics', blurb: 'Arrange pivots and objects on a beam to study torque balance, automatic leveling, and normal forces.', url: 'https://ai-science-sims.github.io/science-simulations/simulations/physics/force-and-motion/moment.html', status: 'ready', icon: '⚙', sort: 210 },
+    { title: 'Vertical Motion & Parachute Simulator', topic: 'Mechanics', blurb: 'Simulate vertical motion with drag and deploy a parachute to see how forces and graphs change over time.', url: 'https://ai-science-sims.github.io/science-simulations/simulations/physics/force-and-motion/vertical-motion-parachute.html', status: 'ready', icon: '⚙', sort: 220 },
+    { title: 'Bicycle Propulsion Sequence', topic: 'Mechanics', blurb: 'Animated sequence illustrating torque, action-reaction, and friction forces on a moving bicycle.', url: 'https://ai-science-sims.github.io/science-simulations/simulations/physics/force-and-motion/friction-in-riding-bicycle.html', status: 'ready', icon: '⚙', sort: 230 },
+    { title: 'Projectile Motion', topic: 'Mechanics', blurb: 'Explore projectile motion with adjustable launch parameters, air resistance, and real-time graphs.', url: 'https://ai-science-sims.github.io/science-simulations/simulations/physics/force-and-motion/projectile-sim.html', status: 'ready', icon: '⚙', sort: 240 },
+    { title: 'Inclined Plane Simulation', topic: 'Mechanics', blurb: 'Investigate forces and motion on an inclined plane with adjustable angle, mass, friction, and velocity.', url: 'https://ai-science-sims.github.io/science-simulations/simulations/physics/force-and-motion/inclined-plane.html', status: 'ready', icon: '⚙', sort: 250 },
+    { title: 'Bouncing Ball Free Fall', topic: 'Mechanics', blurb: 'Simulate free-fall motion with bounces, air resistance, and vector visualizations.', url: 'https://ai-science-sims.github.io/science-simulations/simulations/physics/force-and-motion/bouncing-ball-free-fall.html', status: 'ready', icon: '⚙', sort: 260 },
+    { title: 'Nuclear Chain Reaction Simulator', topic: 'Atomic World', blurb: 'Simulate nuclear fission chain reactions with moderators, control rods, and neutron leakage.', url: 'https://ai-science-sims.github.io/science-simulations/simulations/physics/radioactivity-and-nuclear-energy/nuclear-chain-reaction.html', status: 'ready', icon: '⚛', sort: 270 },
+    { title: 'Circular Motion Laboratory', topic: 'Mechanics', blurb: 'Explore circular motion physics with interactive experiments on centripetal force, angular velocity, and radius relation', url: 'https://ai-science-sims.github.io/science-simulations/simulations/physics/force-and-motion/circular-motion.html', status: 'ready', icon: '⚙', sort: 280 },
+    { title: 'Physics Lab: Complete Friction Analysis', topic: 'Mechanics', blurb: 'Comprehensive friction simulation with equilibrium analysis, torque shift visualization, and interactive challenge mode', url: 'https://ai-science-sims.github.io/science-simulations/simulations/physics/force-and-motion/coefficient-of-friction.html', status: 'ready', icon: '⚙', sort: 290 },
+    { title: 'Electrostatics Lab', topic: 'Electricity and Magnetism', blurb: 'Interactive electrostatic induction simulation with multi-stage polarization, grounding effects, and free sandbox mode f', url: 'https://ai-science-sims.github.io/science-simulations/simulations/physics/electricity-and-magnetism/electrostatic-induction.html', status: 'ready', icon: '⚡', sort: 300 },
+    { title: 'Rheostat Circuit Path', topic: 'Electricity and Magnetism', blurb: 'Explore how a rheostat changes resistance and current by moving the contact in linear or rotary modes.', url: 'https://ai-science-sims.github.io/science-simulations/simulations/physics/electricity-and-magnetism/rheostat-circuit-path.html', status: 'ready', icon: '⚡', sort: 310 },
+    { title: 'Ideal Gas Simulator', topic: 'Heat and Gases', blurb: 'Interactive ideal gas law simulator with real-time particle animation, lock P/V/T controls, dynamic charts (P-V, P-T, V-', url: 'https://ai-science-sims.github.io/science-simulations/simulations/physics/heat-and-gases/ideal-gas.html', status: 'ready', icon: '🌡', sort: 320 },
+    { title: 'Water, Nitrogen & Argon: Particle Motion & States of Matter', topic: 'Heat and Gases', blurb: 'Compare water molecules, nitrogen molecules and argon atoms from 1 K to 500 K: watch particle motion and structure acros', url: 'https://ai-science-sims.github.io/science-simulations/simulations/physics/heat-and-gases/water-states.html', status: 'ready', icon: '🌡', sort: 330 },
+    { title: 'Raybox Bench', topic: 'Waves', blurb: 'Investigate refraction, dispersion, reflection and lens imaging with a ray box, lenses, prisms, mirrors and a protractor', url: 'https://ai-science-sims.github.io/science-simulations/simulations/physics/optics-and-wave-motion/optics-bench.html', status: 'ready', icon: '〰', sort: 340 },
+  ];
+
+  /** Static TBD — not driven by Sheet */
+  var TBD_SIMS = [
+    { title: 'Angry projectile motion', topic: 'Mechanics', blurb: 'Projectile motion sim', url: null, status: 'tbd', icon: '🎯', sort: 1000 },
+    { title: 'Banked road', topic: 'Mechanics', blurb: 'Banked curve forces', url: null, status: 'tbd', icon: '🛣', sort: 1010 },
+    { title: 'Circular motion', topic: 'Mechanics', blurb: 'Uniform circular motion', url: null, status: 'tbd', icon: '🔄', sort: 1020 },
+    { title: 'Gravity', topic: 'Mechanics', blurb: 'Gravitational force / orbits', url: null, status: 'tbd', icon: '🌍', sort: 1030 },
+    { title: 'Kinematics simulation', topic: 'Mechanics', blurb: 'Displacement, velocity, acceleration', url: null, status: 'tbd', icon: '📈', sort: 1040 },
+    { title: 'Light refraction', topic: 'Waves', blurb: 'Snell’s law / refraction', url: null, status: 'tbd', icon: '💡', sort: 1050 },
+    { title: 'Path difference', topic: 'Waves', blurb: 'Interference path difference', url: null, status: 'tbd', icon: '〰️', sort: 1060 },
+    { title: "Faraday's law", topic: 'Electricity and Magnetism', blurb: 'Electromagnetic induction', url: null, status: 'tbd', icon: '🧲', sort: 1070 },
+    { title: 'Filament lamp', topic: 'Electricity and Magnetism', blurb: 'I–V characteristic (filament)', url: null, status: 'tbd', icon: '💡', sort: 1080 },
+    { title: 'LED', topic: 'Electricity and Magnetism', blurb: 'LED characteristic', url: null, status: 'tbd', icon: '🔴', sort: 1090 },
+    { title: 'Magnetic braking', topic: 'Electricity and Magnetism', blurb: 'Eddy current braking', url: null, status: 'tbd', icon: '🛑', sort: 1100 },
+    { title: 'Magnetic field line', topic: 'Electricity and Magnetism', blurb: 'Field line patterns', url: null, status: 'tbd', icon: '🧭', sort: 1110 },
+    { title: 'Resistor grid solver', topic: 'Electricity and Magnetism', blurb: 'Network of resistors', url: null, status: 'tbd', icon: '🔲', sort: 1120 },
+    { title: 'Resistor', topic: 'Electricity and Magnetism', blurb: 'Ohm’s law / resistor', url: null, status: 'tbd', icon: '➖', sort: 1130 },
+    { title: 'Temperature effect on resistor', topic: 'Electricity and Magnetism', blurb: 'Resistance vs temperature', url: null, status: 'tbd', icon: '🌡', sort: 1140 },
+    { title: 'Vrms', topic: 'Electricity and Magnetism', blurb: 'RMS voltage / AC', url: null, status: 'tbd', icon: '∿', sort: 1150 },
+    { title: 'Air pressure', topic: 'Heat and Gases', blurb: 'Gas pressure concepts', url: null, status: 'tbd', icon: '💨', sort: 1160 },
+    { title: 'Silver egg', topic: 'Heat and Gases', blurb: 'Heat transfer demo', url: null, status: 'tbd', icon: '🥚', sort: 1170 },
+    { title: 'Silver spoon', topic: 'Heat and Gases', blurb: 'Conduction demo', url: null, status: 'tbd', icon: '🥄', sort: 1180 },
+    { title: 'STM', topic: 'Atomic World', blurb: 'Scanning tunnelling microscope', url: null, status: 'tbd', icon: '🔬', sort: 1190 },
+    { title: 'TEM', topic: 'Atomic World', blurb: 'Transmission electron microscope', url: null, status: 'tbd', icon: '🔭', sort: 1200 },
+    { title: 'X-ray', topic: 'Atomic World', blurb: 'X-ray production / spectra', url: null, status: 'tbd', icon: '☢️', sort: 1210 },
+    { title: 'Solar panel', topic: 'Energy and Use of Energy', blurb: 'Solar cell / energy', url: null, status: 'tbd', icon: '☀', sort: 1220 }
+  ];
+
+  var TOOLS = [
+    {
+      title: 'DSE MCQ Answer Finder',
+      blurb: 'Check HKDSE / CE / AL / Paper 2 Physics MCQ answers',
+      status: 'ready',
+      icon: '✅',
+      url: null,
+      view: 'mcq',
+      label: 'Open'
+    },
+    { title: 'DSE traps checker', blurb: 'Common exam traps', status: 'soon', icon: '⚠', url: null },
+    { title: 'Publisher mock exam portal', blurb: 'Mock papers portal', status: 'soon', icon: '📝', url: null },
+    { title: 'Publisher quick check', blurb: 'Quick check page', status: 'soon', icon: '⚡', url: null },
+    { title: 'Exam mark checking', blurb: 'Mark checking tools', status: 'later', icon: '📊', url: null }
+  ];
+
+  var CLASSROOM = [
+    {
+      title: 'Slip (MC / TF tallies)',
+      blurb: 'Teacher board for in-class responses',
+      status: 'ready',
+      icon: '📋',
+      url: 'https://blaze-raven-iris-cactus.grok.me/'
+    }
+  ];
+
+  var MATERIALS = []; /* Drive folder TBD — no live links */
+
+  var state = { view: 'home', topic: 'All', q: '', catalogSource: 'pending' };
+  var SIMS = [];
+
+  function isApproved(v) {
+    v = String(v == null ? '' : v).trim().toLowerCase();
+    return v === 'yes' || v === 'true' || v === '1' || v === 'y';
+  }
+
+  function parseCSV(text) {
+    var rows = [];
+    var row = [];
+    var field = '';
+    var i = 0;
+    var inQuotes = false;
+    text = String(text || '').replace(/^\uFEFF/, '');
+    while (i < text.length) {
+      var c = text.charAt(i);
+      if (inQuotes) {
+        if (c === '"') {
+          if (text.charAt(i + 1) === '"') { field += '"'; i += 2; continue; }
+          inQuotes = false; i++; continue;
+        }
+        field += c; i++; continue;
+      }
+      if (c === '"') { inQuotes = true; i++; continue; }
+      if (c === ',') { row.push(field); field = ''; i++; continue; }
+      if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; i++; continue; }
+      if (c === '\r') { i++; continue; }
+      field += c; i++;
+    }
+    if (field.length || row.length) { row.push(field); rows.push(row); }
+    return rows;
+  }
+
+  function rowsToObjects(rows) {
+    if (!rows.length) return [];
+    var headers = rows[0].map(function (h) { return String(h).trim(); });
+    var out = [];
+    for (var r = 1; r < rows.length; r++) {
+      var cells = rows[r];
+      if (!cells || !cells.length) continue;
+      var obj = {};
+      var empty = true;
+      for (var c = 0; c < headers.length; c++) {
+        var key = headers[c];
+        if (!key) continue;
+        var val = cells[c] != null ? String(cells[c]).trim() : '';
+        obj[key] = val;
+        if (val) empty = false;
+      }
+      if (!empty) out.push(obj);
+    }
+    return out;
+  }
+
+  function sheetRowToSim(obj) {
+    var topic = normalizeTopic(obj.topic);
+    var url = obj.url || '';
+    if (!url && obj.fileId) {
+      url = 'https://drive.google.com/file/d/' + obj.fileId + '/view';
+    }
+    if (!url || !obj.title) return null;
+    var sort = Number(obj.sort);
+    if (isNaN(sort)) sort = 500;
+    return {
+      title: obj.title,
+      topic: topic,
+      blurb: obj.blurb || '',
+      url: url,
+      status: 'ready',
+      icon: TOPIC_ICONS[topic] || '🔬',
+      sort: sort
+    };
+  }
+
+  function rebuildSims(readyList) {
+    var ready = (readyList || []).slice().sort(function (a, b) {
+      return (a.sort || 0) - (b.sort || 0);
+    });
+    // Drop TBD cards whose title matches a ready sim (case-insensitive)
+    var readyTitles = {};
+    ready.forEach(function (s) { readyTitles[s.title.toLowerCase()] = 1; });
+    var tbd = TBD_SIMS.filter(function (s) {
+      return !readyTitles[s.title.toLowerCase()];
+    });
+    SIMS = ready.concat(tbd);
+  }
+
+  function showBanner(msg, ok) {
+    /* Catalog status banner removed (v0.5.15) — keep no-op for call sites */
+  }
+
+  function loadCatalog() {
+    rebuildSims(FALLBACK_READY);
+    state.catalogSource = 'fallback';
+
+    var url = String(SHEET_CSV_URL || '').trim();
+    if (!url || url === 'REPLACE_SHEET_CSV_URL') {
+      showBanner('Catalog URL not set yet — showing built-in list. Staff: set SHEET_CSV_URL (STAFF-SETUP.md).', false);
+      finishRender();
+      return Promise.resolve();
+    }
+
+    return fetch(url, { credentials: 'omit', cache: 'no-store' })
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.text();
+      })
+      .then(function (text) {
+        var objs = rowsToObjects(parseCSV(text));
+        var ready = [];
+        objs.forEach(function (o) {
+          if (!isApproved(o.approved)) return;
+          var sim = sheetRowToSim(o);
+          if (sim) ready.push(sim);
+        });
+        if (!ready.length) {
+          throw new Error('No approved rows');
+        }
+        rebuildSims(ready);
+        state.catalogSource = 'sheet';
+        showBanner('Catalog online · ' + ready.length + ' approved sim(s) from Sheet.', true);
+        finishRender();
+      })
+      .catch(function (err) {
+        console.warn('Catalog fetch failed', err);
+        rebuildSims(FALLBACK_READY);
+        state.catalogSource = 'offline';
+        showBanner('Catalog offline — showing built-in list.', false);
+        finishRender();
+      });
+  }
+
+  function readyCount() {
+    return SIMS.filter(function (s) { return s.status === 'ready'; }).length;
+  }
+  function tbdCount() {
+    return SIMS.filter(function (s) { return s.status === 'tbd'; }).length;
+  }
+
+  function statusBadge(st) {
+    if (st === 'ready') return '<span class="badge badge-ready">Ready</span>';
+    if (st === 'tbd') return '<span class="badge badge-tbd">Link TBD</span>';
+    if (st === 'soon') return '<span class="badge badge-soon">Coming soon</span>';
+    return '<span class="badge badge-soon">Coming later</span>';
+  }
+
+  var mcqBlobUrl = null;
+
+  function loadMcqFrame() {
+    var frame = document.getElementById('mcqFrame');
+    var srcEl = document.getElementById('mcq-html');
+    if (!frame || !srcEl) return;
+    var html = String(srcEl.textContent || '').replace(/<\\\//g, '</');
+    if (mcqBlobUrl) {
+      try { URL.revokeObjectURL(mcqBlobUrl); } catch (e) {}
+      mcqBlobUrl = null;
+    }
+    mcqBlobUrl = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+    frame.removeAttribute('srcdoc');
+    frame.src = mcqBlobUrl;
+  }
+
+
+  function setView(view) {
+    state.view = view;
+    document.querySelectorAll('.nav-btn').forEach(function (b) {
+      var dv = b.getAttribute('data-view');
+      b.classList.toggle('active', dv === view || (view === 'mcq' && dv === 'tools'));
+    });
+    document.querySelectorAll('.panel').forEach(function (p) {
+      p.classList.toggle('active', p.getAttribute('data-panel') === view);
+    });
+    if (view === 'mcq') loadMcqFrame();
+    if (location.hash.replace(/^#/, '') !== view) {
+      history.replaceState(null, '', '#' + view);
+    }
+    closeMenu();
+    window.scrollTo(0, 0);
+  }
+
+  function openMenu() {
+    document.getElementById('sidebar').classList.add('open');
+    var bd = document.getElementById('backdrop');
+    bd.hidden = false;
+    bd.classList.add('show');
+  }
+  function closeMenu() {
+    document.getElementById('sidebar').classList.remove('open');
+    var bd = document.getElementById('backdrop');
+    bd.classList.remove('show');
+    bd.hidden = true;
+  }
+
+
+  /* Daily physics-history facts (curated; Wikipedia titles for soft enrichment) */
+  var PHYSICS_FACTS = [
+    { month: 1, day: 1, text: "Christiaan Huygens built highly accurate pendulum clocks in the 1650s, helping make precise timing a tool for mechanics.", sourceTitle: "Christiaan Huygens", wikiTitle: "Christiaan Huygens" },
+    { month: 1, day: 4, text: "Isaac Newton was born on 4 January 1643 (Gregorian calendar). His laws of motion and gravity still anchor school mechanics.", sourceTitle: "Isaac Newton", wikiTitle: "Isaac Newton" },
+    { month: 1, day: 8, text: "Stephen Hawking was born on 8 January 1942. His work linked black holes with thermodynamics and quantum ideas.", sourceTitle: "Stephen Hawking", wikiTitle: "Stephen Hawking" },
+    { month: 1, day: 27, text: "On 27 January 1880, Thomas Edison received a U.S. patent related to an improved electric lamp design.", sourceTitle: "Incandescent light bulb", wikiTitle: "Incandescent light bulb" },
+    { month: 2, day: 8, text: "In February 1672, Isaac Newton was elected a Fellow of the Royal Society after demonstrating his reflecting telescope.", sourceTitle: "Isaac Newton", wikiTitle: "Isaac Newton" },
+    { month: 2, day: 11, text: "Thomas Edison was born on 11 February 1847. He helped commercialise electric lighting and power systems.", sourceTitle: "Thomas Edison", wikiTitle: "Thomas Edison" },
+    { month: 2, day: 15, text: "Galileo Galilei was born on 15 February 1564. His telescopic observations transformed astronomy and the practice of experiment.", sourceTitle: "Galileo Galilei", wikiTitle: "Galileo Galilei" },
+    { month: 2, day: 19, text: "Nicolaus Copernicus was born on 19 February 1473. His heliocentric model reshaped how we map the Solar System.", sourceTitle: "Nicolaus Copernicus", wikiTitle: "Nicolaus Copernicus" },
+    { month: 2, day: 22, text: "Heinrich Hertz was born on 22 February 1857. He experimentally confirmed electromagnetic waves predicted by Maxwell.", sourceTitle: "Heinrich Hertz", wikiTitle: "Heinrich Hertz" },
+    { month: 3, day: 6, text: "On 6 March 1869, Dmitri Mendeleev presented an early periodic table — a map of the elements that later met atomic physics.", sourceTitle: "Dmitri Mendeleev", wikiTitle: "Dmitri Mendeleev" },
+    { month: 3, day: 14, text: "14 March is Pi Day — and Albert Einstein’s birthday (1879). Relativity and quantum ideas remade 20th-century physics.", sourceTitle: "Albert Einstein", wikiTitle: "Albert Einstein" },
+    { month: 3, day: 27, text: "Wilhelm Röntgen was born on 27 March 1845. In 1895 he discovered X-rays while studying cathode rays.", sourceTitle: "Wilhelm Röntgen", wikiTitle: "Wilhelm Röntgen" },
+    { month: 4, day: 12, text: "On 12 April 1961, Yuri Gagarin became the first human in orbit — free-fall weightlessness made Newtonian gravity vivid.", sourceTitle: "Yuri Gagarin", wikiTitle: "Yuri Gagarin" },
+    { month: 4, day: 15, text: "Leonardo da Vinci was born on 15 April 1452. His notebooks blend careful observation of motion, light, and machines.", sourceTitle: "Leonardo da Vinci", wikiTitle: "Leonardo da Vinci" },
+    { month: 4, day: 23, text: "Max Planck was born on 23 April 1858. Quantum theory grew from his work on black-body radiation.", sourceTitle: "Max Planck", wikiTitle: "Max Planck" },
+    { month: 4, day: 25, text: "Guglielmo Marconi was born on 25 April 1874. Wireless telegraphy grew from Hertzian electromagnetic waves.", sourceTitle: "Guglielmo Marconi", wikiTitle: "Guglielmo Marconi" },
+    { month: 5, day: 11, text: "In March–May 1916 Einstein’s general relativity papers laid out gravity as spacetime curvature.", sourceTitle: "General relativity", wikiTitle: "General relativity" },
+    { month: 5, day: 21, text: "Long-distance flight depends on lift, drag, and propulsion — classroom links to Bernoulli’s principle and energy transfer.", sourceTitle: "Bernoulli's principle", wikiTitle: "Bernoulli's principle" },
+    { month: 5, day: 29, text: "On 29 May 1919, eclipse expeditions measured starlight deflection near the Sun — a famous test of general relativity.", sourceTitle: "Eddington experiment", wikiTitle: "Eddington experiment" },
+    { month: 6, day: 8, text: "Giovanni Domenico Cassini was born on 8 June 1625. He studied Saturn’s rings and moons with careful telescopic measures.", sourceTitle: "Giovanni Domenico Cassini", wikiTitle: "Giovanni Domenico Cassini" },
+    { month: 6, day: 10, text: "On 10 June 1854, Bernhard Riemann lectured on geometry — ideas later essential to Einstein’s relativity.", sourceTitle: "Bernhard Riemann", wikiTitle: "Bernhard Riemann" },
+    { month: 6, day: 13, text: "James Clerk Maxwell was born on 13 June 1831. His equations unified electricity and magnetism and predicted EM waves.", sourceTitle: "James Clerk Maxwell", wikiTitle: "James Clerk Maxwell" },
+    { month: 6, day: 21, text: "Near the June solstice, northern daylight peaks — a seasonal reminder of Earth’s axial tilt and orbit.", sourceTitle: "Axial tilt", wikiTitle: "Axial tilt" },
+    { month: 7, day: 4, text: "Marie Curie died on 4 July 1934. Her research on radioactivity shaped nuclear physics and medical imaging.", sourceTitle: "Marie Curie", wikiTitle: "Marie Curie" },
+    { month: 7, day: 10, text: "Nikola Tesla was born on 10 July 1856. He advanced alternating-current power systems and high-frequency experiments.", sourceTitle: "Nikola Tesla", wikiTitle: "Nikola Tesla" },
+    { month: 7, day: 20, text: "On 20 July 1969, Apollo 11 landed humans on the Moon — orbital mechanics and guidance systems in action.", sourceTitle: "Apollo 11", wikiTitle: "Apollo 11" },
+    { month: 8, day: 1, text: "In August 1774, Joseph Priestley isolated oxygen, transforming the chemistry of air and combustion.", sourceTitle: "Joseph Priestley", wikiTitle: "Joseph Priestley" },
+    { month: 8, day: 6, text: "Particle physicists at CERN helped popularise the early World Wide Web — a computing tool born beside big physics labs.", sourceTitle: "World Wide Web", wikiTitle: "World Wide Web" },
+    { month: 8, day: 12, text: "Erwin Schrödinger was born on 12 August 1887. Wave mechanics became a core language of quantum physics.", sourceTitle: "Erwin Schrödinger", wikiTitle: "Erwin Schrödinger" },
+    { month: 8, day: 26, text: "Antoine Lavoisier was born on 26 August 1743. Quantitative mass measurements helped remake chemistry into exact science.", sourceTitle: "Antoine Lavoisier", wikiTitle: "Antoine Lavoisier" },
+    { month: 9, day: 3, text: "In the 1780s Charles-Augustin de Coulomb quantified electrostatic force — Coulomb’s law still opens electrostatics units.", sourceTitle: "Coulomb's law", wikiTitle: "Coulomb's law" },
+    { month: 9, day: 17, text: "Willard Libby was born on 17 September 1908. Radiocarbon dating applies nuclear decay to archaeology and Earth science.", sourceTitle: "Willard Libby", wikiTitle: "Willard Libby" },
+    { month: 9, day: 23, text: "On 23 September 1846, Neptune was observed after predictions from Newtonian gravity — a triumph of celestial mechanics.", sourceTitle: "Discovery of Neptune", wikiTitle: "Discovery of Neptune" },
+    { month: 10, day: 4, text: "On 4 October 1957, Sputnik 1 became the first artificial satellite — orbital physics entered everyday news.", sourceTitle: "Sputnik 1", wikiTitle: "Sputnik 1" },
+    { month: 10, day: 9, text: "Max von Laue was born on 9 October 1879. X-ray diffraction showed that crystals have regular lattices.", sourceTitle: "Max von Laue", wikiTitle: "Max von Laue" },
+    { month: 10, day: 21, text: "Alfred Nobel was born on 21 October 1833. The Nobel Prize in Physics later highlighted many classroom-famous discoveries.", sourceTitle: "Nobel Prize in Physics", wikiTitle: "Nobel Prize in Physics" },
+    { month: 10, day: 22, text: "Michael Faraday’s 1830s induction experiments led to generators, transformers, and the electric motors we still teach.", sourceTitle: "Michael Faraday", wikiTitle: "Michael Faraday" },
+    { month: 10, day: 28, text: "Kepler’s laws of planetary motion (early 1600s) still structure how we teach elliptical orbits and orbital speed.", sourceTitle: "Kepler's laws of planetary motion", wikiTitle: "Kepler's laws of planetary motion" },
+    { month: 11, day: 2, text: "George Boole was born on 2 November 1815. Boolean logic later underpins digital electronics and computing.", sourceTitle: "George Boole", wikiTitle: "George Boole" },
+    { month: 11, day: 7, text: "Marie Curie was born on 7 November 1867. She pioneered radioactivity research and won Nobel Prizes in Physics and Chemistry.", sourceTitle: "Marie Curie", wikiTitle: "Marie Curie" },
+    { month: 11, day: 8, text: "On 8 November 1895, Wilhelm Röntgen discovered X-rays — opening medical imaging and atomic-era physics.", sourceTitle: "X-ray", wikiTitle: "X-ray" },
+    { month: 11, day: 15, text: "William Herschel was born on 15 November 1738. He discovered Uranus and detected infrared radiation from the Sun.", sourceTitle: "William Herschel", wikiTitle: "William Herschel" },
+    { month: 11, day: 20, text: "Edwin Hubble was born on 20 November 1889. His observations showed that the universe is expanding.", sourceTitle: "Edwin Hubble", wikiTitle: "Edwin Hubble" },
+    { month: 11, day: 29, text: "Christian Doppler was born on 29 November 1803. The Doppler effect explains sirens, radar, and astronomical redshifts.", sourceTitle: "Christian Doppler", wikiTitle: "Christian Doppler" },
+    { month: 12, day: 5, text: "Werner Heisenberg was born on 5 December 1901. Matrix mechanics and the uncertainty principle reshaped quantum theory.", sourceTitle: "Werner Heisenberg", wikiTitle: "Werner Heisenberg" },
+    { month: 12, day: 10, text: "10 December is the traditional Nobel award day in Stockholm — Physics laureates often include names from your syllabus topics.", sourceTitle: "Nobel Prize in Physics", wikiTitle: "Nobel Prize in Physics" },
+    { month: 12, day: 14, text: "On 14 December 1900, Max Planck presented his quantum hypothesis for black-body radiation — a birthday of quantum theory.", sourceTitle: "Planck's law", wikiTitle: "Planck's law" },
+    { month: 12, day: 21, text: "Near the December solstice, the Sun’s noon altitude is lowest in the north — geometry that explains the seasons.", sourceTitle: "Solstice", wikiTitle: "Solstice" },
+    { month: 12, day: 25, text: "Newton’s birthday is often listed as 25 December 1642 in the Julian calendar — a reminder that history needs calendar care.", sourceTitle: "Isaac Newton", wikiTitle: "Isaac Newton" },
+    { month: 5, day: 1, text: "In 1898 Marie and Pierre Curie announced radium (after polonium), expanding the study of radioactivity.", sourceTitle: "Radium", wikiTitle: "Radium" },
+    { month: 3, day: 1, text: "In March 1896 Henri Becquerel discovered radioactivity in uranium salts — soon after Röntgen’s X-rays.", sourceTitle: "Henri Becquerel", wikiTitle: "Henri Becquerel" },
+    { month: 4, day: 1, text: "In April 1900 the Rayleigh–Jeans / early black-body debates pushed physicists toward energy quantisation.", sourceTitle: "Ultraviolet catastrophe", wikiTitle: "Ultraviolet catastrophe" },
+    { month: 7, day: 16, text: "On 16 July 1945 the Trinity test demonstrated a nuclear chain reaction — a turning point in nuclear physics history.", sourceTitle: "Trinity (nuclear test)", wikiTitle: "Trinity (nuclear test)" },
+    { month: 8, day: 2, text: "On 2 August 1939, Einstein signed a letter to Roosevelt warning about uranium research — part of WWII nuclear history.", sourceTitle: "Einstein–Szilard letter", wikiTitle: "Einstein–Szilárd letter" },
+    { month: 9, day: 12, text: "On 12 September 1959, the Soviet Luna 2 became the first spacecraft to reach the Moon — applied orbital mechanics.", sourceTitle: "Luna 2", wikiTitle: "Luna 2" },
+    { month: 10, day: 14, text: "On 14 October 1947, Chuck Yeager broke the sound barrier in the Bell X-1 — compressibility and shock waves in action.", sourceTitle: "Bell X-1", wikiTitle: "Bell X-1" },
+    { month: 1, day: 15, text: "On 15 January 2001, Wikipedia launched. It is a common teaching reference for science biographies (always cross-check).", sourceTitle: "Wikipedia", wikiTitle: "Wikipedia" },
+    { month: 6, day: 4, text: "In June 1905 Einstein published on the photoelectric effect — light behaving in energy packets called quanta.", sourceTitle: "Photoelectric effect", wikiTitle: "Photoelectric effect" },
+    { month: 9, day: 26, text: "In late September 1887, the Michelson–Morley experiment reported a null result for the aether wind — a path toward relativity.", sourceTitle: "Michelson–Morley experiment", wikiTitle: "Michelson–Morley experiment" },
+    { month: 11, day: 11, text: "On 11 November 1572, Tycho Brahe observed a “new star” (supernova SN 1572) — evidence the heavens can change.", sourceTitle: "SN 1572", wikiTitle: "SN 1572" }
+  ];
+
+
+  function dayOfYear(d) {
+    var start = new Date(d.getFullYear(), 0, 0);
+    return Math.floor((d - start) / 86400000);
+  }
+
+  function pickTodayFact(now) {
+    var d = now || new Date();
+    var m = d.getMonth() + 1;
+    var day = d.getDate();
+    var i;
+    for (i = 0; i < PHYSICS_FACTS.length; i++) {
+      if (PHYSICS_FACTS[i].month === m && PHYSICS_FACTS[i].day === day) {
+        return PHYSICS_FACTS[i];
+      }
+    }
+    return PHYSICS_FACTS[dayOfYear(d) % PHYSICS_FACTS.length];
+  }
+
+  function formatFactDate(d) {
+    try {
+      return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+    } catch (e) {
+      return (d.getMonth() + 1) + '/' + d.getDate();
+    }
+  }
+
+  function wikiSummaryUrl(title) {
+    return 'https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(title).replace(/%20/g, '_');
+  }
+
+  function wikiPageUrl(title) {
+    return 'https://en.wikipedia.org/wiki/' + encodeURIComponent(title).replace(/%20/g, '_');
+  }
+
+  function softFetchWiki(fact) {
+    if (!fact || !fact.wikiTitle) return;
+    var link = document.getElementById('homeFactWiki');
+    if (!link) return;
+    var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    var timer = setTimeout(function () { try { if (ctrl) ctrl.abort(); } catch (e) {} }, 4000);
+    var opts = { credentials: 'omit', cache: 'default' };
+    if (ctrl) opts.signal = ctrl.signal;
+    fetch(wikiSummaryUrl(fact.wikiTitle), opts)
+      .then(function (res) {
+        if (!res.ok) throw new Error('wiki ' + res.status);
+        return res.json();
+      })
+      .then(function (data) {
+        clearTimeout(timer);
+        var href = (data && data.content_urls && data.content_urls.desktop && data.content_urls.desktop.page)
+          || wikiPageUrl(fact.wikiTitle);
+        link.href = href;
+        link.hidden = false;
+        link.textContent = 'Wikipedia · ' + (fact.sourceTitle || fact.wikiTitle);
+      })
+      .catch(function () {
+        clearTimeout(timer);
+        link.href = wikiPageUrl(fact.wikiTitle);
+        link.hidden = false;
+        link.textContent = 'Wikipedia · ' + (fact.sourceTitle || fact.wikiTitle);
+      });
+  }
+
+  function renderHomeFact() {
+    var fact = pickTodayFact(new Date());
+    var dateEl = document.getElementById('homeFactDate');
+    var textEl = document.getElementById('homeFactText');
+    var link = document.getElementById('homeFactWiki');
+    if (!textEl) return;
+    if (dateEl) dateEl.textContent = formatFactDate(new Date());
+    textEl.textContent = fact.text;
+    if (link) {
+      link.hidden = false;
+      link.href = wikiPageUrl(fact.wikiTitle);
+      link.textContent = 'Wikipedia · ' + (fact.sourceTitle || fact.wikiTitle);
+    }
+    softFetchWiki(fact);
+  }
+
+  function renderHome() {
+    var toolsReady = TOOLS.filter(function (t) { return t.status === 'ready'; }).length;
+    var toolsStub = TOOLS.length - toolsReady;
+    document.getElementById('homeStats').innerHTML =
+      '<div class="stat"><div class="n">' + readyCount() + '</div><div class="l">Ready sims</div></div>' +
+      '<div class="stat"><div class="n">' + tbdCount() + '</div><div class="l">Sims · Link TBD</div></div>' +
+      '<div class="stat"><div class="n">' + toolsReady + '</div><div class="l">Tools ready</div></div>' +
+      '<div class="stat"><div class="n">' + toolsStub + '</div><div class="l">Tools stubbed</div></div>';
+    renderHomeFact();
+  }
+
+  function renderChips() {
+    var el = document.getElementById('topicChips');
+    el.innerHTML = TOPICS.map(function (t) {
+      var active = state.topic === t ? ' active' : '';
+      return '<button type="button" class="chip' + active + '" data-topic="' + t + '" role="tab" aria-selected="' + (state.topic === t) + '">' + t + '</button>';
+    }).join('');
+  }
+
+  function filteredSims() {
+    var q = state.q.trim().toLowerCase();
+    return SIMS.filter(function (s) {
+      if (state.topic !== 'All' && s.topic !== state.topic) return false;
+      if (!q) return true;
+      return (s.title + ' ' + s.blurb + ' ' + s.topic).toLowerCase().indexOf(q) !== -1;
+    });
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function simCard(s) {
+    var dim = s.status !== 'ready' ? ' dim' : '';
+    var action;
+    if (s.status === 'ready' && s.url) {
+      action = '<a class="btn btn-primary" href="' + escapeHtml(s.url) + '" target="_blank" rel="noopener noreferrer">Open</a>';
+    } else {
+      action = '<button type="button" class="btn btn-primary btn-disabled" disabled aria-disabled="true">Link TBD</button>';
+    }
+    return (
+      '<article class="card' + dim + '" data-topic="' + escapeHtml(s.topic) + '">' +
+        '<div class="card-top">' +
+          '<div class="icon-block" aria-hidden="true">' + s.icon + '</div>' +
+          '<h3>' + escapeHtml(s.title) + '</h3>' +
+        '</div>' +
+        '<p class="blurb">' + escapeHtml(s.blurb) + '</p>' +
+        '<div class="card-meta">' +
+          '<span class="topic-tag">' + escapeHtml(s.topic) + '</span>' +
+          statusBadge(s.status) +
+        '</div>' +
+        '<div class="card-actions">' + action + '</div>' +
+      '</article>'
+    );
+  }
+
+  function renderSims() {
+    var list = filteredSims();
+    document.getElementById('simGrid').innerHTML = list.map(simCard).join('');
+    document.getElementById('simEmpty').hidden = list.length > 0;
+  }
+
+  function toolCard(t) {
+    var action;
+    if (t.status === 'ready' && t.view) {
+      action = '<button type="button" class="btn btn-primary" data-open-view="' + escapeHtml(t.view) + '">' +
+        escapeHtml(t.label || 'Open') + '</button>';
+    } else if (t.status === 'ready' && t.url) {
+      action = '<a class="btn btn-primary" href="' + escapeHtml(t.url) + '" target="_blank" rel="noopener noreferrer">' +
+        escapeHtml(t.label || 'Open') + '</a>';
+    } else {
+      var label = t.status === 'later' ? 'Coming later' : 'Coming soon';
+      action = '<button type="button" class="btn btn-primary btn-disabled" disabled>' + label + '</button>';
+    }
+    return (
+      '<article class="card' + (t.status !== 'ready' ? ' dim' : '') + '">' +
+        '<div class="card-top">' +
+          '<div class="icon-block" aria-hidden="true">' + t.icon + '</div>' +
+          '<h3>' + escapeHtml(t.title) + '</h3>' +
+        '</div>' +
+        '<p class="blurb">' + escapeHtml(t.blurb) + '</p>' +
+        '<div class="card-meta">' + statusBadge(t.status) + '</div>' +
+        '<div class="card-actions">' + action + '</div>' +
+      '</article>'
+    );
+  }
+
+  function renderTools() {
+    document.getElementById('toolGrid').innerHTML = TOOLS.map(toolCard).join('');
+  }
+
+  function renderClassroom() {
+    document.getElementById('classGrid').innerHTML = CLASSROOM.map(function (c) {
+      return (
+        '<article class="card">' +
+          '<div class="card-top">' +
+            '<div class="icon-block" aria-hidden="true">' + c.icon + '</div>' +
+            '<h3>' + escapeHtml(c.title) + '</h3>' +
+          '</div>' +
+          '<p class="blurb">' + escapeHtml(c.blurb) + '</p>' +
+          '<div class="card-meta">' + statusBadge(c.status) + '</div>' +
+          '<div class="card-actions">' +
+            '<a class="btn btn-primary" href="' + escapeHtml(c.url) + '" target="_blank" rel="noopener noreferrer">Open</a>' +
+          '</div>' +
+        '</article>'
+      );
+    }).join('');
+  }
+
+  function renderMaterials() {
+    var folder = 'https://drive.google.com/drive/folders/1Y4aV5N0NKvJo1tI_W3ZQ1DTdln4D94Kx';
+    document.getElementById('matList').innerHTML =
+      '<a class="link-row" href="' + folder + '" target="_blank" rel="noopener noreferrer">' +
+        '<span class="ico" aria-hidden="true">📁</span>' +
+        '<span class="txt"><strong>Class materials (Drive)</strong>' +
+        '<span>Open the shared folder · teaching use only</span></span>' +
+        '<span class="arrow" aria-hidden="true">→</span>' +
+      '</a>';
+  }
+
+
+
+
+  function finishRender() {
+    renderHome();
+    renderSims();
+  }
+
+  function initNav() {
+    document.querySelectorAll('.nav-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        setView(btn.getAttribute('data-view'));
+      });
+    });
+    document.getElementById('menuBtn').addEventListener('click', function () {
+      var sb = document.getElementById('sidebar');
+      if (sb.classList.contains('open')) closeMenu(); else openMenu();
+    });
+    document.getElementById('backdrop').addEventListener('click', closeMenu);
+  }
+
+  function initSimsUI() {
+    renderChips();
+    document.getElementById('topicChips').addEventListener('click', function (e) {
+      var t = e.target.closest('[data-topic]');
+      if (!t) return;
+      state.topic = t.getAttribute('data-topic');
+      renderChips();
+      renderSims();
+    });
+    document.getElementById('simSearch').addEventListener('input', function (e) {
+      state.q = e.target.value;
+      renderSims();
+    });
+  }
+
+  function readHash() {
+    var h = (location.hash || '#home').replace(/^#/, '') || 'home';
+    var allowed = { home: 1, sims: 1, tools: 1, classroom: 1, materials: 1, mcq: 1 };
+    if (!allowed[h]) h = 'home';
+    setView(h);
+  }
+
+  initNav();
+  initSimsUI();
+  renderTools();
+  renderClassroom();
+  renderMaterials();
+  document.getElementById('toolGrid').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-open-view]');
+    if (!btn) return;
+    setView(btn.getAttribute('data-open-view'));
+  });
+  document.getElementById('mcqBack').addEventListener('click', function () {
+    setView('tools');
+  });
+  window.addEventListener('hashchange', readHash);
+  readHash();
+  loadCatalog();
+})();
+  </script>
+</body>
+</html>

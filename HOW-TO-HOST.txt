@@ -1,0 +1,49 @@
+Carmel Physics hub — free host, no Grok
+========================================
+
+This is one HTML file. It already loads the simulation list from your Google Sheet.
+Host it on GitHub Pages, under a GitHub account that stays at the school.
+Do not use the account of the teacher who is leaving.
+
+What this does not do
+---------------------
+- No school login. Anyone with the link can open the page, including the DSE answer finder.
+- A Google Doc cannot receive pasted HTML and update the hub.
+- Links that start with grok.me stop working when that Grok account ends. Save those HTML files first.
+
+One-time setup (a colleague who will stay)
+------------------------------------------
+1. Create a GitHub account, or use one the department already keeps.
+2. New repository. Name it carmel-physics. Set it to Public.
+3. Add file → Upload files → upload index.html from this folder.
+4. Settings → Pages → Branch: main → Save.
+5. The site address looks like https://USERNAME.github.io/carmel-physics/
+6. Add a second colleague as a collaborator (Settings → Collaborators) so one person is not the only key.
+
+Add a simulation later
+----------------------
+Link only (a page that already has an address):
+1. Open the catalog Google Sheet.
+2. New row: title, topic, blurb, url, approved = yes.
+3. Topic must be one of: Mechanics, Waves, Electricity and Magnetism, Heat and Gases, Atomic World, Energy and Use of Energy.
+4. Reload the hub. No new upload.
+
+HTML file (a simulation you wrote):
+1. On GitHub, open the repository → Add file → Upload files.
+2. Upload the .html file. Put it in a folder named sims if you like.
+3. Open the file on the Pages site and copy that address. It looks like:
+   https://USERNAME.github.io/carmel-physics/sims/friction.html
+4. Add that address as the url in the Sheet, approved = yes.
+5. Reload the hub.
+
+The Sheet already wired into index.html is:
+https://docs.google.com/spreadsheets/d/1MXX-mM_HFfo_gaP4yca4yO_u11LjIeih0lDI-JRiZ9g
+
+Keep that Sheet on a school Google account, not a personal one.
+
+Before the teacher leaves
+-------------------------
+- Download every simulation that lives on grok.me (Force Notes, waves, atomic, fields, Slip, and any pasted into the Grok hub).
+- Upload those files to this repository and point the Sheet at the new addresses.
+- Confirm a colleague can edit both the GitHub repository and the Sheet.
+- Class materials stay in the shared Drive folder. That link does not depend on Grok.
