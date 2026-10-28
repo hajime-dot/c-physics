@@ -724,7 +724,7 @@
       min-height:48px;
     }
     select:focus,input:focus{border-color:var(--carmel); box-shadow:0 0 0 3px rgba(153,0,17,.22)}
-    .actions{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:4px}
+    .actions{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:4px}
     .btn{
       border:0; border-radius:12px; padding:13px 10px; font-weight:800; cursor:pointer;
       min-height:48px; touch-action:manipulation;
@@ -825,7 +825,6 @@
       </div>
 
       <div class="actions">
-        <button class="btn primary" id="btnFind">Find</button>
         <button class="btn alt" id="btnClear">Clear</button>
         <button class="btn neutral" id="btnGoogle">Google it</button>
       </div>
@@ -1936,6 +1935,7 @@ CE,2009,44,A`;
     fillYears();
     list.innerHTML='';
     postHeight();
+    doFind();
   }
 
   function fillYears(){
@@ -2008,7 +2008,6 @@ CE,2009,44,A`;
   function doFind(){ render(findRows()); }
 
   examEl.addEventListener('change', ()=>{ setMode(); });
-  document.getElementById('btnFind').addEventListener('click', doFind);
   document.getElementById('btnClear').addEventListener('click', ()=>{
     qEl.value=''; qP2El.value=''; yearEl.value=''; list.innerHTML=''; postHeight();
   });
@@ -2032,7 +2031,7 @@ CE,2009,44,A`;
     }
     window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`,'_blank','noopener,noreferrer');
   });
-  qEl.addEventListener('keydown', e=>{ if(e.key==='Enter') doFind(); });
+  qEl.addEventListener('input', doFind);
   yearEl.addEventListener('change', doFind);
   qP2El.addEventListener('change', doFind);
 
