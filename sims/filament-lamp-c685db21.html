@@ -1,0 +1,324 @@
+z<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incandescent Filament - Slower Excitation Simulation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        h2 { margin-bottom: 5px; }
+        p { margin-top: 0; color: #555; max-width: 800px; text-align: center; }
+        .canvas-container {
+            position: relative;
+            background: #fafafa;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        canvas { display: block; }
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #d9534f;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-weight: bold;
+        }
+        button:hover { background-color: #c9302c; }
+        button#active { background-color: #5cb85c; }
+        
+        .legend {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .legend-item { display: flex; align-items: center; gap: 8px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot.current { background-color: #428bca; }
+        .dot.heat { background-color: #f0ad4e; }
+        .dot.photon { background-color: #d9534f; }
+    </style>
+</head>
+<body>
+
+    <h2>Current Excitation & Emission Simulation</h2>
+    <p>Watch how the electric current (horizontal) provides thermal energy to excite electrons to higher energy levels (upward). The electrons then fall back down (downward) to emit EM waves.</p>
+
+    <div class="controls">
+        <button id="heatBtn">Apply Voltage (Start Current)</button>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item"><div class="dot current"></div> Free Electrons (Electric Current)</div>
+        <div class="legend-item"><div class="dot heat"></div> Thermal Excitation (Moving UP)</div>
+        <div class="legend-item"><div class="dot photon"></div> EM Wave Emission (Moving DOWN)</div>
+    </div>
+    <br>
+
+    <div class="canvas-container">
+        <canvas id="simCanvas" width="850" height="550"></canvas>
+    </div>
+
+<script>
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    const heatBtn = document.getElementById('heatBtn');
+
+    // Simulation parameters
+    const energyBands = [];
+    const numBands = 35;
+    const topBandY = 100;
+    const bottomBandY = 450;
+    const bandSpacing = (bottomBandY - topBandY) / numBands;
+
+    let cycles = [];           // Bound electrons going up and down
+    let freeElectrons = [];    // Current flowing horizontally
+    let photons = [];          // Emitted EM waves
+    let isHeating = false;
+
+    // Create the closely spaced energy levels (The Band)
+    for (let i = 0; i <= numBands; i++) {
+        energyBands.push(topBandY + (i * bandSpacing));
+    }
+
+    // Map energy difference to a color for the emitted photon
+    function getPhotonColor(energyDiff) {
+        const maxDiff = bottomBandY - topBandY;
+        const ratio = energyDiff / maxDiff; 
+        const hue = (ratio * 240); // Large jump = Blue/Violet (High Energy), Small jump = Red (Low Energy)
+        return `hsl(${hue}, 100%, 50%)`;
+    }
+
+    // 1. Spawns horizontal current
+    function spawnFreeElectron() {
+        freeElectrons.push({
+            x: 0,
+            y: bottomBandY + 30 + Math.random() * 40, // Flowing below the bands
+            speed: 3 + Math.random() * 2
+        });
+    }
+
+    // 2. Starts the Excitation -> Emission cycle
+    function createElectronCycle() {
+        // Pick a lower energy state (Higher Y on canvas)
+        const groundIndex = Math.floor(Math.random() * (numBands / 3)) + Math.floor(numBands * 0.6); 
+        const groundY = energyBands[groundIndex];
+        
+        // Pick a higher energy state (Lower Y on canvas)
+        const excitedIndex = Math.floor(Math.random() * (numBands / 2));
+        const excitedY = energyBands[excitedIndex];
+        
+        cycles.push({
+            x: 150 + Math.random() * 250, // Position on the bands
+            groundY: groundY,
+            excitedY: excitedY,
+            currentY: groundY,       // Starts at the bottom
+            state: 'exciting',       // 'exciting' (up) or 'falling' (down)
+            photonColor: getPhotonColor(groundY - excitedY)
+        });
+    }
+
+    function drawBackground() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw energy levels
+        ctx.lineWidth = 1;
+        energyBands.forEach(y => {
+            ctx.beginPath();
+            ctx.moveTo(80, y);
+            ctx.lineTo(450, y);
+            ctx.strokeStyle = 'rgba(150, 150, 150, 0.4)';
+            ctx.stroke();
+        });
+
+        // Labels
+        ctx.fillStyle = '#444';
+        ctx.font = 'bold 14px Arial';
+        ctx.fillText("Energy Levels in Solid Metal", 150, 70);
+        ctx.fillText("Emitted EM Waves (Continuous Spectrum)", 520, 70);
+        ctx.fillText("Electric Current Flowing Through Filament", 150, 530);
+        
+        // Wire boundaries for current
+        ctx.strokeStyle = '#aaa';
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath(); ctx.moveTo(0, bottomBandY + 20); ctx.lineTo(canvas.width, bottomBandY + 20); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, bottomBandY + 80); ctx.lineTo(canvas.width, bottomBandY + 80); ctx.stroke();
+        ctx.setLineDash([]);
+    }
+
+    function updateAndDraw() {
+        drawBackground();
+
+        // --- Step 1: Process Free Electrons (Current) ---
+        ctx.fillStyle = '#428bca';
+        for (let i = freeElectrons.length - 1; i >= 0; i--) {
+            let fe = freeElectrons[i];
+            ctx.beginPath();
+            ctx.arc(fe.x, fe.y, 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Draw little motion trail
+            ctx.beginPath();
+            ctx.moveTo(fe.x, fe.y);
+            ctx.lineTo(fe.x - 10, fe.y);
+            ctx.strokeStyle = 'rgba(66, 139, 202, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            fe.x += fe.speed; // Move right
+            if (fe.x > canvas.width) freeElectrons.splice(i, 1);
+        }
+
+        // --- Step 2 & 3: Process Bound Electrons (Excitation & Emission) ---
+        for (let i = cycles.length - 1; i >= 0; i--) {
+            let c = cycles[i];
+            
+            if (c.state === 'exciting') {
+                // Moving UP (Thermal Excitation)
+                ctx.beginPath();
+                ctx.moveTo(c.x, c.groundY);
+                ctx.lineTo(c.x, c.currentY);
+                ctx.strokeStyle = '#f0ad4e'; // Orange for heat/energy absorption
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.arc(c.x, c.currentY, 6, 0, Math.PI * 2);
+                ctx.fillStyle = '#f0ad4e';
+                ctx.fill();
+
+                c.currentY -= 1.0; // SLOW moving up
+
+                // Once it reaches the excited state, pause briefly, then fall
+                if (c.currentY <= c.excitedY) {
+                    c.currentY = c.excitedY;
+                    c.state = 'falling';
+                }
+            } 
+            else if (c.state === 'falling') {
+                // Moving DOWN (Emission)
+                ctx.beginPath();
+                ctx.moveTo(c.x, c.excitedY);
+                ctx.lineTo(c.x, c.currentY);
+                ctx.strokeStyle = c.photonColor; 
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.arc(c.x, c.currentY, 6, 0, Math.PI * 2);
+                ctx.fillStyle = c.photonColor;
+                ctx.fill();
+
+                c.currentY += 1.0; // SLOW moving down
+
+                // Once it hits bottom, release the photon and remove the cycle
+                if (c.currentY >= c.groundY) {
+                    photons.push({
+                        x: c.x,
+                        y: c.groundY,
+                        color: c.photonColor,
+                        amplitude: 15 + Math.random() * 10,
+                        frequency: 0.05 + ((c.groundY - c.excitedY) / 6000), // Wavelength logic
+                        phase: 0,
+                        life: 1.0
+                    });
+                    cycles.splice(i, 1);
+                }
+            }
+        }
+
+        // --- Step 4: Process Photons (EM Waves) ---
+        for (let i = photons.length - 1; i >= 0; i--) {
+            let p = photons[i];
+            
+            ctx.beginPath();
+            let waveX = p.x;
+            ctx.moveTo(waveX, p.y);
+            
+            // Draw a smooth sine wave
+            for(let w = 0; w < 120; w += 2) {
+                let waveY = p.y + Math.sin((w * p.frequency) + p.phase) * p.amplitude;
+                ctx.lineTo(waveX + w, waveY);
+            }
+            
+            ctx.strokeStyle = p.color.replace('hsl', 'hsla').replace(')', `, ${p.life})`);
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Arrow head
+            let headX = waveX + 120;
+            let headY = p.y + Math.sin((120 * p.frequency) + p.phase) * p.amplitude;
+            ctx.beginPath();
+            ctx.arc(headX, headY, 3, 0, Math.PI * 2);
+            ctx.fillStyle = ctx.strokeStyle;
+            ctx.fill();
+
+            // Slower photon movement and wiggle
+            p.x += 2.5; 
+            p.phase -= 0.15; 
+            p.life -= 0.003;
+
+            if (p.life <= 0 || p.x > canvas.width) {
+                photons.splice(i, 1);
+            }
+        }
+
+        requestAnimationFrame(updateAndDraw);
+    }
+
+    // Interaction Handling
+    let heatingInterval;
+    let currentInterval;
+
+    heatBtn.addEventListener('click', () => {
+        if (!isHeating) {
+            isHeating = true;
+            heatBtn.innerText = "Turn Off Voltage";
+            heatBtn.id = "active";
+            
+            // Spawn current continuously
+            currentInterval = setInterval(() => {
+                spawnFreeElectron();
+                spawnFreeElectron();
+            }, 100);
+
+            // Spawn excitations slowly (Heat takes a moment to build up)
+            heatingInterval = setInterval(() => {
+                if (Math.random() > 0.4) createElectronCycle();
+            }, 600); // Slower spawn rate
+        } else {
+            isHeating = false;
+            heatBtn.innerText = "Apply Voltage (Start Current)";
+            heatBtn.id = "heatBtn";
+            clearInterval(heatingInterval);
+            clearInterval(currentInterval);
+        }
+    });
+
+    // Start rendering loop
+    updateAndDraw();
+
+</script>
+</body>
+</html>
