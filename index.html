@@ -2215,8 +2215,9 @@ CE,2009,44,A`;
       url = 'https://drive.google.com/file/d/' + obj.fileId + '/view';
     }
     if (!url || !obj.title) return null;
-    var sort = Number(obj.sort);
-    if (isNaN(sort)) sort = 500;
+    var sortText = String(obj.sort == null ? "" : obj.sort).trim();
+    var sort = Number(sortText);
+    if (!sortText || isNaN(sort)) sort = 100000;
     return {
       title: obj.title,
       topic: topic,

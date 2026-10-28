@@ -72,7 +72,17 @@ function addSim(code, title, topic, blurb, html) {
   }
 
   var pageUrl = PAGES_BASE + name;
-  sheet_().appendRow(["", title, topic, blurb, pageUrl, "", "", new Date(), ""]);
+  var sheet = sheet_();
+  var last = sheet.getLastRow();
+  var nextSort = 10;
+  if (last > 1) {
+    var values = sheet.getRange(2, 9, last - 1, 1).getValues();
+    for (var i = 0; i < values.length; i++) {
+      var n = Number(values[i][0]);
+      if (!isNaN(n) && n >= nextSort) nextSort = n + 10;
+    }
+  }
+  sheet.appendRow(["", title, topic, blurb, pageUrl, "", "", new Date(), nextSort]);
   return pageUrl;
 }
 
