@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#990011" />
+  <title>DSE traps · Carmel Physics</title>
+  <style>
+    :root {
+      --carmel: #990011;
+      --carmel-dark: #7a000e;
+      --carmel-soft: #f8e8ea;
+      --bg: #f4f5f7;
+      --card: #ffffff;
+      --text: #1a1a1a;
+      --muted: #5c5c5c;
+      --border: #e2e4e8;
+      --ok: #1f6b3a;
+      --ok-soft: #e7f4ec;
+      --no: #990011;
+      --no-soft: #f8e8ea;
+      --header-h: 56px;
+      --radius: 12px;
+      --shadow: 0 2px 8px rgba(0,0,0,.06);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      min-height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .hidden { display: none !important; }
+    a { color: inherit; }
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      height: var(--header-h);
+      background: var(--carmel);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.15);
+    }
+    .back {
+      color: #fff;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 4px;
+      flex-shrink: 0;
+    }
+    .brand { min-width: 0; }
+    .brand h1 {
+      font-size: 17px;
+      font-weight: 650;
+      letter-spacing: -0.01em;
+    }
+    .brand p { font-size: 12px; opacity: .85; }
+
+    main {
+      width: min(760px, calc(100% - 32px));
+      margin: 24px auto 48px;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 28px 22px;
+    }
+    .kicker {
+      color: var(--carmel);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    h2 { font-size: 28px; letter-spacing: -0.02em; margin: 6px 0 8px; }
+    .lead { color: var(--muted); font-size: 15px; line-height: 1.45; }
+
+    .name-box { margin-top: 22px; display: flex; flex-direction: column; gap: 10px; }
+    input[type="text"] {
+      width: 100%;
+      min-height: 48px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0 14px;
+      font-size: 16px;
+      font-family: inherit;
+      background: #fff;
+      color: var(--text);
+    }
+    input[type="text"]:focus { outline: 2px solid var(--carmel); border-color: transparent; }
+    #name-input.ring-2 { outline: 2px solid var(--carmel); }
+
+    button { font-family: inherit; cursor: pointer; }
+    .btn {
+      min-height: 48px;
+      border: none;
+      border-radius: 10px;
+      padding: 0 18px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .btn-primary { background: var(--carmel); color: #fff; }
+    .btn-primary:hover { background: var(--carmel-dark); }
+    .btn-quiet { background: #eef0f3; color: var(--text); }
+    .btn-quiet:hover { background: #e4e7eb; }
+    .btn:disabled, .btn.opacity-50 { opacity: .45; cursor: default; }
+
+    #topic-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 18px;
+    }
+    @media (min-width: 700px) {
+      #topic-list { grid-template-columns: 1fr 1fr; }
+    }
+    #topic-list button {
+      text-align: left;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 16px;
+      box-shadow: var(--shadow);
+      min-height: 88px;
+    }
+    #topic-list button:hover { border-color: var(--carmel); }
+    #topic-list h3 { font-size: 18px; font-weight: 700; }
+    #topic-list p { color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+    .quiz-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    #back-to-topics-btn {
+      background: none;
+      border: none;
+      color: var(--carmel);
+      font-weight: 700;
+      font-size: 15px;
+      min-height: 44px;
+      padding: 0;
+    }
+    #progress-indicator {
+      font-size: 13px;
+      font-weight: 650;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 12px;
+    }
+
+    .card { width: 100%; }
+    .card-face {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 22px 20px 18px;
+      display: none;
+      flex-direction: column;
+      gap: 18px;
+      min-height: 280px;
+    }
+    #card-front { display: flex; }
+    .card.flipped #card-front { display: none; }
+    .card.flipped #card-back { display: flex; }
+
+    #topic-title { color: var(--carmel); font-weight: 700; font-size: 14px; }
+    #question-text { font-size: 20px; line-height: 1.45; letter-spacing: -0.01em; }
+    #explanation-text { color: #333; font-size: 16px; line-height: 1.55; }
+    #feedback-text { font-size: 22px; }
+
+    #answer-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .answer-btn {
+      min-height: 56px;
+      border-radius: 12px;
+      border: none;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 750;
+    }
+    .answer-btn[data-answer="true"] { background: var(--ok); }
+    .answer-btn[data-answer="false"] { background: var(--no); }
+    .answer-btn:hover { filter: brightness(1.05); }
+
+    .nav-row { display: flex; justify-content: space-between; gap: 10px; margin-top: auto; }
+    .text-emerald-600 { color: var(--ok) !important; }
+    .text-rose-600 { color: var(--no) !important; }
+
+    #end-screen { text-align: center; }
+    #end-title { color: var(--carmel); font-size: 28px; margin-bottom: 8px; }
+    #end-message { color: #333; font-size: 17px; line-height: 1.5; margin-bottom: 22px; }
+    .end-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+    #retry-wrong-btn { background: #1a1a1a; color: #fff; }
+
+    @media (max-width: 640px) {
+      h2, #end-title { font-size: 24px; }
+      #question-text { font-size: 18px; }
+      main { width: min(760px, calc(100% - 20px)); margin-top: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <a class="back" href="../index.html#tools">← Hub</a>
+    <div class="brand">
+      <h1>DSE traps</h1>
+      <p>Carmel Physics · true or false</p>
+    </div>
+  </header>
+
+  <main>
+    <div id="name-screen">
+      <div class="panel">
+        <p class="kicker">Carmel Physics</p>
+        <h2>DSE traps</h2>
+        <p class="lead">True or false. Read the wording carefully, then check the explanation.</p>
+        <div class="name-box">
+          <input type="text" id="name-input" placeholder="Your name" autocomplete="name" />
+          <button id="start-btn" class="btn btn-primary" type="button">Start</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="topic-selection-screen" class="hidden">
+      <p class="kicker">Choose a topic</p>
+      <h2>DSE traps</h2>
+      <p class="lead">Each card is one statement. Decide true or false.</p>
+      <div id="topic-list"></div>
+    </div>
+
+    <div id="quiz-screen" class="hidden">
+      <div class="quiz-bar">
+        <button id="back-to-topics-btn" type="button">← Topics</button>
+        <div id="progress-indicator"></div>
+      </div>
+      <div id="card" class="card">
+        <div id="card-front" class="card-face">
+          <div>
+            <p id="topic-title"></p>
+            <p id="question-text"></p>
+          </div>
+          <div id="answer-buttons">
+            <button type="button" data-answer="true" class="answer-btn">True</button>
+            <button type="button" data-answer="false" class="answer-btn">False</button>
+          </div>
+        </div>
+        <div id="card-back" class="card-face">
+          <div>
+            <h2 id="feedback-text"></h2>
+            <p id="explanation-text"></p>
+          </div>
+          <div class="nav-row">
+            <button id="prev-btn" class="btn btn-quiet" type="button">← Previous</button>
+            <button id="next-btn" class="btn btn-primary" type="button">Next →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="end-screen" class="hidden panel">
+      <h2 id="end-title"></h2>
+      <p id="end-message"></p>
+      <div class="end-actions">
+        <button id="retry-wrong-btn" class="btn hidden" type="button">Retry wrong answers</button>
+        <button id="restart-btn" class="btn btn-primary" type="button">Start over</button>
+      </div>
+    </div>
+  </main>
+  <script>
+
+        document.addEventListener('DOMContentLoaded', () => {
+             const questionsData = {
+                "Mechanics": [
+                    { question: "If the net force on an object is zero, the object must be at rest.", answer: false, explanation: "Incorrect. According to Newton's First Law, if the net force is zero, the object's velocity is constant. This means it can be at rest OR moving at a constant velocity." },
+                    { question: "Momentum is a scalar quantity.", answer: false, explanation: "Incorrect. Momentum (p = mv) is a vector quantity. It has both magnitude and direction, which is the same as the direction of the velocity." },
+                    { question: "The work done by a centripetal force on an object moving in a circle is always zero.", answer: true, explanation: "Correct. The centripetal force is always perpendicular to the direction of the object's instantaneous velocity (displacement). Since Work = Fd cos(θ) and θ = 90°, the work done is zero." },
+                    { question: "When a non-elastic collision occurs, both momentum and kinetic energy are conserved.", answer: false, explanation: "Incorrect. In a non-elastic (or inelastic) collision, total momentum is conserved, but some kinetic energy is converted into other forms, such as heat or sound. Therefore, kinetic energy is not conserved." },
+                    { question: "An object thrown upwards reaches its maximum height when its acceleration is zero.", answer: false, explanation: "Incorrect. At the maximum height, the object's instantaneous velocity is zero, but its acceleration is still the acceleration due to gravity (g ≈ 9.8 m/s² downwards), assuming air resistance is negligible." },
+                    { question: "The period of a satellite in a stable circular orbit around the Earth depends on the mass of the satellite.", answer: false, explanation: "Incorrect. The period of a satellite in a circular orbit depends on the radius of the orbit and the mass of the central body (Earth), but not on the satellite's own mass." },
+                    { question: "Weight is a measure of an object's inertia.", answer: false, explanation: "Incorrect. Mass is the measure of an object's inertia (resistance to change in motion). Weight is the gravitational force acting on that mass (W = mg)." },
+                    { question: "For every action, there is an equal and opposite reaction. These two forces act on the same object.", answer: false, explanation: "Incorrect. The action and reaction forces (Newton's Third Law) are equal and opposite, but they act on two different objects. For example, the Earth pulls on the Moon, and the Moon pulls on the Earth." },
+                    { question: "If the speed of an object is doubled, its kinetic energy is also doubled.", answer: false, explanation: "Incorrect. Kinetic energy is given by KE = ½mv². If the speed (v) is doubled, the kinetic energy becomes KE' = ½m(2v)² = 4(½mv²) = 4KE. The kinetic energy is quadrupled." },
+                    { question: "Gravitational potential energy can be negative.", answer: true, explanation: "Correct. Gravitational potential energy is defined relative to a zero point. If the zero point is set at infinity (as is common in astrophysics), the potential energy of any object bound by gravity will be negative." },
+                    { question: "An object is in equilibrium only if it is at rest.", answer: false, explanation: "Incorrect. An object is in equilibrium if the net force and net torque acting on it are zero. This can occur when the object is at rest (static equilibrium) or when it is moving with a constant velocity and constant angular velocity (dynamic equilibrium)." },
+                    { question: "The principle of conservation of momentum applies only to collisions in the absence of external forces.", answer: true, explanation: "Correct. The total momentum of a system is conserved only if the net external force acting on the system is zero." },
+                    { question: "Work is a vector quantity.", answer: false, explanation: "Incorrect. Work is a scalar quantity, calculated as the dot product of force and displacement vectors (W = F · d). It has magnitude but no direction." },
+                    { question: "The centripetal acceleration of an object in uniform circular motion is directed tangentially.", answer: false, explanation: "Incorrect. The centripetal acceleration is always directed towards the center of the circle, perpendicular to the tangential velocity." },
+                    { question: "Power is the rate at which energy is consumed.", answer: true, explanation: "Correct. Power is defined as the rate of doing work or the rate of energy transfer (P = W/t or P = dE/dt)." },
+                    { question: "An object with constant speed can have a non-zero acceleration.", answer: true, explanation: "Correct. An object in uniform circular motion has a constant speed but is continuously accelerating because its direction of velocity is changing. This is the centripetal acceleration." },
+                    { question: "Friction always opposes the motion of an object.", answer: false, explanation: "Incorrect. Static friction can act in the direction of motion or intended motion. For example, when you walk, the static friction from the ground on your foot pushes you forward." },
+                    { question: "The impulse on an object is equal to the change in its kinetic energy.", answer: false, explanation: "Incorrect. The impulse on an object is equal to the change in its momentum (Impulse = Δp). The work-energy theorem states that the net work done is equal to the change in kinetic energy." },
+                    { question: "In a projectile motion, the horizontal component of velocity remains constant.", answer: true, explanation: "Correct. Assuming negligible air resistance, there is no horizontal force acting on the projectile, so its horizontal acceleration is zero and its horizontal velocity is constant." },
+                    { question: "The escape velocity from Earth is the same for a rocket and a feather.", answer: true, explanation: "Correct. The escape velocity depends on the mass and radius of the planet (Earth), not on the mass of the object escaping it." },
+{ question: "For a block of weight W at rest on a horizontal table, its weight (W) and the normal force from the table (R) form an action-and-reaction pair as defined by Newton's Third Law.", answer: false, explanation: "False. This is a balanced pair of forces acting on the same object. An action-reaction pair always acts on different objects. The reaction to the block's weight (Earth pulling block) is the block pulling the Earth." },
+{ question: "A block sliding down a rough incline at a constant velocity experiences a net resultant force acting down the slope.", answer: false, explanation: "False. According to Newton's First Law, any object moving at a constant velocity (including zero velocity) has zero net force. The component of gravity pulling it down the slope is perfectly balanced by the friction force pointing up the slope." },
+{ question: "According to Newton's Third Law, the action force (e.g., a book's weight on a table) and the reaction force (e.g., the table's normal force on the book) act on the same object.", answer: false, explanation: "False. Action-reaction forces always act on different objects. The action 'Book pushes on Table' has the reaction 'Table pushes on Book'. They don't cancel out because they act on different bodies." },
+{ question: "A block is moving at a constant speed under a 12 N pushing force and a 2 N pulling force, against friction. The kinetic friction force is 10 N.", answer: true, explanation: "True. 'Constant speed' means the net force is zero. The total forward force is 12 N - 2 N = 10 N. To balance this, the kinetic friction force must be 10 N in the opposite direction." },
+{ question: "In the previous scenario, if the 12 N force is suddenly removed, the kinetic friction force immediately becomes zero.", answer: false, explanation: "False. The kinetic friction force opposes motion and will continue to act as long as the object is moving. The friction force will remain 10 N (now opposing the 2 N force), causing the block to decelerate." },
+{ question: "A block of mass m is held at rest on a smooth incline (angle θ) by a horizontal force F. The magnitude of F is mg sinθ.", answer: false, explanation: "False. The component of weight down the incline is mg sinθ. The component of the horizontal force F up the incline is F cosθ. For equilibrium, F cosθ = mg sinθ, which means F = mg tanθ." },
+{ question: "On a v-t graph for two cars starting from the same position, the point where their graphs intersect means they are at the same position.", answer: false, explanation: "False. The intersection point means they have the same instantaneous velocity. The areas under their graphs must be equal for them to be at the same position." },
+{ question: "A car traveling east at 80 km/h changes direction to travel north at 60 km/h. The magnitude of its change in velocity is 100 km/h.", answer: true, explanation: "True. Change in velocity is Δv = v_final - v_initial = (60 N) - (80 E) = (60 N) + (80 W). Using Pythagoras on the vectors, the magnitude is √(60² + 80²) = 100 km/h." },
+{ question: "Two identical blocks slide from rest down two smooth inclined planes of the same height H but different angles. The block on the steeper incline will reach the bottom with a greater final speed.", answer: false, explanation: "False. By conservation of energy (mgh = ½mv²), the loss in P.E. is the same for both, so their final K.E. and final speed (v) must be identical, regardless of the path." },
+{ question: "In the scenario above, the time taken to reach the bottom will be the same for both blocks.", answer: false, explanation: "False. The block on the steeper incline experiences a greater acceleration (a = g sinθ) and travels a shorter distance. It will reach the bottom in less time." },
+{ question: "A 1 kg mass (Y) hanging over a pulley pulls a 0.5 kg mass (X) on a smooth horizontal table. When Y falls 1 m from rest, its final speed can be found using m_Ygh = ½m_Yv².", answer: false, explanation: "False. The potential energy lost by Y (m_Ygh) is converted into the kinetic energy of both masses (X and Y), which move together. The correct equation is m_Ygh = ½m_Yv² + ½m_Xv²." },
+{ question: "A machine lifts a block vertically up at speed v. If it instead pulls it up a smooth incline at the same speed v, the power output required is the same.", answer: false, explanation: "False. Power = Force × velocity. To lift vertically, Force = mg. To pull up a smooth incline, Force = mg sinθ. Since sinθ < 1, the force and thus the power required (P = (mg sinθ)v) are less for the incline." },
+{ question: "A car's headrest is primarily designed to minimize injury when the car brakes suddenly.", answer: false, explanation: "False. Its main safety function is to prevent whiplash (neck injury) when the car is struck from behind. The headrest supports the head, which by inertia lags behind the rest of the body." },
+{ question: "When cutting an object with scissors, the cutting force is largest at the tips of the blades and smallest near the pivot.", answer: false, explanation: "False. By the principle of moments (levers), the output force is inversely proportional to the distance from the pivot. The force is largest near the pivot (smallest distance) and smallest at the tips." },
+{ question: "To find the center of gravity (C.G.) of a non-uniform plate, you suspend it from one vertex (P) and draw a vertical line. The C.G. lies on this line.", answer: false, explanation: "False. This is only the first step. You must then suspend the plate from a second, different point (e.g., Q) and draw a second vertical line. The C.G. is the point where the two lines intersect." },
+{ question: "When an object falls from rest, the distance it falls in time t is s. The distance it falls in time 2t is 4s.", answer: true, explanation: "True. For an object in free fall from rest, s = ½gt². The distance s is proportional to t². If you double the time t to 2t, the distance becomes proportional to (2t)² = 4t², which is 4s." },
+{ question: "An object falling from rest travels 9m in time t₁. It then travels another 16m in time t₂. The ratio t₁:t₂ must be 3:4.", answer: false, explanation: "False. Since s ∝ t², the time to travel 9m is t₁ ∝ √9 = 3. The total time to travel (9+16)=25m is (t₁+t₂) ∝ √25 = 5. If t₁ = 3k and (t₁+t₂) = 5k, then t₂ = 2k. The ratio t₁:t₂ is 3:2." },
+{ question: "For an object starting from rest, the area under its Force-time (F-t) graph represents the work done on it.", answer: false, explanation: "False. The area under an F-t graph is the impulse (which equals the change in momentum, mΔv). The area under a Force-distance (F-s) graph represents the work done." },
+{ question: "In free fall under gravity, the displacement–time graph is a straight line.", answer: false, explanation: "False. Constant acceleration gives a parabolic displacement–time graph." },
+
+{ question: "In free fall under gravity, the velocity–time graph is a straight line with slope −g (taking downward negative).", answer: true, explanation: "True. This represents constant acceleration." },
+
+{ question: "A block sliding down a 30° rough incline at uniform speed has zero net force.", answer: true, explanation: "True. Zero acceleration implies the resultant force is zero." },
+
+{ question: "For the same block, the kinetic friction equals 0.5 mg.", answer: true, explanation: "True. To balance mg sin 30°, friction must be mg sin 30° = 0.5 mg." },
+
+{ question: "If the block on the 30° incline is given a greater initial speed, it will then accelerate down the plane.", answer: false, explanation: "False. With kinetic friction equal to mg sin 30°, the net force remains zero; speed remains constant (neglecting changes in μ)." },
+
+{ question: "Two satellites in circular orbits of the same radius around Earth have the same speed and period, regardless of orbital plane orientation.", answer: true, explanation: "True. Speed and period formulas v = √(GM/R) and T = 2π√(R³/GM) are independent of the plane's orientation." },
+
+{ question: "The centripetal force on a satellite is directed along the plane of its orbit, toward the center.", answer: true, explanation: "True. It points toward Earth’s center and lies in the orbital plane." },
+
+{ question: "For two cars on a v–t graph starting at the same position, their separation is maximum at the time when the area between their v–t curves (from t = 0) is maximum.", answer: true, explanation: "True. Relative displacement is the time integral of relative velocity." },
+
+{ question: "If two cars’ velocities have the same sign over an interval, they travel in the same direction during that interval.", answer: true, explanation: "True. The sign of velocity indicates direction." },
+
+{ question: "If one car’s v–t curve lies below the other’s for a long enough time, that car will lag behind in position.", answer: true, explanation: "True. Less positive (or more negative) velocity accumulates less forward displacement." },
+
+{ question: "On a banked curve with no friction, the centripetal force equals mg tan θ.", answer: true, explanation: "True. The horizontal component of the normal force provides the centripetal force: N sinθ = (mg/cosθ) sinθ = mg tanθ." },
+
+{ question: "On a banked curve with no friction, the centripetal force equals mg sin θ.", answer: false, explanation: "False. The correct expression is mg tan θ." },
+
+{ question: "In a frictionless banked turn, the normal reaction’s horizontal component provides the centripetal force.", answer: true, explanation: "True. With no friction, only the normal force N can have a horizontal component." },
+
+{ question: "A free-body diagram should include a “resultant force” arrow in addition to all actual forces.", answer: false, explanation: "False. Only actual forces are drawn; the resultant is inferred by their vector sum." },
+
+{ question: "The change in velocity is the vector difference v_final − v_initial, not the magnitude of the resultant velocity.", answer: true, explanation: "True. Δv is a vector subtraction." },
+
+{ question: "An object falling from very far toward an airless planet speeds up with increasing acceleration; its v–t curve is concave upward, not a straight line.", answer: true, explanation: "True. The acceleration a ∝ 1/r² increases as the distance r decreases." },
+
+{ question: "Weight and air resistance on a projectile form an action–reaction pair.", answer: false, explanation: "False. Action–reaction pairs act on different bodies; the weight's pair is with the Earth’s pull." },
+
+{ question: "In the “bullet and trolley” setup, the motion sensor reads the trolley’s speed, not its distance.", answer: true, explanation: "True. This was a reported misconception." },
+
+{ question: "Rocket acceleration should be found from a = (F_thrust − mg)/m (ignoring drag).", answer: true, explanation: "True. This is an application of Newton’s second law." },
+
+{ question: "The average thrust of a rocket is the mass flow rate of exhaust times the exhaust speed (relative to rocket), ignoring pressure terms.", answer: true, explanation: "True. This is based on momentum flux." },
+
+{ question: "For a block at rest on a horizontal surface, the normal reaction R and its weight W are not an action–reaction pair, even though they can be equal and opposite.", answer: true, explanation: "True. Action–reaction pairs must act on different bodies." },
+
+{ question: "When the block is in equilibrium on a horizontal surface, R equals W in magnitude.", answer: true, explanation: "True. This is due to the force balance in the vertical direction." },
+
+{ question: "A block sliding down a rough incline at constant velocity has zero net force; the resultant force from the incline (normal + friction) balances the component of weight.", answer: true, explanation: "True. This is a condition of zero acceleration." },
+
+{ question: "At the highest point of a projectile’s trajectory (neglecting air), its vertical velocity is zero and its speed equals the horizontal component.", answer: true, explanation: "True. At the peak, v_y = 0, so the total speed v = v_x." },
+
+{ question: "If forces on a mass are balanced, then it accelerates.", answer: false, explanation: "False. Balanced forces imply zero acceleration." },
+{ question: "For a perfectly elastic bounce, a ball’s speed just after impact equals its speed just before impact (ignoring air resistance).", answer: true, explanation: "True. An elastic collision with the ground reverses the velocity component normal to the surface without loss of speed." },
+
+{ question: "The area under a force–time graph equals the impulse and hence the change in momentum.", answer: true, explanation: "True. This is the impulse–momentum theorem." },
+
+{ question: "The slope of a force–time graph gives the acceleration directly.", answer: false, explanation: "False. The slope is dF/dt; acceleration is F/m." },
+
+{ question: "For lifting a load steadily from height difference Δh, the work done by the crane equals WΔh regardless of the horizontal path taken.", answer: true, explanation: "True. The work done against gravity depends only on the vertical displacement." },
+
+{ question: "The crane’s work on a steady lift depends on the horizontal displacement.", answer: false, explanation: "False. There is no change in gravitational potential from horizontal motion." },
+
+{ question: "In a two-mass system connected over a pulley, the loss of gravitational potential energy equals the total kinetic energy gained by both masses (neglecting losses).", answer: true, explanation: "True. This is a statement of energy conservation." },
+
+{ question: "Lifting the same block vertically and up a smooth incline by a machine at the same speed requires the same average output power.", answer: false, explanation: "False. Power = mgv_vertical; along the incline at speed v, the vertical rate is v sinθ, which is less than v." },
+
+{ question: "The tension in the string is the same when lifting vertically and along a smooth incline at the same speed.", answer: false, explanation: "False. Vertically: T ≈ mg; on a smooth incline: T ≈ mg sinθ." },
+
+{ question: "In α-decay at rest, the α and daughter nucleus have equal and opposite momenta, but not equal kinetic energies.", answer: true, explanation: "True. They have the same momentum magnitude |p|, but KE ∝ p²/2m; the lighter α particle gets more KE." },
+
+{ question: "In that decay, the heavier daughter nucleus has greater kinetic energy than the α.", answer: false, explanation: "False. The lighter particle gets more KE." }
+
+
+                ],
+                "Heat & Gases": [
+                    { question: "Internal energy of an ideal gas depends only on its temperature.", answer: true, explanation: "Correct. For an ideal gas, there are no intermolecular forces, so its internal energy is purely the sum of the kinetic energies of its molecules, which is directly proportional to its absolute temperature (U ∝ T)." },
+                    { question: "During an isothermal expansion of an ideal gas, the gas does no work because its temperature remains constant.", answer: false, explanation: "Incorrect. During an isothermal expansion, the gas does positive work on its surroundings. To keep the temperature constant, heat must be supplied to the gas, according to the first law of thermodynamics (ΔU = Q - W; since ΔU = 0, Q = W)." },
+{ question: "When two objects of equal mass but different specific heat capacities and different initial temperatures reach thermal equilibrium, the final temperature will be the simple average of the two initial temperatures.", answer: false, explanation: "False. The object with the higher specific heat capacity (c) will undergo a smaller temperature change (since Q = mcΔT). The final temperature will be closer to the initial temperature of the object with the higher heat capacity (C=mc)." },
+{ question: "When 0.3 kg of water at 50°C is mixed with 0.2 kg of ice at 0°C (L_f = 3.34x10⁵ J/kg, c_water = 4200 J/kg/°C), all the ice will melt.", answer: false, explanation: "False. Energy available from water cooling to 0°C is Q_lost = (0.3)(4200)(50) = 63,000 J. Energy needed to melt all ice is Q_melt = (0.2)(3.34x10⁵) = 66,800 J. Since Q_lost < Q_melt, there is not enough energy to melt all the ice. The final temperature will be 0°C." },
+{ question: "In a vacuum flask, the silvered surfaces are designed to reduce heat transfer by conduction.", answer: false, explanation: "False. The vacuum prevents heat transfer by conduction and convection. The silvered surfaces (facing the vacuum) reduce heat transfer by radiation." },
+{ question: "For an ideal gas at constant temperature, a graph of pressure (p) plotted against 1/Volume (1/V) will be a curve.", answer: false, explanation: "False. Boyle's Law is p ∝ 1/V, or p = k(1/V). This is a direct proportionality (y = mx). A graph of p against 1/V will be a straight line through the origin. A graph of p against V would be the curve." },
+                    { question: "Absolute zero (0 Kelvin) is the temperature at which all molecular motion ceases completely.", answer: true, explanation: "Correct. Absolute zero is the lowest possible temperature where particles have minimum vibrational motion, representing the minimum possible internal energy. It is the zero point of the Kelvin scale." },
+                    { question: "A pressure cooker cooks food faster because it increases the specific heat capacity of water.", answer: false, explanation: "Incorrect. A pressure cooker increases the pressure inside, which raises the boiling point of water. Cooking at a higher temperature (above 100°C) significantly speeds up the chemical reactions in cooking." },
+                    { question: "Heat is a measure of how hot an object is.", answer: false, explanation: "Incorrect. Temperature is a measure of how hot an object is (related to the average kinetic energy of its particles). Heat is the energy transferred between objects due to a temperature difference." },
+                    { question: "In an adiabatic process, the temperature of the system must remain constant.", answer: false, explanation: "Incorrect. An adiabatic process is one in which no heat is exchanged with the surroundings (Q=0). The temperature can change, for example, during adiabatic compression, the temperature of a gas increases." },
+                    { question: "Evaporation is a cooling process.", answer: true, explanation: "Correct. During evaporation, the most energetic molecules escape from the liquid surface, which lowers the average kinetic energy of the remaining molecules, thus decreasing the temperature of the liquid." },
+                    { question: "Conduction is the primary mode of heat transfer in gases.", answer: false, explanation: "Incorrect. Convection is the primary mode of heat transfer in fluids (liquids and gases). Conduction is the main mode of heat transfer in solids." },
+                    { question: "Two objects are in thermal equilibrium if they have the same internal energy.", answer: false, explanation: "Incorrect. Two objects are in thermal equilibrium if they are at the same temperature, meaning there is no net flow of heat between them." },
+                    { question: "The specific latent heat of vaporization of a substance is generally smaller than its specific latent heat of fusion.", answer: false, explanation: "Incorrect. The latent heat of vaporization is typically much larger than the latent heat of fusion because a greater amount of energy is required to completely separate the molecules (liquid to gas) than to just loosen their bonds (solid to liquid)." },
+                    { question: "According to the ideal gas law (PV=nRT), if you double the absolute temperature of a gas while keeping the volume constant, the pressure will be halved.", answer: false, explanation: "Incorrect. According to PV=nRT, if T is doubled and V is constant, the pressure P must also be doubled to maintain the equality." },
+                    { question: "A black surface is a good absorber of radiation, but a poor emitter of radiation.", answer: false, explanation: "Incorrect. A good absorber of thermal radiation is also a good emitter of thermal radiation. A perfect black body is a perfect absorber and a perfect emitter." },
+                    { question: "When a bimetallic strip is heated, it bends towards the metal with the higher thermal expansion coefficient.", answer: false, explanation: "Incorrect. The metal with the higher coefficient of thermal expansion expands more. To accommodate this greater length, the strip must bend away from it, so it bends towards the metal with the lower coefficient." },
+      	            { question: "The first law of thermodynamics is a statement of the conservation of energy.", answer: true, explanation: "Correct. The first law (ΔU = Q - W) states that the change in a system's internal energy (ΔU) is equal to the heat added to the system (Q) minus the work done by the system (W), which is a direct application of energy conservation." },
+                    { question: "Boiling can occur at any temperature, while evaporation only occurs at a specific boiling point.", answer: false, explanation: "Incorrect. It's the other way around. Evaporation can occur at any temperature from the surface of a liquid, whereas boiling is the bulk vaporization that occurs at a specific temperature (the boiling point) for a given pressure." },
+                    { question: "Water has a very low specific heat capacity.", answer: false, explanation: "Incorrect. Water has a very high specific heat capacity compared to most other common substances. This is why it is used as a coolant and why large bodies of water moderate climates." },
+                    { question: "Increasing the pressure on ice can cause it to melt, even below 0°C.", answer: true, explanation: "Correct. For water, the solid phase (ice) is less dense than the liquid phase. Increasing the pressure lowers the melting point, a phenomenon called regelation. This is why an ice skate's blade melts the ice beneath it." },
+                    { question: "The average kinetic energy of molecules in a gas is proportional to the temperature in degrees Celsius.", answer: false, explanation: "Incorrect. The average kinetic energy of gas molecules is directly proportional to the absolute temperature, which must be measured in Kelvin (K)." },
+                    { question: "Entropy is a measure of the energy of a system.", answer: false, explanation: "Incorrect. Entropy is a measure of the disorder or randomness of a system. The second law of thermodynamics states that the total entropy of an isolated system can only increase over time." },
+{ question: "When two equal-mass blocks at 40°C and 30°C are in good thermal contact with no heat loss, and the hotter one has a larger specific heat capacity, the final common temperature is higher than 35°C.", answer: true, explanation: "True. Energy balance with equal masses gives Tf closer to the initial temperature of the block with larger c." },
+{ question: "For the situation above, the final temperature is exactly 35°C.", answer: false, explanation: "False. Only equal specific heat capacities would yield 35°C; here cX > cY, so Tf > 35°C." },
+{ question: "When mixing water at 50°C with ice at 0°C in an insulated container, the final temperature cannot be below 0°C.", answer: true, explanation: "True. The ice–water mixture's temperature is pinned at 0°C until all the ice melts." },
+{ question: "In such a mixture, if insufficient hot water is available to melt all the ice, the final temperature is 0°C.", answer: true, explanation: "True. This is due to the phase change plateau." },
+{ question: "The root-mean-square speed of gas molecules scales directly with temperature (v_rms ∝ T).", answer: false, explanation: "False. The correct relationship is v_rms ∝ √T." },
+{ question: "In the ideal gas equation, temperature must be in kelvin.", answer: true, explanation: "True. The equation requires an absolute temperature scale." },
+{ question: "Gas pressure is due to molecular impacts on the container walls; collisions among molecules themselves do not directly exert pressure on the walls.", answer: true, explanation: "True. The momentum transfer at the walls is what defines pressure." },
+{ question: "A good thermal conductor (e.g., copper) necessarily “absorbs more heat” than a poor conductor at the same mass and temperature change.", answer: false, explanation: "False. The heat absorbed depends on mcΔT (heat capacity), not on thermal conductivity." },
+                    { question: "It is possible to build a heat engine that is 100% efficient.", answer: false, explanation: "Incorrect. The second law of thermodynamics forbids the creation of a heat engine that converts heat completely into work (Kelvin-Planck statement). There will always be some waste heat exhausted to a colder reservoir." }
+                ],
+                "Waves": [
+                    { question: "Sound waves are transverse waves.", answer: false, explanation: "Incorrect. Sound waves are longitudinal waves. The particles of the medium oscillate parallel to the direction of energy propagation." },
+{ question: "When you look at an object at the bottom of a pool, it appears to be deeper than it really is.", answer: false, explanation: "False. Due to refraction (light bending away from the normal as it leaves the water), the apparent depth is less than the real depth. The object appears shallower." },
+{ question: "A short-sighted (myopic) person cannot see nearby objects clearly, and their condition is corrected using a convex lens.", answer: false, explanation: "False. A short-sighted person cannot see distant objects clearly (their far point is too close). The condition is corrected using a concave (diverging) lens." },
+                    { question: "The speed of a wave (v) is determined by the properties of the medium, so changing the source's frequency (f) will not change the wave's speed.", answer: true, explanation: "Correct. While v = fλ is true, the speed (v) is constant for a given medium. If you change the frequency (f) of the source, the wavelength (λ) will adjust accordingly (λ = v/f), but v remains the same." },
+                    { question: "In a diffraction grating, red light is diffracted at a larger angle than violet light for the same order of maximum.", answer: true, explanation: "Correct. According to the grating equation d sin(θ) = nλ, the angle of diffraction (θ) is directly proportional to the wavelength (λ). Since red light has a longer wavelength than violet light, it diffracts more." },
+                    { question: "The amplitude of a wave is related to its energy.", answer: true, explanation: "Correct. The energy carried by a wave is proportional to the square of its amplitude. A wave with a larger amplitude carries more energy." },
+                    { question: "When light passes from air into water, its frequency changes.", answer: false, explanation: "Incorrect. When a wave passes from one medium to another, its frequency remains constant because it is determined by the source. Its speed and wavelength change, but the frequency does not." },
+                    { question: "Constructive interference occurs when a crest meets a trough.", answer: false, explanation: "Incorrect. Constructive interference occurs when two crests or two troughs meet, resulting in a wave of larger amplitude. When a crest meets a trough, destructive interference occurs." },
+                    { question: "A stationary wave transmits energy from one point to another.", answer: false, explanation: "Incorrect. A stationary (or standing) wave does not transfer energy. Energy is localized in segments between the nodes. Progressive (traveling) waves transfer energy." },
+                    { question: "The refractive index of a medium can be less than 1.", answer: false, explanation: "Incorrect. The refractive index (n) is defined as the ratio of the speed of light in a vacuum (c) to the speed of light in the medium (v), so n = c/v. Since light travels fastest in a vacuum, v is always less than or equal to c, meaning n is always greater than or equal to 1." },
+                   { question: "Sound travels faster in air than in steel.", answer: false, explanation: "Incorrect. Sound travels much faster in solids like steel than in gases like air. This is because the particles in a solid are much closer together and more rigidly connected, allowing vibrations to be transmitted more efficiently." },
+                    { question: "The pitch of a sound is determined by its amplitude.", answer: false, explanation: "Incorrect. The pitch of a sound is determined by its frequency. The amplitude of a sound wave determines its loudness or intensity." },
+                    { question: "When a wave is reflected from a fixed end, it is inverted.", answer: true, explanation: "Correct. When a wave on a string reflects from a fixed end, it undergoes a 180° phase change, meaning it is inverted. If it reflects from a free end, there is no phase change." },
+                    { question: "Total internal reflection can occur when light travels from a denser medium to a less dense medium.", answer: true, explanation: "Correct. Total internal reflection happens when light travels from a medium with a higher refractive index to one with a lower refractive index, and the angle of incidence is greater than the critical angle." },
+                    { question: "Ultrasound is a sound wave with a very high amplitude.", answer: false, explanation: "Incorrect. Ultrasound refers to sound waves with frequencies above the range of human hearing (typically > 20,000 Hz). Its amplitude is not necessarily high." },
+                    { question: "Electromagnetic waves require a medium to travel.", answer: false, explanation: "Incorrect. Electromagnetic waves, such as light and radio waves, are disturbances in electric and magnetic fields and can travel through a vacuum. Mechanical waves (like sound) require a medium." },
+      	            { question: "The loudness of a sound is measured in Hertz (Hz).", answer: false, explanation: "Incorrect. The loudness or sound intensity level is measured in decibels (dB). Frequency is measured in Hertz (Hz)." },
+
+{ question: "For a stationary wave on a string, any point at a node has zero displacement at all times.", answer: true, explanation: "True. This is the definition of a node." },
+
+{ question: "For a stationary wave, a point at an antinode vibrates sinusoidally with maximum amplitude A.", answer: true, explanation: "True. This is the definition of an antinode." },
+
+{ question: "A single snapshot of a stationary wave uniquely reveals the period.", answer: false, explanation: "False. A snapshot gives the spatial pattern, not the temporal period." },
+
+{ question: "A wave pulse reflecting from a fixed end is inverted.", answer: true, explanation: "True. The fixed boundary condition enforces phase inversion." },
+
+{ question: "A wave pulse reflecting from a fixed end returns without inversion.", answer: false, explanation: "False. That occurs at a free end, not a fixed one." },
+
+{ question: "In a glass prism, violet light deviates more than red because its refractive index is higher (violet travels slower).", answer: true, explanation: "True. This is due to normal dispersion in glass." },
+
+{ question: "In a diffraction grating, red light appears at larger diffraction angles than violet in the same order.", answer: true, explanation: "True. From θ ≈ arcsin(mλ/d), a larger wavelength λ gives a larger angle θ." },
+
+{ question: "A typical ultraviolet wavelength in vacuum is of order 10⁻⁷ m.", answer: true, explanation: "True. The UV range is approximately 10–400 nm." },
+
+{ question: "A typical microwave wavelength in vacuum is of order 10⁻⁵ m.", answer: false, explanation: "False. Microwaves are typically in the range of ~10⁻² to 10⁻¹ m." },
+
+{ question: "In water–glass–air with a ray emerging along the glass–air interface, the required incidence angle in water is independent of the glass’s refractive index.", answer: true, explanation: "True. The condition at the final interface fixes the internal angle; tracing back with Snell's law yields a unique incident angle in water." },
+
+{ question: "On a given string, doubling the driving frequency doubles the wave speed.", answer: false, explanation: "False. The wave speed v ≈ √(T/μ) is set by the string's tension and mass per unit length, not by the driving frequency." },
+
+{ question: "On the same string, changing the frequency changes the wavelength but not (to first order) the wave speed.", answer: true, explanation: "True. This follows from the wave equation v = fλ." },
+
+{ question: "When a standing wave pattern shifts from one harmonic to the next, some pairs of points that were out of phase can become in phase.", answer: true, explanation: "True. The mode shapes change the phase relations between points." },
+
+{ question: "In a stretched string, nodes are at fixed ends; the second harmonic has twice as many loops as the first.", answer: true, explanation: "True. This describes the relationship between mode numbers." },
+
+{ question: "In a longitudinal wave, equilibrium positions are fixed; particles oscillate about them.", answer: true, explanation: "True. Medium particles vibrate around fixed equilibrium positions." },
+
+{ question: "A particle is momentarily at rest whenever it passes through the equilibrium position.", answer: false, explanation: "False. It moves fastest at the equilibrium position." },
+
+{ question: "Two waves of different frequencies cannot be superposed at the same point.", answer: false, explanation: "False. The superposition principle still applies; the resultant wave varies in time (beats are possible)." },
+
+{ question: "Two different-frequency circular ripples do not always reinforce at a fixed point; constructive/destructive conditions change with time.", answer: true, explanation: "True. The phase difference between the waves varies in time." },
+
+{ question: "Submarines use ultrasound instead of microwaves mainly because microwaves are strongly absorbed by seawater.", answer: true, explanation: "True. Water is lossy at microwave frequencies." },
+
+{ question: "Ultrasound is used at sea because its wavelength is longer than microwaves.", answer: false, explanation: "False. Ultrasound wavelengths in water are much shorter than microwave wavelengths in water." },
+
+{ question: "At a fixed end, the reflected pulse inverts and the fixed point is a node.", answer: true, explanation: "True. A fixed boundary enforces zero displacement, so reflections invert and the boundary is a node." },
+{ question: "When two pulses on a string meet, the instantaneous shape is the algebraic sum of their displacements.", answer: true, explanation: "True. This is the superposition principle for waves on strings." },
+{ question: "For an ideal string (no losses), a pulse reflects from a fixed end with the same speed and magnitude of displacement but inverted sign.", answer: true, explanation: "True. The medium's properties set the wave speed, and a fixed end flips the phase of the reflection." },
+{ question: "In a standing wave on a string, the distance between adjacent nodes equals half a wavelength.", answer: true, explanation: "True. The spacing between a node and an antinode is λ/4, so the node-to-node distance is λ/2." },
+{ question: "In a standing wave, all points within the same loop (between two adjacent nodes) oscillate in phase; neighboring loops are in antiphase.", answer: true, explanation: "True. This is the standard phase relationship for standing waves." },
+{ question: "In a longitudinal wave, particle displacement is parallel to the direction of wave propagation.", answer: true, explanation: "True. This is the definition of a longitudinal wave." },
+{ question: "From the 2017 snapshot (E→N), the pattern indicates the wave is traveling left-to-right.", answer: true, explanation: "True. The displacement shift of the particles shows a rightward propagation of the wave." },
+{ question: "In simple harmonic oscillation of a particle in a wave, the particle’s speed is maximum at its equilibrium position.", answer: true, explanation: "True. Maximum velocity occurs at zero displacement in SHM." },
+{ question: "With two different-frequency ripples in a ripple tank, the amplitude at a fixed point generally varies with time (not constant reinforcement).", answer: true, explanation: "True. The phase difference varies in time, so superposition still applies but without a stable pattern." },
+{ question: "In glass, red light travels faster than violet light (n_red < n_violet), so red deviates less in a prism.", answer: true, explanation: "True. This phenomenon is known as normal dispersion in glass." },
+{ question: "With white light on a diffraction grating, the central maximum appears white because all wavelengths overlap at θ = 0.", answer: true, explanation: "True. The m = 0 order is achromatic, meaning it is not spread into colors." },
+{ question: "Higher diffraction orders in a grating spread colors more than lower orders.", answer: true, explanation: "True. From θ ≈ arcsin(mλ/d), a larger order 'm' increases the angular spread by wavelength." },
+{ question: "Two incoherent sources will not produce a stable, observable interference pattern even though waves still superpose physically.", answer: true, explanation: "True. Random phase differences destroy the conditions for stationary fringes." },
+{ question: "For coherent sources, increasing the source separation decreases fringe spacing (closer fringes).", answer: true, explanation: "True. Fringe spacing is inversely proportional to the separation of the sources." },
+{ question: "Antinodal lines from two coherent point sources on water are curved, not straight.", answer: true, explanation: "True. The loci of points with a constant path difference form hyperbolas, which are curved." },
+{ question: "A mirage requires a refractive-index gradient near hot ground that bends rays by refraction.", answer: true, explanation: "True. Thermal gradients in the air create a non-uniform refractive index that curves light paths." },
+{ question: "Total internal reflection can occur within graded air layers if n decreases rapidly with height near hot surfaces.", answer: true, explanation: "True. A sufficient gradient in the refractive index can meet the condition for TIR locally." },
+{ question: "In a stratified medium with gradual n variation, n sinθ remains approximately constant along a ray.", answer: true, explanation: "True. This is an application of Snell's law for slowly varying media." },
+{ question: "At an interface from a higher to a lower refractive index (e.g., plastic to air), a refracted ray bends away from the normal.", answer: true, explanation: "True. This is a direct consequence of Snell’s law." },
+{ question: "A ray totally internally reflecting within a block may later emerge if at a subsequent boundary its incidence angle becomes smaller than the critical angle.", answer: true, explanation: "True. The internal geometry of the block can change the incidence angle at the next surface." },
+{ question: "In the water–glass–air slab where the final ray grazes the glass–air interface, the incidence angle inside glass at that boundary equals the glass–air critical angle.", answer: true, explanation: "True. 'Emerges along the interface' means the angle of refraction is 90°, so the angle of incidence must be the critical angle, θc." },
+{ question: "Peak-to-trough displacement of a sinusoidal wave equals 2A if the amplitude is A.", answer: true, explanation: "True. This is by definition of amplitude, which is the maximum displacement from the equilibrium position." },
+{ question: "Frequency of light does not change upon refraction between media; only speed and wavelength do.", answer: true, explanation: "True. This was a commonly missed concept in lens and refraction problems." },
+{ question: "Mislabeling refraction angles (mixing up θi and θr) leads to wrong Snell-law application in lens problems.", answer: true, explanation: "True. This was reported as a common error among candidates." },
+{ question: "Stating only “crest meets trough” is incomplete; interference minima require π phase difference and comparable amplitudes.", answer: true, explanation: "True. Candidates’ explanations were often too brief and lacked necessary conditions." },
+
+{ question: "In echo sounding, the travel time corresponds to a one-way trip to the seabed.", answer: false, explanation: "False. The time measured is for a round trip (down and back)." }
+
+                ],
+                "Electricity & Magnetism": [
+                    { question: "The resistance of a metallic conductor typically decreases as its temperature increases.", answer: false, explanation: "Incorrect. For a metallic conductor, resistance increases with temperature. Higher temperature causes the metal ions to vibrate more, leading to more frequent collisions with the charge carriers (electrons) and thus impeding their flow." },
+                    { question: "A transformer can step up DC voltage.", answer: false, explanation: "Incorrect. Transformers operate on the principle of mutual electromagnetic induction, which requires a changing magnetic flux. DC current produces a constant magnetic field, so it cannot induce a current in the secondary coil. Transformers only work with AC." },
+                    { question: "According to Lenz's law, the induced current will flow in a direction that opposes the change in magnetic flux that produced it.", answer: true, explanation: "Correct. This is the fundamental statement of Lenz's law. It's a consequence of the conservation of energy, ensuring that you have to do work to create the induced current." },
+                    { question: "In a uniform electric field, the electric potential increases in the direction of the electric field lines.", answer: false, explanation: "Incorrect. Electric field lines point from regions of higher potential to regions of lower potential. Therefore, electric potential decreases in the direction of the electric field." },
+                    { question: "Adding resistors in parallel decreases the total resistance of the circuit.", answer: true, explanation: "Correct. When resistors are added in parallel, more paths are available for the current to flow, which reduces the overall resistance. The equivalent resistance is always less than the smallest individual resistance." },
+                    { question: "The magnetic field inside a long solenoid is strongest at its ends.", answer: false, explanation: "Incorrect. The magnetic field inside a long, ideal solenoid is nearly uniform and strongest in its center, far from the ends. The field becomes weaker and diverges outside the ends." },
+                    { question: "An electron moving parallel to a magnetic field line will experience a magnetic force.", answer: false, explanation: "Incorrect. The magnetic force on a charged particle is given by F = qvBsin(θ). If the velocity (v) is parallel to the magnetic field (B), the angle θ is 0°, and sin(0°) = 0, so the force is zero." },
+                    { question: "Ohm's law (V=IR) is a fundamental law of physics and is always obeyed by all materials.", answer: false, explanation: "Incorrect. Ohm's law is an empirical relationship that holds true for many materials (ohmic materials) under certain conditions. It is not a fundamental law, and many devices (like diodes and transistors) are non-ohmic." },
+                    { question: "A capacitor stores energy in its magnetic field.", answer: false, explanation: "Incorrect. A capacitor stores energy in the electric field between its plates. An inductor stores energy in its magnetic field." },
+                    { question: "The Earth's magnetic north pole is located at the geographic North Pole.", answer: false, explanation: "Incorrect. The Earth's magnetic north pole (where a compass needle points) is actually a magnetic south pole, located near the geographic North Pole. Opposite poles attract." },
+                    { question: "Kirchhoff's junction rule is a consequence of the conservation of charge.", answer: true, explanation: "Correct. The junction rule states that the total current entering a junction must equal the total current leaving it. This is a direct statement that charge does not accumulate at a junction." },
+                    { question: "In a step-up transformer, the current in the secondary coil is greater than the current in the primary coil.", answer: false, explanation: "Incorrect. For an ideal transformer, power is conserved (P_in = P_out, so V_p * I_p = V_s * I_s). If the voltage is stepped up (V_s > V_p), the current must be stepped down (I_s < I_p) to conserve power." },
+                    { question: "Electric field lines can cross each other.", answer: false, explanation: "Incorrect. Electric field lines can never cross. If they did, it would imply that the electric field has two different directions at the same point, which is impossible." },
+                    { question: "A voltmeter should have a very high internal resistance.", answer: true, explanation: "Correct. A voltmeter is connected in parallel with the component it measures. To avoid drawing significant current from the circuit and altering the voltage it is intended to measure, it must have a very high resistance." },
+                    { question: "The force between two parallel current-carrying wires is attractive if the currents are in opposite directions.", answer: false, explanation: "Incorrect. The force is attractive if the currents are in the same direction and repulsive if they are in opposite directions." },
+                    { question: "An ammeter should be connected in series and have a very high resistance.", answer: false, explanation: "Incorrect. An ammeter is connected in series to measure the current flowing through a part of the circuit. It must have a very low resistance so that it does not significantly impede the current it is trying to measure." },
+                    { question: "The unit of capacitance, the Farad, is equivalent to a Coulomb per Volt.", answer: true, explanation: "Correct. Capacitance is defined as the ratio of charge stored to the potential difference (C = Q/V), so its unit, the Farad (F), is equivalent to C/V." },
+                    { question: "A moving electric charge produces both an electric and a magnetic field.", answer: true, explanation: "Correct. A stationary charge produces only an electric field. A moving charge (a current) produces both an electric field and a magnetic field." },
+{ question: "For charges −4Q and +Q on a line, the point where the net electric field is zero lies outside the segment between them.", answer: true, explanation: "True. Between them, the fields point in the same direction; cancellation occurs outside, near the side of the smaller-magnitude charge." },
+
+{ question: "In electromagnetic induction, the induced magnetic torque on a rotating coil opposes its rotation.", answer: true, explanation: "True. This is a direct consequence of Lenz’s law." },
+
+{ question: "The induced e.m.f. in a rotating coil is maximum when the plane of the coil is parallel to the field.", answer: true, explanation: "True. The rate of change of magnetic flux, |dΦ/dt|, is maximum at this orientation (θ = 90°)." },
+
+{ question: "For +4Q at x = 0 and +Q at x = 0.15 m, the point where their electric fields are equal in magnitude and direction is at x = 0.30 m.", answer: true, explanation: "True. Solving k·4Q/x² = k·Q/(x−0.15)² yields x = 0.30 m (to the right of +Q)." },
+
+{ question: "The r.m.s. voltage of a sinusoid is Vp/√2; changing frequency does not change Vrms if Vp is fixed.", answer: true, explanation: "True. This is the definition of Vrms for a sinusoidal voltage." },
+
+{ question: "Halving the peak voltage while doubling frequency halves the r.m.s. voltage.", answer: true, explanation: "True. Vrms is proportional to Vp only." },
+
+{ question: "The r.m.s. voltage of a sinusoidal source increases when the frequency is doubled (with the same peak).", answer: false, explanation: "False. Vrms depends on Vp only." },
+
+{ question: "Two charged conducting spheres pressed against a smooth cylinder must carry equal charges to remain separated.", answer: false, explanation: "False. The equilibrium separation does not require the charges to be equal." },
+
+{ question: "In that setup, both spheres must be positively charged.", answer: false, explanation: "False. Both could be negative; they only need to have like charges to repel." },
+
+{ question: "In that setup, the equilibrium separation depends on the mass m.", answer: true, explanation: "True. The equilibrium is a balance of electric repulsion with weight and constraints." },
+
+{ question: "In a simple d.c. motor with a split-ring commutator, the current reverses every half-turn.", answer: true, explanation: "True. This is necessary to maintain continuous rotation." },
+
+{ question: "In the motor shown, the turning effect (torque) is zero when the coil is vertical.", answer: true, explanation: "True. This was stated in the item." },
+
+{ question: "For a rod moving across rails in a uniform B into the page, the induced emf magnitude is Bdv, where d is the rail separation.", answer: true, explanation: "True. The induced EMF is ℰ = Blv, with l being the separation of the rails (the active length)." },
+
+{ question: "In that setup, using the full length of the rod beyond the rail separation to compute emf is correct.", answer: false, explanation: "False. Only the segment cutting field lines between the rails contributes to the EMF." },
+
+{ question: "Transformers: Total output power equals (number of bulbs) × (rated power per bulb); input power equals output/efficiency.", answer: true, explanation: "True. P_out = ΣP_rated, and P_in = P_out/η." },
+
+{ question: "Electric field vectors add by vector addition; the resultant at a point is the vector sum of contributions from all charges.", answer: true, explanation: "True. This is the principle of superposition." },
+
+{ question: "The electrical resistance between opposite faces of a metallic cube of side x is proportional to 1/x.", answer: true, explanation: "True. R = ρL/A = ρx/x² = ρ/x." },
+
+{ question: "When estimating the cube’s resistance, considering only cross-sectional area while ignoring its length leads to a wrong dependence.", answer: true, explanation: "True. Both length and area matter in the resistance formula." },
+
+{ question: "A metal rod moving across a magnetic field with open terminals has an induced emf but no induced current; hence no magnetic drag force acts on it.", answer: true, explanation: "True. With no circuit, there is no current, so there is no force F = IL×B." },
+
+{ question: "A bird can sit safely on a single high-voltage power line because its body is at the same high potential as the wire.", answer: true, explanation: "True. For a significant current to flow, there must be a potential difference (voltage) across the bird. Since both of the bird's feet are on the same wire, there is almost no potential difference between them, so no current flows through the bird." },
+      	            { question: "In a DC motor, the purpose of the split-ring commutator is to reverse the direction of the voltage every half turn.", answer: false, explanation: "Incorrect. The split-ring commutator's function is to reverse the direction of the current in the coil every half turn, which ensures that the torque continues to act in the same direction, allowing for continuous rotation." },
+                    { question: "Resistivity is a property of an object, while resistance is a property of a material.", answer: false, explanation: "Incorrect. It is the other way around. Resistivity (ρ) is an intrinsic property of a material. Resistance (R) is a property of a specific object that depends on its material (resistivity), length, and cross-sectional area (R = ρL/A)." },
+
+{ question: "Electric shock severity depends primarily on current through the body, not voltage alone.", answer: true, explanation: "True. A high voltage is dangerous mainly because it can drive a large and harmful current through you." },
+{ question: "A bird perched on a single high-voltage line is usually safe because the potential difference across its feet is tiny, so negligible current flows through its body.", answer: true, explanation: "True. The bird is at a nearly uniform high potential, so there is no significant voltage drop across its body." },
+{ question: "“Resistance per km” must be multiplied by the cable length (in km) to find total resistance.", answer: true, explanation: "True. This was a step that some students forgot to apply in calculations." },
+{ question: "Resistance depends on cross-sectional area, not surface area.", answer: true, explanation: "True. The formula is R = ρL/A, where A is the perpendicular cross-sectional area." },
+{ question: "In a search-coil experiment inside a solenoid, the induced emf is maximized when the coil’s plane is perpendicular to the field lines (coil axis parallel to B).", answer: true, explanation: "True. This orientation maximizes the change in flux linkage as the coil is moved or the field is changed." },
+{ question: "Increasing the a.c. frequency can increase a search coil’s induced emf (ℰ ∝ ω), but it is not automatically “more accurate.”", answer: true, explanation: "True. Whether accuracy improves depends on instrument bandwidth and noise; this nuance led to a deleted item." },
+{ question: "Aligning a long solenoid east–west to “avoid Earth’s field” is generally unnecessary for measuring its internal field.", answer: true, explanation: "True. The solenoid’s internal field is typically much stronger and dominates the Earth's magnetic field." },
+{ question: "Bulbs connected in parallel share the same potential difference; hence energy dissipated per unit charge is the same for each bulb.", answer: true, explanation: "True. This is the definition of potential difference (voltage)." },
+{ question: "In that parallel-bulb circuit, the brighter bulb dissipates more power per second and carries a larger current.", answer: true, explanation: "True. Since P = VI and V is the same for both, a larger power P implies a larger current I." },
+{ question: "In a moving rod within a magnetic field, the end indicated by v × B (for positive charges) becomes the positive terminal of the induced emf.", answer: true, explanation: "True. This describes the direction of charge separation due to the magnetic force." },
+{ question: "If the moving-rod circuit is closed, the induced current generates a magnetic force opposing the motion.", answer: true, explanation: "True. This is a direct consequence of Lenz’s law, where the force F opposes the velocity v." },
+{ question: "A split-ring commutator in a d.c. motor reverses current every half-turn to keep torque in the same rotational sense.", answer: true, explanation: "True. This mechanism ensures the coil continues to rotate in one direction." },
+{ question: "The magnetic force on a straight current-carrying wire is maximal when the wire is perpendicular to B and zero when parallel to B.", answer: true, explanation: "True. The force is given by F = B I L sinθ." },
+{ question: "In a rectangular coil, segments parallel to the magnetic field experience negligible magnetic force; torque comes mainly from the sides perpendicular to B.", answer: true, explanation: "True. This is due to the sinθ dependence of the magnetic force." },
+{ question: "In a current-carrying spring, adjacent wire segments with currents in the same direction attract each other; in opposite directions they repel.", answer: true, explanation: "True. This is the basis of magnetic deformation in springs and coils." },
+{ question: "Two parallel long conductors carrying currents in the same direction attract each other.", answer: true, explanation: "True. This is a standard result of Ampere’s force law." },
+{ question: "In a uniform electric field, charged particles follow parabolic trajectories (constant acceleration a = qE/m), neglecting other forces.", answer: true, explanation: "True. This is analogous to projectile motion under gravity." },
+{ question: "In the same electric field, α-particles deflect much less than β-particles because of the α’s much larger mass and lower charge-to-mass ratio.", answer: true, explanation: "True. Since a = qE/m and the mass of an alpha particle is much greater than an electron, its acceleration is much smaller." },
+{ question: "For the transformer powering 10 bulbs at 3 V, 1.5 W each with 70% efficiency, Pin = Pout/η and Iin = Pin/220 V.", answer: true, explanation: "True. These are the correct power and current relations used to reach the reported answer." },
+{ question: "When summing electric fields from multiple point charges, vector addition (component-wise) must be used; magnitudes do not simply add.", answer: true, explanation: "True. This was a point of struggle for candidates involving vector sums." },
+{ question: "For two identical positive charges placed symmetrically, the electric field at the midpoint is non-zero and points outward along the symmetry axis.", answer: true, explanation: "True. The fields from each charge add together, they do not cancel out." },
+{ question: "The instantaneous induced emf in a rotating coil is proportional to the time rate of change of flux, ℰ = −d(NΦ)/dt, not to the flux itself.", answer: true, explanation: "True. This explains why the emf is maximum when the flux is changing fastest." },
+{ question: "When the coil’s plane is perpendicular to B (flux maximum), the induced emf is instantaneously zero.", answer: true, explanation: "True. At this point, the rate of change of flux, dΦ/dt, is zero." },
+{ question: "In the rotating frame example, the magnetic braking torque is opposite to the rotation at all instants (Lenz’s law).", answer: true, explanation: "True. Induced effects always oppose the change that produces them." },
+{ question: "A protective resistor placed in the ammeter branch limits current and helps prevent meter damage if misused.", answer: true, explanation: "True. This is the purpose of the protective resistor in the circuit." },
+{ question: "Connecting an ammeter directly across a supply (like a wire) is dangerous because its low internal resistance can draw excessive current.", answer: true, explanation: "True. Some candidates misunderstood this safety precaution." },
+{ question: "Be careful with units: currents may be in mA or A; mixing units leads to wrong numerical answers.", answer: true, explanation: "True. This was a frequently reported source of mistakes in calculations." },
+{ question: "Tungsten filament resistance changes with temperature; if you compute the filament length from resistance, use the resistance measured at room temperature if that’s what was asked for.", answer: true, explanation: "True. Candidates often used the wrong resistance value in their calculations." },
+{ question: "In parallel networks, the potential difference across each branch equals the source potential difference.", answer: true, explanation: "True. This fundamental circuit rule was missed by some." },
+{ question: "In the 2021 moving-rod item, an opposing magnetic force exists only if there is a closed current path; with an open circuit, there’s emf but no magnetic drag.", answer: true, explanation: "True. No current means there is no ILB force." }
+                ],
+                "Atomic & Nuclear Physics": [
+                    { question: "Alpha particles are positively charged.", answer: true, explanation: "Correct. An alpha particle is a helium nucleus, consisting of two protons and two neutrons, giving it a charge of +2e." },
+                    { question: "Gamma rays can be deflected by a magnetic field.", answer:false, explanation: "Incorrect. Gamma rays are high-energy electromagnetic radiation (photons). They have no charge and therefore are not deflected by electric or magnetic fields." },
+                    { question: "Isotopes of an element have the same number of neutrons but a different number of protons.", answer: false, explanation: "Incorrect. Isotopes of an element have the same number of protons (which defines the element) but a different number of neutrons, resulting in a different mass number." },
+                    { question: "During beta decay, a neutron in the nucleus is converted into a proton and an electron.", answer: true, explanation: "Correct. In beta-minus decay, a neutron transforms into a proton (which remains in the nucleus), and an electron (the beta particle) and an antineutrino are emitted." },
+                    { question: "Nuclear fission is the process of combining light nuclei to form a heavier nucleus.", answer: false, explanation: "Incorrect. Nuclear fission is the process of splitting a heavy, unstable nucleus into two or more lighter nuclei. Combining light nuclei is called nuclear fusion." },
+                    { question: "The half-life of a radioactive substance is the time it takes for half of its atoms to decay.", answer: true, explanation: "Correct. This is the definition of half-life. After one half-life, the activity of the sample is also reduced by half." },
+{ question: "In the Bohr model, electron angular momentum is quantized.", answer: true, explanation: "True. This is a foundational postulate of the Bohr model." },
+
+{ question: "An electron dropping from n = 3 to n = 1 can produce three spectral lines in total.", answer: true, explanation: "True. The possible transitions are 3→1, 3→2, and 2→1." },
+
+{ question: "Explaining atomic stability simply by “electrons are negative” is sufficient.", answer: false, explanation: "False. It requires quantized energy levels and angular momentum, not just the charge sign." },
+
+{ question: "Nuclear fusion of light nuclei proceeds spontaneously under normal terrestrial conditions.", answer: false, explanation: "False. It requires extreme temperature and pressure to overcome the Coulomb barrier." },
+
+{ question: "Conventional film badges cannot reliably monitor alpha radiation exposure to workers.", answer: true, explanation: "True. Alpha particles are easily stopped by the badge’s covering and the air." },
+
+{ question: "In a photocell I–V curve, the saturation current can occur at a positive anode voltage (not necessarily at 0 V).", answer: true, explanation: "True. This is device-dependent; the report noted saturation at ~1.0 V." },
+
+{ question: "The stopping potential is equal to the maximum photoelectron kinetic energy divided by e.", answer: true, explanation: "True. The relationship is eVs = Kmax." },
+
+{ question: "Increasing light frequency increases the saturation current.", answer: false, explanation: "False. The saturation current depends mainly on intensity; frequency changes Kmax." },
+
+{ question: "In a uniform electric field, β-particles (electrons) are deflected more than α-particles, in opposite directions.", answer: true, explanation: "True. This is due to their much smaller mass and opposite charge." },
+
+{ question: "Natural ionizing radiation can be found in sea water, rocks, and the human body.", answer: true, explanation: "True. These contain traces of radionuclides (e.g., K-40)." },
+                    { question: "All of an atom's mass is concentrated in its nucleus.", answer: false, explanation: "Incorrect. While the vast majority (over 99.9%) of an atom's mass is in the nucleus, the electrons orbiting the nucleus also contribute a small amount to the total mass." },
+                    { question: "The penetrating power of beta particles is generally greater than that of alpha particles.", answer: true, explanation: "Correct. The order of penetrating power is typically gamma > beta > alpha. Alpha particles are large and highly ionizing, so they are stopped easily (by paper or skin). Beta particles are smaller and can penetrate further (stopped by thin aluminum)." },
+                    { question: "Einstein's mass-energy equivalence principle is given by E = mc.", answer: false, explanation: "Incorrect. The famous equation is E = mc², where 'c' is the speed of light. This relationship shows that mass and energy are interchangeable." },
+                    { question: "In the photoelectric effect, increasing the intensity of the incident light increases the maximum kinetic energy of the emitted electrons.", answer: false, explanation: "Incorrect. Increasing the intensity of the light increases the number of photons, which in turn increases the number of emitted electrons (the photoelectric current). The maximum kinetic energy of the electrons is determined by the frequency of the incident light, not its intensity." },
+                    { question: "A chain reaction in a nuclear reactor is controlled by using control rods that absorb protons.", answer: false, explanation: "Incorrect. Control rods, typically made of materials like boron or cadmium, control the reaction rate by absorbing excess neutrons, not protons." },
+                    { question: "Background radiation is solely due to man-made sources.", answer: false, explanation: "Incorrect. Background radiation comes from both natural sources (like radon gas, cosmic rays, radioactive elements in rocks) and man-made sources (like medical x-rays and nuclear fallout)." },
+                    { question: "Nuclear fusion reactions release more energy per nucleon than fission reactions.", answer: true, explanation: "Correct. While a single fission event releases more total energy than a single fusion event, fusion of light elements (like hydrogen) releases significantly more energy per unit of mass (per nucleon)." },
+                    { question: "Rutherford's gold foil experiment proved the existence of the neutron.", answer: false, explanation: "Incorrect. Rutherford's experiment led to the discovery of the atomic nucleus and the proposal of the planetary model of the atom. The neutron was discovered later by James Chadwick in 1932." },
+                    { question: "The strong nuclear force is responsible for holding electrons in orbit around the nucleus.", answer: false, explanation: "Incorrect. The strong nuclear force is the force that binds protons and neutrons together within the nucleus. The electromagnetic force is responsible for keeping electrons in orbit." },
+                    { question: "Light exhibits properties of both a particle and a wave.", answer: true, explanation: "Correct. This is the principle of wave-particle duality. Light can behave as an electromagnetic wave (showing diffraction and interference) and as a particle or photon (as seen in the photoelectric effect)." },
+                    { question: "Radioactive decay is a random and spontaneous process.", answer: true, explanation: "Correct. It is impossible to predict when a specific nucleus will decay. The process is governed by probability, which is why we use statistical measures like half-life to describe it for a large number of atoms." },
+                    { question: "The activity of a radioactive sample is measured in Joules.", answer: false, explanation: "Incorrect. The activity of a radioactive sample (the rate of decay) is measured in Becquerels (Bq), where 1 Bq = 1 decay per second. Energy is measured in Joules." },
+      	            { "question": "An electron can exist in any orbit around a nucleus, as long as it has enough energy.", "answer": false, "explanation": "Incorrect. According to the Bohr model and quantum mechanics, electrons can only exist in specific, discrete energy levels or orbitals around the nucleus. They cannot exist in the spaces between these allowed orbits." },
+                    { "question": "In a controlled nuclear fission reactor, the goal is to have the multiplication factor k exactly equal to 1.", "answer": true, "explanation": "Correct. A multiplication factor (k) of 1 means that each fission event causes, on average, exactly one other fission event. This leads to a self-sustaining chain reaction at a constant rate, which is known as a critical state." }
+                ]
+            };
+            
+            // DOM Elements
+            const nameScreen = document.getElementById('name-screen');
+            const nameInput = document.getElementById('name-input');
+            const startBtn = document.getElementById('start-btn');
+            const topicSelectionScreen = document.getElementById('topic-selection-screen');
+            const quizScreen = document.getElementById('quiz-screen');
+            const endScreen = document.getElementById('end-screen');
+            const topicList = document.getElementById('topic-list');
+
+            // Quiz elements
+            const card = document.getElementById('card');
+            const topicTitle = document.getElementById('topic-title');
+            const questionText = document.getElementById('question-text');
+            const answerButtons = document.getElementById('answer-buttons');
+            const explanationText = document.getElementById('explanation-text');
+            const feedbackText = document.getElementById('feedback-text');
+            const nextBtn = document.getElementById('next-btn');
+            const prevBtn = document.getElementById('prev-btn');
+            const progressIndicator = document.getElementById('progress-indicator');
+            const backToTopicsBtn = document.getElementById('back-to-topics-btn');
+
+            // End screen elements
+            const endTitle = document.getElementById('end-title');
+            const endMessage = document.getElementById('end-message');
+            const retryWrongBtn = document.getElementById('retry-wrong-btn');
+            const restartBtn = document.getElementById('restart-btn');
+
+            // State variables
+            let userName = '';
+            let currentTopic = '';
+            let questions = [];
+            let currentQuestionIndex = 0;
+            let userAnswers = [];
+            let isRetryMode = false;
+
+            function init() {
+                // Populate topic list
+                Object.keys(questionsData).forEach(topic => {
+                    const button = document.createElement('button');
+                    button.className = "text-left p-6 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-cyan-400 transition-all duration-300 transform hover:-translate-y-1";
+                    button.innerHTML = `<h3 class="text-xl font-bold text-slate-800">${topic}</h3><p class="text-slate-600 mt-1">${questionsData[topic].length} questions</p>`;
+                    button.onclick = () => startQuiz(topic);
+                    topicList.appendChild(button);
+                });
+            }
+
+            function startQuiz(topic, retry = false) {
+                currentTopic = topic;
+                isRetryMode = retry;
+
+                if (isRetryMode) {
+                    const wrongAnswerIndices = userAnswers
+                        .map((ua, index) => ({...ua, originalIndex: index}))
+                        .filter(ua => !ua.correct)
+                        .map(ua => ua.originalIndex);
+                    
+                    const originalQuestions = questionsData[currentTopic];
+                    questions = wrongAnswerIndices.map(index => originalQuestions[userAnswers[index].originalIndex]);
+
+                    userAnswers = questions.map((_, newIndex) => {
+                        const originalQuestionIndex = userAnswers[wrongAnswerIndices[newIndex]].originalIndex;
+                        return { answered: false, correct: null, userChoice: null, originalIndex: originalQuestionIndex };
+                    });
+
+                } else {
+                    questions = [...questionsData[currentTopic]];
+                    userAnswers = questions.map((_, index) => ({ answered: false, correct: null, userChoice: null, originalIndex: index }));
+                }
+                
+                currentQuestionIndex = 0;
+                showScreen('quiz');
+                displayQuestion();
+            }
+
+            function displayQuestion() {
+                if (currentQuestionIndex >= questions.length) {
+                    showEndScreen();
+                    return;
+                }
+
+                const question = questions[currentQuestionIndex];
+                const answerState = userAnswers[currentQuestionIndex];
+
+                card.classList.remove('flipped');
+                
+                setTimeout(() => {
+                    topicTitle.textContent = currentTopic;
+                    questionText.textContent = question.question;
+                    explanationText.textContent = question.explanation;
+
+                    if (answerState.answered) {
+                        showFeedback(answerState.correct, answerState.userChoice);
+                        card.classList.add('flipped');
+                    } else {
+                        answerButtons.style.display = 'grid';
+                    }
+                }, 150);
+
+                updateProgress();
+                prevBtn.disabled = currentQuestionIndex === 0;
+                prevBtn.classList.toggle('opacity-50', prevBtn.disabled);
+            }
+            
+            function handleAnswer(e) {
+                const selectedAnswer = e.target.closest('.answer-btn').dataset.answer === 'true';
+                const question = questions[currentQuestionIndex];
+                const isCorrect = selectedAnswer === question.answer;
+
+                userAnswers[currentQuestionIndex] = { ...userAnswers[currentQuestionIndex], answered: true, correct: isCorrect, userChoice: selectedAnswer };
+                showFeedback(isCorrect, selectedAnswer);
+            }
+
+            function showFeedback(isCorrect, selectedAnswer) {
+                card.classList.add('flipped');
+                feedbackText.textContent = isCorrect ? 'Correct!' : 'Incorrect.';
+                feedbackText.className = `text-2xl font-bold ${isCorrect ? 'text-emerald-600' : 'text-rose-600'}`;
+                answerButtons.style.display = 'none';
+            }
+
+            function nextQuestion() {
+                if(currentQuestionIndex < questions.length - 1) {
+                    currentQuestionIndex++;
+                    displayQuestion();
+                } else {
+                    showEndScreen();
+                }
+            }
+
+            function prevQuestion() {
+                if (currentQuestionIndex > 0) {
+                    currentQuestionIndex--;
+                    displayQuestion();
+                }
+            }
+            
+            function updateProgress() {
+                 progressIndicator.textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
+            }
+
+            function showEndScreen() {
+                showScreen('end');
+                const correctCount = userAnswers.filter(a => a.correct).length;
+                const totalCount = questions.length;
+                const wronglyAnsweredCount = totalCount - correctCount;
+
+                if (wronglyAnsweredCount === 0) {
+                    endTitle.textContent = `Congratulations, ${userName}!`;
+                    endMessage.textContent = `You have fully understood the "${currentTopic}" stack!`;
+                    retryWrongBtn.classList.add('hidden');
+                } else {
+                    endTitle.textContent = "Topic Completed!";
+                    endMessage.textContent = `You scored ${correctCount} out of ${totalCount}. You have ${wronglyAnsweredCount} question(s) to review.`;
+                    retryWrongBtn.classList.remove('hidden');
+                }
+            }
+
+            function showScreen(screenId) {
+                nameScreen.classList.add('hidden');
+                topicSelectionScreen.classList.add('hidden');
+                quizScreen.classList.add('hidden');
+                endScreen.classList.add('hidden');
+                document.getElementById(`${screenId}-screen`).classList.remove('hidden');
+            }
+
+            // Event Listeners
+            startBtn.addEventListener('click', () => {
+                const name = nameInput.value.trim();
+                if (name) {
+                    userName = name;
+                    showScreen('topic-selection');
+                } else {
+                    nameInput.classList.add('ring-2', 'ring-rose-400');
+                    setTimeout(() => nameInput.classList.remove('ring-2', 'ring-rose-400'), 1500);
+                }
+            });
+
+            answerButtons.addEventListener('click', e => {
+                if (e.target.matches('.answer-btn')) handleAnswer(e);
+            });
+
+            nextBtn.addEventListener('click', nextQuestion);
+            prevBtn.addEventListener('click', prevQuestion);
+            
+            backToTopicsBtn.addEventListener('click', () => {
+                isRetryMode = false;
+                showScreen('topic-selection');
+            });
+
+            restartBtn.addEventListener('click', () => {
+                isRetryMode = false;
+                showScreen('name');
+                nameInput.value = '';
+            });
+
+            retryWrongBtn.addEventListener('click', () => startQuiz(currentTopic, true));
+
+            // Initial setup
+            init();
+        });
+    
+  </script>
+</body>
+</html>
