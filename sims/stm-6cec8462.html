@@ -1,0 +1,1735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scanning Tunnelling Microscope (STM) Interactive Simulator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        probe: {
+                            light: '#ff7b54',
+                            DEFAULT: '#e11d48',
+                            dark: '#881337'
+                        },
+                        sample: {
+                            light: '#38bdf8',
+                            DEFAULT: '#0284c7',
+                            dark: '#0c4a6e'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        /* Custom Range Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            height: 6px;
+            border-radius: 999px;
+            background: #cbd5e1;
+        }
+        .dark input[type=range]::-webkit-slider-runnable-track {
+            background: #334155;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            background: #2563eb;
+            cursor: pointer;
+            margin-top: -6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: transform 0.15s ease, background-color 0.15s ease;
+        }
+        input[type=range]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+            background: #1d4ed8;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            touch-action: none;
+        }
+        .pulse-signal {
+            animation: signalPulse 1.5s infinite ease-in-out;
+        }
+        @keyframes signalPulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200 min-h-screen flex flex-col">
+
+    <!-- Top Navigation & Header -->
+    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-sky-600 flex items-center justify-center text-white shadow-md">
+                    <i class="ph-bold ph-atom text-2xl"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="font-bold text-lg sm:text-xl tracking-tight">STM Interactive Lab</h1>
+                        <span class="hidden sm:inline-block text-xs font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
+                            Atomic World • Nanoscale
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">
+                        Scanning Tunnelling Microscope: Quantum Tunnelling, Scanning Modes & Resolving Power
+                    </p>
+                </div>
+            </div>
+
+            <!-- Mode Switcher Tabs & Theme Toggle -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <button id="tab-sim" onclick="switchMainTab('sim')" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-white dark:bg-slate-700 shadow-sm text-blue-600 dark:text-blue-300 flex items-center gap-1.5">
+                        <i class="ph-bold ph-sliders-horizontal"></i> Simulator
+                    </button>
+                    <button id="tab-compare" onclick="switchMainTab('compare')" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 flex items-center gap-1.5">
+                        <i class="ph-bold ph-columns"></i> Side-by-Side (Table 3.2a)
+                    </button>
+                    <button id="tab-quiz" onclick="switchMainTab('quiz')" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 flex items-center gap-1.5">
+                        <i class="ph-bold ph-check-square-offset"></i> Concept Check
+                    </button>
+                </div>
+
+                <button id="theme-toggle" onclick="toggleTheme()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition" title="Toggle Light/Dark Theme">
+                    <i id="theme-icon" class="ph-bold ph-moon text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- ========================================== -->
+        <!-- TAB 1: INTERACTIVE STM SIMULATOR           -->
+        <!-- ========================================== -->
+        <div id="view-sim" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- Left Column: Atomic Simulation Canvas & Synchronized Graphs (8 cols) -->
+            <div class="lg:col-span-8 flex flex-col gap-5">
+
+                <!-- Top Control Bar inside Simulator -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-wrap items-center justify-between gap-4">
+                    <!-- Scanning Mode Selector -->
+                    <div class="flex flex-col gap-1">
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Scanning Method (Table 3.2a)</span>
+                        <div class="inline-flex rounded-xl bg-slate-100 dark:bg-slate-800 p-1 border border-slate-200 dark:border-slate-700">
+                            <button id="btn-mode-height" onclick="setScanMode('constant_height')" class="px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all bg-blue-600 text-white shadow-sm flex items-center gap-1.5">
+                                <i class="ph-bold ph-arrows-horizontal"></i> Constant Height
+                            </button>
+                            <button id="btn-mode-current" onclick="setScanMode('constant_current')" class="px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all text-slate-700 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-700/50 flex items-center gap-1.5">
+                                <i class="ph-bold ph-arrows-out-line-vertical"></i> Constant Current
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Playback & Scan Controls -->
+                    <div class="flex items-center gap-2">
+                        <button id="btn-play" onclick="togglePlay()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center gap-1.5">
+                            <i id="play-icon" class="ph-fill ph-pause text-base"></i>
+                            <span id="play-text">Pause Scan</span>
+                        </button>
+                        <button onclick="resetScan()" class="px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs sm:text-sm border border-slate-200 dark:border-slate-700 transition flex items-center gap-1" title="Restart Scan from Left">
+                            <i class="ph-bold ph-arrow-counter-clockwise"></i> Reset
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Dynamic Mode Explanation Banner -->
+                <div id="mode-banner" class="bg-blue-50/90 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/80 rounded-2xl p-3.5 px-4 flex items-start gap-3">
+                    <i class="ph-fill ph-info text-blue-600 dark:text-blue-400 text-xl mt-0.5 shrink-0"></i>
+                    <div class="text-xs sm:text-sm leading-relaxed text-slate-700 dark:text-slate-200" id="mode-description">
+                        <strong>Scanning with Constant Height:</strong> The probe scans horizontally across the sample surface at a <strong>constant height</strong> ($z$ fixed). The details of the surface are revealed by monitoring the <strong>change in the tunnelling current</strong>.
+                    </div>
+                </div>
+
+                <!-- Main Atomic View Canvas Card -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 bg-slate-50/60 dark:bg-slate-800/50">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                            <h2 class="font-bold text-sm sm:text-base">Atomic-Scale Probe & Sample Surface (Fig 3.2o & Table 3.2a)</h2>
+                        </div>
+                        <span class="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+                            <i class="ph-bold ph-hand-pointing"></i> Drag probe horizontally or click any blue surface site to toggle an adatom bump!
+                        </span>
+                    </div>
+
+                    <!-- Interactive Atomic Canvas -->
+                    <div class="relative w-full h-[330px] sm:h-[370px] bg-gradient-to-b from-amber-50/30 to-white dark:from-slate-900 dark:to-slate-950 select-none">
+                        <canvas id="atomicCanvas"></canvas>
+
+                        <!-- Floating Live Telemetry Badges -->
+                        <div class="absolute top-3 right-3 flex flex-col gap-1.5 pointer-events-none">
+                            <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between gap-4 text-xs">
+                                <span class="text-slate-500 dark:text-slate-400 font-medium">Tip-Surface Gap $d$:</span>
+                                <span id="readout-gap" class="font-mono font-bold text-slate-800 dark:text-slate-100">0.35 nm</span>
+                            </div>
+                            <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between gap-4 text-xs">
+                                <span class="text-slate-500 dark:text-slate-400 font-medium">Tunnelling Current $I$:</span>
+                                <span id="readout-current" class="font-mono font-bold text-amber-600 dark:text-amber-400">2.45 nA</span>
+                            </div>
+                            <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between gap-4 text-xs">
+                                <span class="text-slate-500 dark:text-slate-400 font-medium">Tip Height $z$:</span>
+                                <span id="readout-z" class="font-mono font-bold text-rose-600 dark:text-rose-400">0.00 nm</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Synchronized Real-time Dual Plots (Vertical Tip Position & Tunnelling Current vs X) -->
+                    <div class="border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/60 p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                                <i class="ph-bold ph-chart-line-up text-amber-500"></i>
+                                Synchronized Scan Traces vs. Horizontal Position ($x$)
+                            </h3>
+                            <span class="text-[11px] text-slate-400 dark:text-slate-500">Directly aligned with sample atoms above</span>
+                        </div>
+                        <div class="w-full h-[210px] rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 overflow-hidden">
+                            <canvas id="traceCanvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reconstructed 2D STM Surface Image Monitor (Data Processing & Display) -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                        <div class="flex items-center gap-2">
+                            <i class="ph-bold ph-desktop text-emerald-500 text-xl"></i>
+                            <div>
+                                <h3 class="font-bold text-sm">Data Processing & Atomic Surface Display Monitor</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Reconstructed top-down 2D STM image formed by scanning rows across the sample surface</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs">
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-semibold" id="resolution-badge">
+                                High Resolving Power (Single-Atom Tip)
+                            </span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+                        <div class="sm:col-span-8 h-[130px] rounded-xl bg-slate-950 border-2 border-slate-700 overflow-hidden relative shadow-inner">
+                            <canvas id="stmMonitorCanvas"></canvas>
+                        </div>
+                        <div class="sm:col-span-4 text-xs space-y-2 text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <div class="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                                <i class="ph-fill ph-sparkle text-amber-500"></i> Why is Rayleigh Criterion Not Applicable?
+                            </div>
+                            <p class="leading-relaxed">
+                                Since <strong>diffraction is not involved</strong> in the formation of an STM image, the Rayleigh criterion does <strong>not</strong> apply. Resolving power is limited only by the <strong>size of the probe's tip</strong> (~0.01 nm lateral, ~0.001 nm vertical).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Controls, Resolving Power, Exponential I(d) Curve & System Block Diagram (4 cols) -->
+            <div class="lg:col-span-4 flex flex-col gap-5">
+
+                <!-- Interactive Parameters Card -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-5 space-y-5">
+                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                        <h2 class="font-bold text-base flex items-center gap-2">
+                            <i class="ph-bold ph-faders text-blue-600"></i> Microscope Controls
+                        </h2>
+                        <span class="text-xs font-mono text-slate-400">HKDSE Ch 3.2</span>
+                    </div>
+
+                    <!-- 1. Surface Profile Preset -->
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+                            1. Sample Surface Arrangement
+                        </label>
+                        <select id="preset-select" onchange="setSurfacePreset(this.value)" class="w-full rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2.5 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="textbook">Textbook Diagram (1 Adatom Bump in Middle)</option>
+                            <option value="flat">Uniform Flat Crystal Surface</option>
+                            <option value="double_bump">Two Protruding Adatoms</option>
+                            <option value="vacancy">Surface with Atomic Vacancy (Missing Atom)</option>
+                            <option value="step">Atomic Terrace Step Edge</option>
+                        </select>
+                    </div>
+
+                    <!-- 2. Probe Tip Size (Resolving Power) -->
+                    <div class="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                2. Probe Tip Size (Resolving Power)
+                            </label>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="btn-tip-sharp" onclick="setTipSharpness('sharp')" class="p-2.5 rounded-xl border-2 border-rose-500 bg-rose-50/70 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 font-bold text-xs flex flex-col items-center gap-1 transition">
+                                <i class="ph-bold ph-caret-down text-lg"></i>
+                                <span>Single-Atom Tip</span>
+                                <span class="text-[10px] font-normal opacity-80">High Resolving Power</span>
+                            </button>
+                            <button id="btn-tip-blunt" onclick="setTipSharpness('blunt')" class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-xs flex flex-col items-center gap-1 transition">
+                                <i class="ph-bold ph-users-three text-lg"></i>
+                                <span>Blunt Multi-Atom Tip</span>
+                                <span class="text-[10px] font-normal opacity-80">Blurred / Low Resolution</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 3. Horizontal Probe Position Slider -->
+                    <div class="space-y-1.5 pt-1 border-t border-slate-100 dark:border-slate-800">
+                        <div class="flex justify-between text-xs font-semibold">
+                            <span class="text-slate-600 dark:text-slate-300">Horizontal Scan Position ($x$)</span>
+                            <span id="val-x" class="font-mono text-blue-600 dark:text-blue-400">45%</span>
+                        </div>
+                        <input id="slider-x" type="range" min="0" max="100" step="0.2" value="20" oninput="manualScrubX(this.value)" class="w-full">
+                    </div>
+
+                    <!-- 4. Reference Height / Target Setpoint Slider -->
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between text-xs font-semibold">
+                            <span id="label-height-slider" class="text-slate-600 dark:text-slate-300">Baseline Tip-to-Surface Distance</span>
+                            <span id="val-height" class="font-mono text-rose-600 dark:text-rose-400">0.35 nm</span>
+                        </div>
+                        <input id="slider-height" type="range" min="0.22" max="0.58" step="0.01" value="0.36" oninput="updateBaseDistance(this.value)" class="w-full">
+                        <div class="flex justify-between text-[10px] text-slate-400">
+                            <span>Closer (Strong Tunnelling)</span>
+                            <span>Further (Weak Tunnelling)</span>
+                        </div>
+                    </div>
+
+                    <!-- 5. Bias Voltage (V) & Scan Speed -->
+                    <div class="grid grid-cols-2 gap-3 pt-1 border-t border-slate-100 dark:border-slate-800">
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-xs font-semibold">
+                                <span class="text-slate-600 dark:text-slate-300">Bias Voltage $V$</span>
+                                <span id="val-voltage" class="font-mono text-amber-600">0.5 V</span>
+                            </div>
+                            <input id="slider-voltage" type="range" min="0.1" max="1.0" step="0.1" value="0.5" oninput="updateVoltage(this.value)" class="w-full">
+                        </div>
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-xs font-semibold">
+                                <span class="text-slate-600 dark:text-slate-300">Scan Speed</span>
+                                <span id="val-speed" class="font-mono text-emerald-600">1.0x</span>
+                            </div>
+                            <input id="slider-speed" type="range" min="0.3" max="2.5" step="0.1" value="1.0" oninput="updateSpeed(this.value)" class="w-full">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quantum Tunnelling Current vs Distance Curve Card -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-bold text-sm flex items-center gap-1.5">
+                                <i class="ph-bold ph-lightning text-amber-500"></i>
+                                Quantum Tunnelling: $I$ vs Gap Distance $d$
+                            </h3>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                                Current increases <strong>drastically</strong> ($I \propto V e^{-2\kappa d}$) with a tiny decrease in $d$
+                            </p>
+                        </div>
+                    </div>
+                    <div class="w-full h-[145px] rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 overflow-hidden">
+                        <canvas id="expCurveCanvas"></canvas>
+                    </div>
+                </div>
+
+                <!-- STM Feedback Loop & Hardware Block Diagram (Textbook Fig 3.2p) -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold text-sm flex items-center gap-1.5">
+                            <i class="ph-bold ph-circuitry text-blue-500"></i>
+                            STM Feedback & Control System
+                        </h3>
+                        <span class="text-[11px] font-medium px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300" id="feedback-status-badge">
+                            Z-Feedback: LOCKED (Const Height)
+                        </span>
+                    </div>
+
+                    <!-- Interactive SVG Block Diagram matching textbook schematic -->
+                    <div class="w-full rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2">
+                        <svg viewBox="0 0 360 195" class="w-full h-auto select-none">
+                            <!-- Feedback wires from Distance Control to Piezo Scanning Unit -->
+                            <path id="svg-feedback-wire" d="M 275 95 L 335 95 L 335 18 L 95 18 L 95 48" fill="none" stroke="#64748b" stroke-width="3" stroke-dasharray="5,3"/>
+                            <path d="M 275 103 L 343 103 L 343 10 L 87 10 L 87 48" fill="none" stroke="#94a3b8" stroke-width="2"/>
+
+                            <!-- 3D Coordinate Axes (x, y, z) -->
+                            <g transform="translate(26, 48)" stroke="currentColor" class="text-slate-600 dark:text-slate-400" stroke-width="1.5">
+                                <line x1="0" y1="0" x2="0" y2="-24" />
+                                <polygon points="0,-27 -3,-21 3,-21" fill="currentColor" stroke="none"/>
+                                <text x="-3" y="-30" font-size="9" font-weight="bold" font-style="italic" fill="currentColor" stroke="none">z</text>
+
+                                <line x1="0" y1="0" x2="24" y2="0" />
+                                <polygon points="27,0 21,-3 21,3" fill="currentColor" stroke="none"/>
+                                <text x="29" y="3" font-size="9" font-weight="bold" font-style="italic" fill="currentColor" stroke="none">y</text>
+
+                                <line x1="0" y1="0" x2="-14" y2="14" />
+                                <polygon points="-16,16 -14,10 -10,14" fill="currentColor" stroke="none"/>
+                                <text x="-24" y="22" font-size="9" font-weight="bold" font-style="italic" fill="currentColor" stroke="none">x</text>
+                            </g>
+
+                            <!-- Scanning Unit (Piezo Cylinder) -->
+                            <g id="svg-piezo-unit" transform="translate(75, 48)">
+                                <rect x="0" y="0" width="32" height="52" rx="4" fill="#ef4444" stroke="#7f1d1d" stroke-width="1.5"/>
+                                <rect x="5" y="6" width="6" height="40" fill="#fca5a5" opacity="0.7"/>
+                                <rect x="21" y="6" width="6" height="40" fill="#fca5a5" opacity="0.7"/>
+                                <!-- Probe Tip shaft -->
+                                <path d="M 12 52 L 20 52 L 18 76 L 16 83 L 14 76 Z" fill="#f87171" stroke="#7f1d1d" stroke-width="1.2"/>
+                                <text x="36" y="22" font-size="9.5" font-weight="bold" fill="currentColor" class="text-slate-700 dark:text-slate-200">scanning</text>
+                                <text x="36" y="33" font-size="9.5" font-weight="bold" fill="currentColor" class="text-slate-700 dark:text-slate-200">unit</text>
+                            </g>
+
+                            <!-- Blue Sample Slab -->
+                            <g transform="translate(42, 134)">
+                                <polygon points="0,16 18,0 82,0 64,16" fill="#38bdf8" stroke="#0369a1" stroke-width="1.2"/>
+                                <rect x="0" y="16" width="64" height="10" fill="#0284c7" stroke="#0369a1" stroke-width="1.2"/>
+                                <polygon points="64,16 82,0 82,10 64,26" fill="#0369a1" stroke="#0369a1" stroke-width="1.2"/>
+                                <text x="15" y="38" font-size="9.5" font-weight="bold" fill="currentColor" class="text-slate-700 dark:text-slate-200">sample</text>
+                            </g>
+
+                            <!-- Tunnelling Signal Wire to Amplifier -->
+                            <path d="M 93 115 Q 112 108 122 115 T 150 115 L 168 115" fill="none" stroke="#f59e0b" stroke-width="2"/>
+
+                            <!-- Tunnelling Current Amplifier (Triangle) -->
+                            <polygon points="168,101 168,129 194,115" fill="#94a3b8" stroke="#334155" stroke-width="1.5"/>
+                            <text x="152" y="75" font-size="9" font-weight="bold" fill="currentColor" class="text-slate-700 dark:text-slate-200">tunnelling</text>
+                            <text x="152" y="85" font-size="9" font-weight="bold" fill="currentColor" class="text-slate-700 dark:text-slate-200">current</text>
+                            <text x="152" y="95" font-size="9" font-weight="bold" fill="currentColor" class="text-slate-700 dark:text-slate-200">amplifier</text>
+
+                            <!-- Wire from Amplifier to Distance Control -->
+                            <line x1="194" y1="115" x2="222" y2="115" stroke="#f59e0b" stroke-width="2"/>
+
+                            <!-- Distance Control Box -->
+                            <rect x="222" y="90" width="54" height="36" rx="4" fill="#94a3b8" stroke="#334155" stroke-width="1.5"/>
+                            <text x="216" y="82" font-size="9.5" font-weight="bold" fill="currentColor" class="text-slate-700 dark:text-slate-200">distance control</text>
+
+                            <!-- Wire to Data Processing Display -->
+                            <polyline points="260,126 260,145" fill="none" stroke="#10b981" stroke-width="2"/>
+
+                            <!-- Data Processing & Display CRT Monitor -->
+                            <rect x="238" y="145" width="44" height="34" rx="3" fill="#1e293b" stroke="#475569" stroke-width="1.5"/>
+                            <rect x="242" y="149" width="36" height="26" fill="#065f46"/>
+                            <circle cx="250" cy="156" r="2.5" fill="#34d399"/>
+                            <circle cx="258" cy="156" r="2.5" fill="#34d399"/>
+                            <circle cx="266" cy="156" r="2.5" fill="#34d399"/>
+                            <circle cx="254" cy="164" r="3" fill="#a7f3d0"/>
+                            <circle cx="262" cy="164" r="2.5" fill="#34d399"/>
+                            <text x="225" y="190" font-size="8.5" font-weight="bold" fill="currentColor" class="text-slate-700 dark:text-slate-200">data processing & display</text>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB 2: SIDE-BY-SIDE COMPARISON (TABLE 3.2a)-->
+        <!-- ========================================== -->
+        <div id="view-compare" class="hidden space-y-6">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+                    <div>
+                        <h2 class="text-lg sm:text-xl font-bold flex items-center gap-2">
+                            <i class="ph-bold ph-columns text-blue-600"></i>
+                            Table 3.2a: Direct Comparison of STM Scanning Methods
+                        </h2>
+                        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                            Watch both modes scan simultaneously across the exact same sample surface with a protruding central atom
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="togglePlay()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-bold transition flex items-center gap-1.5">
+                            <i class="ph-fill ph-play-pause"></i> Play / Pause Both
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Two Column Textbook Table 3.2a Layout -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Column 1: Constant Height -->
+                    <div class="rounded-2xl border-2 border-blue-200 dark:border-blue-900 overflow-hidden bg-slate-50/50 dark:bg-slate-950/50 flex flex-col">
+                        <div class="bg-blue-100/80 dark:bg-blue-950 px-4 py-3 border-b border-blue-200 dark:border-blue-900">
+                            <h3 class="font-bold text-base text-blue-950 dark:text-blue-200 text-center">Scanning with constant height</h3>
+                        </div>
+                        <div class="p-4 text-xs sm:text-sm space-y-2 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                            <p class="leading-relaxed">
+                                The probe scans horizontally across the sample surface at a <strong>constant height</strong>. The details of the surface are revealed by monitoring the <strong>change in the tunnelling current</strong>.
+                            </p>
+                            <div class="flex flex-wrap gap-2 pt-1">
+                                <span class="px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-xs font-semibold">Advantage: Faster scan speed</span>
+                                <span class="px-2 py-0.5 rounded bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 text-xs font-semibold">Risk: Tip may crash into tall bumps</span>
+                            </div>
+                        </div>
+                        <div class="h-[360px] w-full bg-white dark:bg-slate-950">
+                            <canvas id="compareHeightCanvas"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Column 2: Constant Current -->
+                    <div class="rounded-2xl border-2 border-purple-200 dark:border-purple-900 overflow-hidden bg-slate-50/50 dark:bg-slate-950/50 flex flex-col">
+                        <div class="bg-purple-100/80 dark:bg-purple-950 px-4 py-3 border-b border-purple-200 dark:border-purple-900">
+                            <h3 class="font-bold text-base text-purple-950 dark:text-purple-200 text-center">Scanning with constant current</h3>
+                        </div>
+                        <div class="p-4 text-xs sm:text-sm space-y-2 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                            <p class="leading-relaxed">
+                                The probe scans across the sample surface with a <strong>constant current</strong>. The probe is moved up and down during scanning to keep the tip-to-surface distance unchanged. By monitoring the <strong>vertical movement of the probe</strong>, the details of the surface are revealed.
+                            </p>
+                            <div class="flex flex-wrap gap-2 pt-1">
+                                <span class="px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-xs font-semibold">Advantage: Safe for rough surfaces</span>
+                                <span class="px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-xs font-semibold">Trade-off: Slower due to feedback loop</span>
+                            </div>
+                        </div>
+                        <div class="h-[360px] w-full bg-white dark:bg-slate-950">
+                            <canvas id="compareCurrentCanvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB 3: INTERACTIVE CONCEPT CHECK QUIZ      -->
+        <!-- ========================================== -->
+        <div id="view-quiz" class="hidden max-w-4xl mx-auto space-y-6">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+                <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+                    <div>
+                        <h2 class="text-xl font-bold flex items-center gap-2">
+                            <i class="ph-bold ph-exam text-blue-600"></i>
+                            STM Concept Check (Exam-Style Questions)
+                        </h2>
+                        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                            Test your understanding of quantum tunnelling, scanning modes, and resolving power
+                        </p>
+                    </div>
+                    <button onclick="resetQuiz()" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-xs font-bold transition">
+                        Reset Answers
+                    </button>
+                </div>
+
+                <div id="quiz-container" class="space-y-5"></div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Application Logic -->
+    <script>
+        // ============================================================================
+        // STATE & PHYSICAL MODEL CONFIGURATION
+        // ============================================================================
+        const state = {
+            mainTab: 'sim',              // 'sim' | 'compare' | 'quiz'
+            scanMode: 'constant_height', // 'constant_height' | 'constant_current'
+            tipSharpness: 'sharp',       // 'sharp' | 'blunt'
+            surfacePreset: 'textbook',   // 'textbook' | 'flat' | 'double_bump' | 'vacancy' | 'step'
+            playing: true,
+            scanX: 0.18,                 // Normalized horizontal probe position [0.08 .. 0.92]
+            scanDirection: 1,            // 1 = left-to-right
+            scanSpeed: 1.0,
+            baseDistanceNm: 0.36,        // Baseline distance in nm
+            biasVoltage: 0.5,            // Bias voltage V in Volts
+            decayKappa: 11.0,            // Exponential decay constant (nm^-1)
+            numAtoms: 9,                 // 9 columns of sample atoms matching textbook diagram
+            atomModifiers: [0, 0, 0, 0, 1, 0, 0, 0, 0], // +1 = adatom bump, -1 = vacancy, >0 step
+            particles: [],               // Animated quantum tunnelling electrons
+            hitboxes: [],                // Clickable atom regions on canvas
+            currentGapNm: 0.36,
+            currentInA: 2.0,
+            currentTipZNm: 0.0
+        };
+
+        // Initialize tunnelling electron particles
+        for (let i = 0; i < 28; i++) {
+            state.particles.push({
+                progress: Math.random(),
+                offsetX: (Math.random() - 0.5) * 16,
+                speed: 0.018 + Math.random() * 0.025,
+                size: 2.2 + Math.random() * 1.8
+            });
+        }
+
+        // ============================================================================
+        // PHYSICS ENGINE: ATOMIC CORRUGATION, TIP CONVOLUTION & TUNNELLING CURRENT
+        // ============================================================================
+
+        // Apply surface preset to atomModifiers array
+        function setSurfacePreset(preset) {
+            state.surfacePreset = preset;
+            const n = state.numAtoms;
+            if (preset === 'textbook') {
+                // Single protruding blue atom right in the middle (index 4), exactly like Table 3.2a
+                state.atomModifiers = [0, 0, 0, 0, 1, 0, 0, 0, 0];
+            } else if (preset === 'flat') {
+                state.atomModifiers = new Array(n).fill(0);
+            } else if (preset === 'double_bump') {
+                state.atomModifiers = [0, 0, 1, 0, 0, 0, 1, 0, 0];
+            } else if (preset === 'vacancy') {
+                state.atomModifiers = [0, 0, 0, 0, -1, 0, 0, 0, 0];
+            } else if (preset === 'step') {
+                state.atomModifiers = [0, 0, 0, 0, 0.85, 0.85, 0.85, 0.85, 0.85];
+            }
+            drawMonitorImage();
+        }
+
+        // Compute effective surface height h(x) in nm at normalized horizontal position u in [0, 1]
+        // Accounts for individual atomic corrugations and probe tip size (sharp vs blunt)
+        function getEffectiveSurfaceHeightNm(u, sharpnessOverride) {
+            const sharpness = sharpnessOverride || state.tipSharpness;
+            const xStart = 0.12;
+            const xEnd = 0.88;
+            const spacing = (xEnd - xStart) / (state.numAtoms - 1);
+
+            // Gaussian width of each atom's electronic cloud as sensed by the tip
+            // Sharp single-atom tip resolves deep troughs between atoms; blunt tip blurs neighboring atoms together
+            const baseSigma = sharpness === 'sharp' ? spacing * 0.34 : spacing * 0.82;
+            const bumpSigma = sharpness === 'sharp' ? spacing * 0.42 : spacing * 0.95;
+
+            let heightNm = 0;
+
+            for (let i = 0; i < state.numAtoms; i++) {
+                const atomU = xStart + i * spacing;
+                const dist = u - atomU;
+                const mod = state.atomModifiers[i];
+
+                if (mod === -1) {
+                    // Vacancy: missing top-layer atom creates a dip
+                    heightNm -= 0.045 * Math.exp(-(dist * dist) / (2 * bumpSigma * bumpSigma));
+                } else {
+                    // Regular top-layer atom corrugation (~0.065 nm peak)
+                    const gBase = Math.exp(-(dist * dist) / (2 * baseSigma * baseSigma));
+                    heightNm += 0.065 * gBase;
+
+                    // Extra protruding adatom or step terrace
+                    if (mod > 0) {
+                        const gBump = Math.exp(-(dist * dist) / (2 * bumpSigma * bumpSigma));
+                        heightNm += (0.115 * mod) * gBump;
+                    }
+                }
+            }
+
+            // Normalize blunt tip slightly so average height stays comparable while contrast drops
+            if (sharpness === 'blunt') {
+                heightNm *= 0.54;
+            }
+
+            return heightNm;
+        }
+
+        // Compute probe vertical position z(u), tip-surface gap d(u), and tunnelling current I(u)
+        function evaluatePhysicsAt(u, modeOverride, sharpnessOverride) {
+            const mode = modeOverride || state.scanMode;
+            const sharpness = sharpnessOverride || state.tipSharpness;
+            const surfH = getEffectiveSurfaceHeightNm(u, sharpness);
+
+            let tipZNm = 0;
+            let gapNm = state.baseDistanceNm;
+            let currentnA = 0;
+
+            if (mode === 'constant_height') {
+                // Probe stays at fixed vertical height (tipZNm = 0 relative to reference line)
+                tipZNm = 0;
+                // Gap decreases when surface height increases
+                gapNm = Math.max(0.14, state.baseDistanceNm - surfH);
+                // Exponential quantum tunnelling law: I = I0 * V * exp(-2 * kappa * (d - d0))
+                currentnA = 3.2 * state.biasVoltage * Math.exp(-state.decayKappa * (gapNm - 0.34));
+            } else {
+                // Constant current mode: feedback loop moves probe up and down so gap d remains constant
+                gapNm = state.baseDistanceNm - 0.05;
+                tipZNm = surfH; // Vertical movement directly traces surface contour
+                currentnA = 3.2 * state.biasVoltage * Math.exp(-state.decayKappa * (gapNm - 0.34));
+            }
+
+            return {
+                surfH,
+                tipZNm,
+                gapNm,
+                currentnA: Math.min(12.5, Math.max(0.05, currentnA))
+            };
+        }
+
+        // ============================================================================
+        // UI CONTROLS & EVENT HANDLERS
+        // ============================================================================
+        function switchMainTab(tab) {
+            state.mainTab = tab;
+            ['sim', 'compare', 'quiz'].forEach(t => {
+                const view = document.getElementById(`view-${t}`);
+                const btn = document.getElementById(`tab-${t}`);
+                if (t === tab) {
+                    view.classList.remove('hidden');
+                    btn.className = "px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-white dark:bg-slate-700 shadow-sm text-blue-600 dark:text-blue-300 flex items-center gap-1.5";
+                } else {
+                    view.classList.add('hidden');
+                    btn.className = "px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 flex items-center gap-1.5";
+                }
+            });
+            handleResize();
+        }
+
+        function setScanMode(mode) {
+            state.scanMode = mode;
+            const btnH = document.getElementById('btn-mode-height');
+            const btnC = document.getElementById('btn-mode-current');
+            const desc = document.getElementById('mode-description');
+            const banner = document.getElementById('mode-banner');
+            const fbBadge = document.getElementById('feedback-status-badge');
+            const lblSlider = document.getElementById('label-height-slider');
+
+            if (mode === 'constant_height') {
+                btnH.className = "px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all bg-blue-600 text-white shadow-sm flex items-center gap-1.5";
+                btnC.className = "px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all text-slate-700 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-700/50 flex items-center gap-1.5";
+                desc.innerHTML = `<strong>Scanning with Constant Height:</strong> The probe scans horizontally across the sample surface at a <strong>constant height</strong> (flat dashed line). The details of the surface are revealed by monitoring the <strong>change in the tunnelling current</strong>.`;
+                banner.className = "bg-blue-50/90 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/80 rounded-2xl p-3.5 px-4 flex items-start gap-3";
+                fbBadge.textContent = "Z-Feedback: OFF (Fixed Z)";
+                fbBadge.className = "text-[11px] font-medium px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300";
+                lblSlider.textContent = "Fixed Probe Height Baseline";
+            } else {
+                btnC.className = "px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all bg-purple-600 text-white shadow-sm flex items-center gap-1.5";
+                btnH.className = "px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all text-slate-700 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-700/50 flex items-center gap-1.5";
+                desc.innerHTML = `<strong>Scanning with Constant Current:</strong> The probe scans across the sample surface with a <strong>constant current</strong>. The probe is moved up and down during scanning to keep the tip-to-surface distance unchanged. By monitoring the <strong>vertical movement of the probe</strong>, the details of the surface are revealed.`;
+                banner.className = "bg-purple-50/90 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/80 rounded-2xl p-3.5 px-4 flex items-start gap-3";
+                fbBadge.textContent = "Z-Feedback: ACTIVE (Constant I)";
+                fbBadge.className = "text-[11px] font-medium px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300";
+                lblSlider.textContent = "Target Tip-to-Surface Gap Setpoint";
+            }
+        }
+
+        function setTipSharpness(sharpness) {
+            state.tipSharpness = sharpness;
+            const btnSharp = document.getElementById('btn-tip-sharp');
+            const btnBlunt = document.getElementById('btn-tip-blunt');
+            const badge = document.getElementById('resolution-badge');
+
+            if (sharpness === 'sharp') {
+                btnSharp.className = "p-2.5 rounded-xl border-2 border-rose-500 bg-rose-50/70 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 font-bold text-xs flex flex-col items-center gap-1 transition";
+                btnBlunt.className = "p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-xs flex flex-col items-center gap-1 transition";
+                badge.textContent = "High Resolving Power (Single-Atom Tip)";
+                badge.className = "px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-semibold";
+            } else {
+                btnBlunt.className = "p-2.5 rounded-xl border-2 border-amber-500 bg-amber-50/70 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-bold text-xs flex flex-col items-center gap-1 transition";
+                btnSharp.className = "p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-xs flex flex-col items-center gap-1 transition";
+                badge.textContent = "Low Resolving Power (Blunt Multi-Atom Tip)";
+                badge.className = "px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 font-semibold";
+            }
+            drawMonitorImage();
+        }
+
+        function togglePlay() {
+            state.playing = !state.playing;
+            const icon = document.getElementById('play-icon');
+            const text = document.getElementById('play-text');
+            if (state.playing) {
+                icon.className = "ph-fill ph-pause text-base";
+                text.textContent = "Pause Scan";
+            } else {
+                icon.className = "ph-fill ph-play text-base";
+                text.textContent = "Resume Scan";
+            }
+        }
+
+        function resetScan() {
+            state.scanX = 0.10;
+            state.scanDirection = 1;
+            updateXSliderUI();
+        }
+
+        function manualScrubX(val) {
+            state.playing = false;
+            document.getElementById('play-icon').className = "ph-fill ph-play text-base";
+            document.getElementById('play-text').textContent = "Resume Scan";
+            state.scanX = 0.08 + (parseFloat(val) / 100) * 0.84;
+            document.getElementById('val-x').textContent = `${Math.round(val)}%`;
+        }
+
+        function updateXSliderUI() {
+            const pct = Math.max(0, Math.min(100, ((state.scanX - 0.08) / 0.84) * 100));
+            const slider = document.getElementById('slider-x');
+            if (slider) slider.value = pct;
+            const label = document.getElementById('val-x');
+            if (label) label.textContent = `${Math.round(pct)}%`;
+        }
+
+        function updateBaseDistance(val) {
+            state.baseDistanceNm = parseFloat(val);
+            document.getElementById('val-height').textContent = `${state.baseDistanceNm.toFixed(2)} nm`;
+        }
+
+        function updateVoltage(val) {
+            state.biasVoltage = parseFloat(val);
+            document.getElementById('val-voltage').textContent = `${state.biasVoltage.toFixed(1)} V`;
+        }
+
+        function updateSpeed(val) {
+            state.scanSpeed = parseFloat(val);
+            document.getElementById('val-speed').textContent = `${state.scanSpeed.toFixed(1)}x`;
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            html.classList.toggle('dark');
+            if (html.classList.contains('dark')) {
+                icon.className = 'ph-bold ph-sun text-lg text-amber-400';
+            } else {
+                icon.className = 'ph-bold ph-moon text-lg';
+            }
+            drawMonitorImage();
+        }
+
+        // ============================================================================
+        // CANVAS DRAWING HELPERS (3D Glossy Spheres matching Textbook Illustration)
+        // ============================================================================
+        function drawGlossyAtom(ctx, x, y, radius, colorType, alpha = 1.0) {
+            ctx.save();
+            ctx.globalAlpha = alpha;
+
+            const grad = ctx.createRadialGradient(
+                x - radius * 0.35,
+                y - radius * 0.35,
+                radius * 0.1,
+                x,
+                y,
+                radius
+            );
+
+            if (colorType === 'probe') {
+                // Red-orange probe atom matching textbook Fig 3.2o / Table 3.2a
+                grad.addColorStop(0, '#fff1f2');
+                grad.addColorStop(0.28, '#fb7185');
+                grad.addColorStop(0.75, '#e11d48');
+                grad.addColorStop(1, '#881337');
+            } else if (colorType === 'probe_ghost') {
+                grad.addColorStop(0, '#fff1f2');
+                grad.addColorStop(0.4, '#fda4af');
+                grad.addColorStop(1, '#be123c');
+            } else if (colorType === 'sample_bump') {
+                // Highlighted protruding blue sample adatom
+                grad.addColorStop(0, '#f0f9ff');
+                grad.addColorStop(0.3, '#38bdf8');
+                grad.addColorStop(0.8, '#0284c7');
+                grad.addColorStop(1, '#075985');
+            } else {
+                // Standard blue sample atom
+                grad.addColorStop(0, '#e0f2fe');
+                grad.addColorStop(0.35, '#38bdf8');
+                grad.addColorStop(0.8, '#0369a1');
+                grad.addColorStop(1, '#0c4a6e');
+            }
+
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = colorType.startsWith('probe') ? 'rgba(136,19,55,0.6)' : 'rgba(12,74,110,0.6)';
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // Draw the conical cluster of red atoms forming the STM probe tip
+        function drawProbeCluster(ctx, tipX, tipApexY, atomR, sharpness, isGhost = false) {
+            const alpha = isGhost ? 0.38 : 1.0;
+            const colorKey = isGhost ? 'probe_ghost' : 'probe';
+            const rowDy = atomR * 1.62;
+
+            // Blueish quantum glow cone behind probe tip
+            ctx.save();
+            ctx.globalAlpha = isGhost ? 0.12 : 0.25;
+            const coneGrad = ctx.createLinearGradient(tipX, tipApexY - rowDy * 4, tipX, tipApexY + atomR);
+            coneGrad.addColorStop(0, 'rgba(56, 189, 248, 0)');
+            coneGrad.addColorStop(1, 'rgba(56, 189, 248, 0.55)');
+            ctx.fillStyle = coneGrad;
+            ctx.beginPath();
+            ctx.moveTo(tipX - atomR * 5.2, tipApexY - rowDy * 4.2);
+            ctx.lineTo(tipX + atomR * 5.2, tipApexY - rowDy * 4.2);
+            ctx.lineTo(tipX + (sharpness === 'blunt' ? atomR * 2.4 : atomR * 0.9), tipApexY + atomR * 0.6);
+            ctx.lineTo(tipX - (sharpness === 'blunt' ? atomR * 2.4 : atomR * 0.9), tipApexY + atomR * 0.6);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+
+            // Rows of atoms from top (row 4) down to apex (row 0)
+            const rows = sharpness === 'sharp' ? [5, 4, 3, 2, 1] : [6, 5, 4, 3, 3];
+            for (let r = 0; r < rows.length; r++) {
+                const count = rows[r];
+                const rowIndexFromBottom = rows.length - 1 - r;
+                const y = tipApexY - rowIndexFromBottom * rowDy;
+                const startX = tipX - ((count - 1) * atomR * 1.85) / 2;
+
+                for (let c = 0; c < count; c++) {
+                    const x = startX + c * atomR * 1.85;
+                    drawGlossyAtom(ctx, x, y, atomR * 0.95, colorKey, alpha);
+                }
+            }
+        }
+
+        // ============================================================================
+        // MAIN ATOMIC CANVAS RENDERER
+        // ============================================================================
+        function renderAtomicCanvas() {
+            const canvas = document.getElementById('atomicCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            const isDark = document.documentElement.classList.contains('dark');
+
+            ctx.clearRect(0, 0, w, h);
+
+            // Evaluate physics at current probe position
+            const phys = evaluatePhysicsAt(state.scanX);
+            state.currentGapNm = phys.gapNm;
+            state.currentInA = phys.currentnA;
+            state.currentTipZNm = phys.tipZNm;
+
+            // Update telemetry badges
+            document.getElementById('readout-gap').textContent = `${phys.gapNm.toFixed(2)} nm`;
+            document.getElementById('readout-current').textContent = `${phys.currentnA.toFixed(2)} nA`;
+            document.getElementById('readout-z').textContent = `${(phys.tipZNm >= 0 ? '+' : '') + phys.tipZNm.toFixed(2)} nm`;
+
+            // Animate SVG Piezo & Feedback wire in right panel
+            const svgPiezo = document.getElementById('svg-piezo-unit');
+            if (svgPiezo) {
+                const shiftY = -phys.tipZNm * 35;
+                const shiftX = (state.scanX - 0.5) * 14;
+                svgPiezo.setAttribute('transform', `translate(${(75 + shiftX).toFixed(1)}, ${(48 + shiftY).toFixed(1)})`);
+            }
+
+            // Geometry coordinates matching synchronized trace graph below
+            const xLeft = w * 0.12;
+            const xRight = w * 0.88;
+            const spacing = (xRight - xLeft) / (state.numAtoms - 1);
+            const atomR = Math.min(20, Math.max(11, spacing * 0.42));
+
+            const surfaceBaseY = h * 0.72;
+            // Convert baseline distance (0.22..0.58 nm) into pixels
+            const nmToPx = atomR * 15.5;
+            const baseTipY = surfaceBaseY - state.baseDistanceNm * nmToPx;
+            const activeTipY = baseTipY - phys.tipZNm * nmToPx;
+            const probeX = xLeft + ((state.scanX - 0.12) / 0.76) * (xRight - xLeft);
+
+            // 1. Draw Sample Substrate Gradient Block
+            const subGrad = ctx.createLinearGradient(0, surfaceBaseY, 0, h);
+            subGrad.addColorStop(0, isDark ? 'rgba(14, 116, 144, 0.45)' : 'rgba(125, 211, 252, 0.65)');
+            subGrad.addColorStop(1, isDark ? 'rgba(15, 23, 42, 0.1)' : 'rgba(224, 242, 254, 0.1)');
+            ctx.fillStyle = subGrad;
+            ctx.fillRect(xLeft - atomR * 1.4, surfaceBaseY, (xRight - xLeft) + atomR * 2.8, h - surfaceBaseY);
+
+            // 2. Draw 3 Layers of Blue Sample Atoms + Protruding Adatoms
+            state.hitboxes = [];
+            const rowOffsetY = atomR * 1.65;
+
+            // Bottom two bulk crystal layers
+            for (let layer = 2; layer >= 1; layer--) {
+                const yLayer = surfaceBaseY + layer * rowOffsetY;
+                const stagger = (layer % 2 === 1) ? spacing * 0.5 : 0;
+                const count = (layer % 2 === 1) ? state.numAtoms - 1 : state.numAtoms;
+                for (let i = 0; i < count; i++) {
+                    const x = xLeft + stagger + i * spacing;
+                    drawGlossyAtom(ctx, x, yLayer, atomR * 0.96, 'sample', 0.85);
+                }
+            }
+
+            // Top surface layer (layer 0) and any adatoms (mod > 0)
+            for (let i = 0; i < state.numAtoms; i++) {
+                const x = xLeft + i * spacing;
+                const mod = state.atomModifiers[i];
+
+                // Record clickable hitbox for interactive surface editing
+                state.hitboxes.push({ index: i, x, y: surfaceBaseY - atomR * 0.6, r: atomR * 1.45 });
+
+                if (mod !== -1) {
+                    drawGlossyAtom(ctx, x, surfaceBaseY, atomR, 'sample', 1.0);
+                } else {
+                    // Dotted outline showing atomic vacancy
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(x, surfaceBaseY, atomR * 0.85, 0, Math.PI * 2);
+                    ctx.strokeStyle = isDark ? 'rgba(56,189,248,0.4)' : 'rgba(2,132,199,0.4)';
+                    ctx.setLineDash([3, 3]);
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                // Draw protruding adatom or step terrace atom on top of surface
+                if (mod > 0) {
+                    const bumpY = surfaceBaseY - mod * (atomR * 1.55);
+                    drawGlossyAtom(ctx, x, bumpY, atomR * 1.02, 'sample_bump', 1.0);
+                }
+            }
+
+            // 3. Draw Ghost Reference Probe on Left (matching Table 3.2a textbook diagram)
+            const ghostU = 0.16;
+            const ghostPhys = evaluatePhysicsAt(ghostU);
+            const ghostX = xLeft + ((ghostU - 0.12) / 0.76) * (xRight - xLeft);
+            const ghostY = baseTipY - ghostPhys.tipZNm * nmToPx;
+            drawProbeCluster(ctx, ghostX, ghostY, atomR, state.tipSharpness, true);
+
+            // Scan arrow between ghost probe and active probe
+            if (probeX > ghostX + atomR * 4.5) {
+                const arrowY = baseTipY - atomR * 4.2;
+                ctx.save();
+                ctx.strokeStyle = isDark ? '#94a3b8' : '#334155';
+                ctx.fillStyle = isDark ? '#94a3b8' : '#334155';
+                ctx.lineWidth = 1.8;
+                ctx.beginPath();
+                ctx.moveTo(ghostX + atomR * 2.8, arrowY);
+                ctx.lineTo(ghostX + atomR * 5.2, arrowY);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(ghostX + atomR * 5.5, arrowY);
+                ctx.lineTo(ghostX + atomR * 4.8, arrowY - 4);
+                ctx.lineTo(ghostX + atomR * 4.8, arrowY + 4);
+                ctx.closePath();
+                ctx.fill();
+                ctx.font = 'bold 11px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('scan', ghostX + atomR * 4.1, arrowY - 7);
+                ctx.restore();
+            }
+
+            // 4. Draw Quantum Tunnelling Electron Stream & Plasma Glow
+            const currentRatio = Math.min(1, phys.currentnA / 7.5);
+            const surfaceTopAtProbe = surfaceBaseY - phys.surfH * nmToPx - atomR * 0.85;
+            const tipBottomAtProbe = activeTipY + atomR * 0.85;
+
+            // Tunnelling bridge glow
+            ctx.save();
+            const bridgeGrad = ctx.createLinearGradient(probeX, tipBottomAtProbe, probeX, surfaceTopAtProbe);
+            bridgeGrad.addColorStop(0, `rgba(251, 113, 133, ${0.15 + currentRatio * 0.65})`);
+            bridgeGrad.addColorStop(0.5, `rgba(250, 204, 21, ${0.2 + currentRatio * 0.75})`);
+            bridgeGrad.addColorStop(1, `rgba(56, 189, 248, ${0.15 + currentRatio * 0.65})`);
+            ctx.fillStyle = bridgeGrad;
+            const bridgeWidth = (state.tipSharpness === 'blunt' ? atomR * 2.8 : atomR * 1.1) * (0.6 + currentRatio * 0.7);
+            ctx.beginPath();
+            ctx.ellipse(
+                probeX,
+                (tipBottomAtProbe + surfaceTopAtProbe) * 0.5,
+                bridgeWidth,
+                Math.max(8, (surfaceTopAtProbe - tipBottomAtProbe) * 0.7),
+                0, 0, Math.PI * 2
+            );
+            ctx.fill();
+            ctx.restore();
+
+            // Jumping electron particles (from sample (-) up to probe (+))
+            const activeParticleCount = Math.max(2, Math.floor(currentRatio * state.particles.length));
+            ctx.save();
+            for (let i = 0; i < activeParticleCount; i++) {
+                const p = state.particles[i];
+                p.progress += p.speed * (0.5 + currentRatio * 2.2);
+                if (p.progress > 1) p.progress -= 1;
+
+                const py = surfaceTopAtProbe - p.progress * (surfaceTopAtProbe - tipBottomAtProbe);
+                const spreadFactor = state.tipSharpness === 'blunt' ? 2.2 : 0.75;
+                const px = probeX + p.offsetX * spreadFactor * Math.sin(p.progress * Math.PI);
+
+                ctx.beginPath();
+                ctx.arc(px, py, p.size, 0, Math.PI * 2);
+                ctx.fillStyle = '#fde047';
+                ctx.shadowColor = '#f59e0b';
+                ctx.shadowBlur = 8;
+                ctx.fill();
+            }
+            ctx.restore();
+
+            // 5. Draw Active Probe Tip Cluster
+            drawProbeCluster(ctx, probeX, activeTipY, atomR, state.tipSharpness, false);
+
+            // 6. Draw Dashed Trajectory Curve of Vertical Position of the Tip (Matching Table 3.2a)
+            ctx.save();
+            ctx.beginPath();
+            ctx.setLineDash([6, 5]);
+            ctx.lineWidth = 2.2;
+            ctx.strokeStyle = isDark ? '#f8fafc' : '#0f172a';
+
+            const steps = 120;
+            for (let s = 0; s <= steps; s++) {
+                const u = 0.08 + (s / steps) * 0.84;
+                const p = evaluatePhysicsAt(u);
+                const sx = xLeft + ((u - 0.12) / 0.76) * (xRight - xLeft);
+                const sy = baseTipY - p.tipZNm * nmToPx;
+                if (s === 0) ctx.moveTo(sx, sy);
+                else ctx.lineTo(sx, sy);
+            }
+            ctx.stroke();
+            ctx.restore();
+
+            // Label "vertical position of the tip" on the left and polarity signs (+) / (-)
+            ctx.save();
+            ctx.font = 'bold 11.5px Inter, sans-serif';
+            ctx.fillStyle = isDark ? '#e2e8f0' : '#1e293b';
+            ctx.fillText('vertical position', 14, baseTipY - 6);
+            ctx.fillText('of the tip', 14, baseTipY + 9);
+
+            // Polarity (+) at probe and (-) at sample
+            ctx.font = 'bold 16px JetBrains Mono, monospace';
+            ctx.fillStyle = '#e11d48';
+            ctx.fillText('+', ghostX - atomR * 5.2, baseTipY - atomR * 4.8);
+            ctx.fillStyle = '#0284c7';
+            ctx.fillText('−', ghostX - atomR * 4.5, surfaceBaseY + 5);
+
+            // If in constant current mode, draw "moving up and down" vertical double-arrow above active probe
+            if (state.scanMode === 'constant_current') {
+                const indX = probeX + atomR * 4.6;
+                const indY = activeTipY - atomR * 4.2;
+                ctx.strokeStyle = isDark ? '#c084fc' : '#7e22ce';
+                ctx.fillStyle = isDark ? '#c084fc' : '#7e22ce';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(indX, indY - 14);
+                ctx.lineTo(indX, indY + 14);
+                ctx.stroke();
+                // Top arrowhead
+                ctx.beginPath();
+                ctx.moveTo(indX, indY - 18);
+                ctx.lineTo(indX - 4, indY - 11);
+                ctx.lineTo(indX + 4, indY - 11);
+                ctx.fill();
+                // Bottom arrowhead
+                ctx.beginPath();
+                ctx.moveTo(indX, indY + 18);
+                ctx.lineTo(indX - 4, indY + 11);
+                ctx.lineTo(indX + 4, indY + 11);
+                ctx.fill();
+
+                ctx.font = 'bold 11px Inter, sans-serif';
+                ctx.fillText('moving up', indX + 8, indY - 3);
+                ctx.fillText('and down', indX + 8, indY + 10);
+            }
+            ctx.restore();
+
+            // Vertical alignment guide drop-line from active probe tip to bottom of canvas
+            ctx.save();
+            ctx.beginPath();
+            ctx.setLineDash([4, 4]);
+            ctx.strokeStyle = isDark ? 'rgba(248, 250, 252, 0.45)' : 'rgba(15, 23, 42, 0.45)';
+            ctx.lineWidth = 1.5;
+            ctx.moveTo(probeX, activeTipY);
+            ctx.lineTo(probeX, h);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // ============================================================================
+        // SYNCHRONIZED DUAL TRACE GRAPH RENDERER (Z vs X & Tunnelling Current I vs X)
+        // ============================================================================
+        function renderTraceCanvas() {
+            const canvas = document.getElementById('traceCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            const isDark = document.documentElement.classList.contains('dark');
+
+            ctx.clearRect(0, 0, w, h);
+
+            const xLeft = w * 0.12;
+            const xRight = w * 0.88;
+            const probeX = xLeft + ((state.scanX - 0.12) / 0.76) * (xRight - xLeft);
+
+            // Top mini-plot: Vertical position of the tip (z)
+            const zTop = 16;
+            const zBottom = 72;
+            const zBase = 58;
+
+            // Bottom main plot: Tunnelling current (I) vs Horizontal position (x), matching Table 3.2a
+            const iTop = 98;
+            const iBottom = h - 26;
+
+            // Draw axes for both plots
+            ctx.save();
+            ctx.strokeStyle = isDark ? '#475569' : '#334155';
+            ctx.lineWidth = 1.6;
+
+            // Top Z axes
+            ctx.beginPath();
+            ctx.moveTo(xLeft - 15, zTop);
+            ctx.lineTo(xLeft - 15, zBottom);
+            ctx.lineTo(xRight + 20, zBottom);
+            ctx.stroke();
+
+            // Bottom I axes
+            ctx.beginPath();
+            ctx.moveTo(xLeft - 15, iTop);
+            ctx.lineTo(xLeft - 15, iBottom);
+            ctx.lineTo(xRight + 20, iBottom);
+            ctx.stroke();
+
+            // Labels
+            ctx.font = 'bold 11px Inter, sans-serif';
+            ctx.fillStyle = isDark ? '#cbd5e1' : '#1e293b';
+            ctx.fillText('vertical', 12, zTop + 14);
+            ctx.fillText('position (z)', 12, zTop + 27);
+
+            ctx.fillText('tunnelling', 12, iTop + 18);
+            ctx.fillText('current (I)', 12, iTop + 31);
+
+            ctx.textAlign = 'center';
+            ctx.fillText('horizontal position (x)', (xLeft + xRight) * 0.5, h - 6);
+            ctx.restore();
+
+            // Plot curves across x
+            const steps = 160;
+
+            // 1. Vertical Position (Z) curve (Dashed purple/slate curve)
+            ctx.save();
+            ctx.beginPath();
+            ctx.setLineDash([5, 4]);
+            ctx.lineWidth = 2.4;
+            ctx.strokeStyle = state.scanMode === 'constant_current' ? '#9333ea' : (isDark ? '#94a3b8' : '#475569');
+
+            for (let s = 0; s <= steps; s++) {
+                const u = 0.08 + (s / steps) * 0.84;
+                const p = evaluatePhysicsAt(u);
+                const sx = xLeft + ((u - 0.12) / 0.76) * (xRight - xLeft);
+                const sy = zBase - p.tipZNm * 210;
+                if (s === 0) ctx.moveTo(sx, sy);
+                else ctx.lineTo(sx, sy);
+            }
+            ctx.stroke();
+            ctx.restore();
+
+            // 2. Tunnelling Current (I) curve (Solid orange curve matching textbook Table 3.2a!)
+            ctx.save();
+            ctx.beginPath();
+            ctx.lineWidth = 2.6;
+            ctx.strokeStyle = '#f59e0b';
+
+            for (let s = 0; s <= steps; s++) {
+                const u = 0.08 + (s / steps) * 0.84;
+                const p = evaluatePhysicsAt(u);
+                const sx = xLeft + ((u - 0.12) / 0.76) * (xRight - xLeft);
+                const normI = Math.min(1, p.currentnA / 9.5);
+                const sy = iBottom - 6 - normI * (iBottom - iTop - 12);
+                if (s === 0) ctx.moveTo(sx, sy);
+                else ctx.lineTo(sx, sy);
+            }
+            ctx.stroke();
+            ctx.restore();
+
+            // Draw Vertical Tracker Line & Current Operating Dots
+            const curPhys = evaluatePhysicsAt(state.scanX);
+            const curZ_Y = zBase - curPhys.tipZNm * 210;
+            const curI_Y = iBottom - 6 - Math.min(1, curPhys.currentnA / 9.5) * (iBottom - iTop - 12);
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.setLineDash([4, 4]);
+            ctx.strokeStyle = isDark ? 'rgba(248, 250, 252, 0.4)' : 'rgba(15, 23, 42, 0.4)';
+            ctx.lineWidth = 1.5;
+            ctx.moveTo(probeX, 0);
+            ctx.lineTo(probeX, iBottom);
+            ctx.stroke();
+
+            // Marker on Z curve
+            ctx.beginPath();
+            ctx.arc(probeX, curZ_Y, 5, 0, Math.PI * 2);
+            ctx.fillStyle = '#e11d48';
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Marker on I curve
+            ctx.beginPath();
+            ctx.arc(probeX, curI_Y, 5.5, 0, Math.PI * 2);
+            ctx.fillStyle = '#f59e0b';
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // ============================================================================
+        // EXPONENTIAL QUANTUM TUNNELLING GRAPH (I vs Gap d)
+        // ============================================================================
+        function renderExpCurveCanvas() {
+            const canvas = document.getElementById('expCurveCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            const isDark = document.documentElement.classList.contains('dark');
+
+            ctx.clearRect(0, 0, w, h);
+
+            const padL = 42, padR = 18, padT = 16, padB = 26;
+            const plotW = w - padL - padR;
+            const plotH = h - padT - padB;
+
+            // Axes
+            ctx.save();
+            ctx.strokeStyle = isDark ? '#475569' : '#64748b';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(padL, padT);
+            ctx.lineTo(padL, padT + plotH);
+            ctx.lineTo(padL + plotW, padT + plotH);
+            ctx.stroke();
+
+            ctx.font = 'bold 10px Inter, sans-serif';
+            ctx.fillStyle = isDark ? '#94a3b8' : '#475569';
+            ctx.fillText('I (nA)', 6, padT + 10);
+            ctx.textAlign = 'center';
+            ctx.fillText('Tip-to-Surface Distance d (nm)', padL + plotW * 0.5, h - 6);
+
+            // Plot exponential decay curve for d in [0.16, 0.56] nm
+            const dMin = 0.16, dMax = 0.56;
+            ctx.beginPath();
+            ctx.lineWidth = 2.5;
+            ctx.strokeStyle = '#f59e0b';
+
+            for (let i = 0; i <= 100; i++) {
+                const d = dMin + (i / 100) * (dMax - dMin);
+                const I = Math.min(10.5, 3.2 * state.biasVoltage * Math.exp(-state.decayKappa * (d - 0.34)));
+                const x = padL + ((d - dMin) / (dMax - dMin)) * plotW;
+                const y = padT + plotH - (I / 10.5) * plotH;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            // Plot current live operating point on the exponential curve
+            const curD = Math.max(dMin, Math.min(dMax, state.currentGapNm));
+            const curI = Math.min(10.5, state.currentInA);
+            const ptX = padL + ((curD - dMin) / (dMax - dMin)) * plotW;
+            const ptY = padT + plotH - (curI / 10.5) * plotH;
+
+            ctx.setLineDash([3, 3]);
+            ctx.strokeStyle = '#e11d48';
+            ctx.beginPath();
+            ctx.moveTo(ptX, ptY);
+            ctx.lineTo(ptX, padT + plotH);
+            ctx.moveTo(ptX, ptY);
+            ctx.lineTo(padL, ptY);
+            ctx.stroke();
+
+            ctx.setLineDash([]);
+            ctx.beginPath();
+            ctx.arc(ptX, ptY, 5.5, 0, Math.PI * 2);
+            ctx.fillStyle = '#e11d48';
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // ============================================================================
+        // 2D RECONSTRUCTED STM SURFACE MONITOR RENDERER
+        // ============================================================================
+        function drawMonitorImage() {
+            const canvas = document.getElementById('stmMonitorCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+
+            ctx.fillStyle = '#022c22';
+            ctx.fillRect(0, 0, w, h);
+
+            // Render a 3-row top-down atomic lattice heatmap where the middle row has the active modifiers
+            const rows = 3;
+            const cols = state.numAtoms;
+            const cellW = (w - 30) / cols;
+            const cellH = (h - 20) / rows;
+            const blurRadius = state.tipSharpness === 'sharp' ? cellW * 0.44 : cellW * 0.98;
+
+            for (let r = 0; r < rows; r++) {
+                const cy = 10 + (r + 0.5) * cellH;
+                for (let c = 0; c < cols; c++) {
+                    const cx = 15 + (c + 0.5) * cellW;
+                    const mod = (r === 1) ? state.atomModifiers[c] : 0;
+
+                    if (mod === -1) {
+                        // Dark vacancy depression
+                        const vGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, blurRadius);
+                        vGrad.addColorStop(0, '#011510');
+                        vGrad.addColorStop(1, 'rgba(2, 44, 34, 0)');
+                        ctx.fillStyle = vGrad;
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, blurRadius, 0, Math.PI * 2);
+                        ctx.fill();
+                        continue;
+                    }
+
+                    const isBump = mod > 0;
+                    const grad = ctx.createRadialGradient(cx - 2, cy - 2, 1, cx, cy, blurRadius);
+                    if (isBump) {
+                        grad.addColorStop(0, '#ffffff');
+                        grad.addColorStop(0.45, '#6ee7b7');
+                        grad.addColorStop(1, 'rgba(16, 185, 129, 0)');
+                    } else {
+                        grad.addColorStop(0, state.tipSharpness === 'sharp' ? '#a7f3d0' : '#34d399');
+                        grad.addColorStop(0.55, '#059669');
+                        grad.addColorStop(1, 'rgba(6, 95, 70, 0)');
+                    }
+
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, blurRadius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // Draw scanline cursor corresponding to current scanX
+            const scanPx = 15 + ((state.scanX - 0.08) / 0.84) * (w - 30);
+            ctx.save();
+            ctx.strokeStyle = '#34d399';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(scanPx, 0);
+            ctx.lineTo(scanPx, h);
+            ctx.stroke();
+
+            // CRT scanline overlay
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
+            for (let y = 0; y < h; y += 3) {
+                ctx.fillRect(0, y, w, 1);
+            }
+            ctx.restore();
+        }
+
+        // ============================================================================
+        // TAB 2: SIDE-BY-SIDE TABLE 3.2a COMPARISON RENDERER
+        // ============================================================================
+        function renderSideBySidePanel(canvasId, mode) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            const isDark = document.documentElement.classList.contains('dark');
+
+            ctx.clearRect(0, 0, w, h);
+
+            const xLeft = w * 0.15;
+            const xRight = w * 0.88;
+            const spacing = (xRight - xLeft) / (state.numAtoms - 1);
+            const atomR = Math.min(15, Math.max(9, spacing * 0.42));
+
+            const surfaceBaseY = h * 0.48;
+            const nmToPx = atomR * 14.5;
+            const baseTipY = surfaceBaseY - 0.35 * nmToPx;
+
+            const phys = evaluatePhysicsAt(state.scanX, mode, 'sharp');
+            const probeX = xLeft + ((state.scanX - 0.12) / 0.76) * (xRight - xLeft);
+            const activeTipY = baseTipY - phys.tipZNm * nmToPx;
+
+            // Draw 2 layers of sample atoms
+            for (let i = 0; i < state.numAtoms; i++) {
+                const x = xLeft + i * spacing;
+                drawGlossyAtom(ctx, x, surfaceBaseY + atomR * 1.6, atomR * 0.95, 'sample', 0.85);
+                if (state.atomModifiers[i] !== -1) {
+                    drawGlossyAtom(ctx, x, surfaceBaseY, atomR, 'sample', 1.0);
+                }
+                if (state.atomModifiers[i] > 0) {
+                    drawGlossyAtom(ctx, x, surfaceBaseY - state.atomModifiers[i] * atomR * 1.5, atomR, 'sample_bump', 1.0);
+                }
+            }
+
+            // Ghost probe on left + Active probe
+            const ghostU = 0.16;
+            const ghostPhys = evaluatePhysicsAt(ghostU, mode, 'sharp');
+            const ghostX = xLeft + ((ghostU - 0.12) / 0.76) * (xRight - xLeft);
+            drawProbeCluster(ctx, ghostX, baseTipY - ghostPhys.tipZNm * nmToPx, atomR, 'sharp', true);
+            drawProbeCluster(ctx, probeX, activeTipY, atomR, 'sharp', false);
+
+            // Dashed trajectory line of vertical position of the tip
+            ctx.save();
+            ctx.beginPath();
+            ctx.setLineDash([5, 4]);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = isDark ? '#f8fafc' : '#0f172a';
+            for (let s = 0; s <= 100; s++) {
+                const u = 0.08 + (s / 100) * 0.84;
+                const p = evaluatePhysicsAt(u, mode, 'sharp');
+                const sx = xLeft + ((u - 0.12) / 0.76) * (xRight - xLeft);
+                const sy = baseTipY - p.tipZNm * nmToPx;
+                if (s === 0) ctx.moveTo(sx, sy);
+                else ctx.lineTo(sx, sy);
+            }
+            ctx.stroke();
+            ctx.restore();
+
+            // Bottom Graph: Tunnelling Current vs Horizontal Position
+            const gTop = h * 0.66;
+            const gBottom = h - 28;
+
+            ctx.save();
+            ctx.strokeStyle = isDark ? '#64748b' : '#1e293b';
+            ctx.lineWidth = 1.6;
+            ctx.beginPath();
+            ctx.moveTo(xLeft - 10, gTop);
+            ctx.lineTo(xLeft - 10, gBottom);
+            ctx.lineTo(xRight + 15, gBottom);
+            ctx.stroke();
+
+            // Orange tunnelling current curve
+            ctx.beginPath();
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2.5;
+            for (let s = 0; s <= 120; s++) {
+                const u = 0.08 + (s / 120) * 0.84;
+                const p = evaluatePhysicsAt(u, mode, 'sharp');
+                const sx = xLeft + ((u - 0.12) / 0.76) * (xRight - xLeft);
+                const normI = Math.min(1, p.currentnA / 9.5);
+                const sy = gBottom - 6 - normI * (gBottom - gTop - 12);
+                if (s === 0) ctx.moveTo(sx, sy);
+                else ctx.lineTo(sx, sy);
+            }
+            ctx.stroke();
+
+            // Vertical dashed alignment lines from ghost & active probes to graph
+            ctx.setLineDash([4, 4]);
+            ctx.strokeStyle = isDark ? 'rgba(226,232,240,0.4)' : 'rgba(15,23,42,0.45)';
+            ctx.beginPath();
+            ctx.moveTo(ghostX, baseTipY);
+            ctx.lineTo(ghostX, gBottom);
+            ctx.moveTo(probeX, activeTipY);
+            ctx.lineTo(probeX, gBottom);
+            ctx.stroke();
+
+            ctx.font = 'bold 11px Inter, sans-serif';
+            ctx.fillStyle = isDark ? '#cbd5e1' : '#1e293b';
+            ctx.fillText('tunnelling', 8, gTop + 14);
+            ctx.fillText('current', 8, gTop + 26);
+            ctx.textAlign = 'center';
+            ctx.fillText('horizontal position', (xLeft + xRight) * 0.5, h - 8);
+            ctx.restore();
+        }
+
+        // ============================================================================
+        // INTERACTIVE CANVAS MOUSE / TOUCH DRAGGING & ATOM CLICKING
+        // ============================================================================
+        function setupCanvasInteractions() {
+            const canvas = document.getElementById('atomicCanvas');
+            if (!canvas) return;
+
+            let isDraggingProbe = false;
+
+            function getCanvasCoords(e) {
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return {
+                    x: (clientX - rect.left) * (canvas.width / rect.width),
+                    y: (clientY - rect.top) * (canvas.height / rect.height)
+                };
+            }
+
+            canvas.addEventListener('pointerdown', (e) => {
+                const pt = getCanvasCoords(e);
+
+                // Check if user clicked on a blue sample atom to toggle an adatom bump
+                for (const box of state.hitboxes) {
+                    const dx = pt.x - box.x;
+                    const dy = pt.y - box.y;
+                    if (Math.hypot(dx, dy) <= box.r) {
+                        // Cycle atom state: 0 (normal) -> 1 (adatom bump) -> -1 (vacancy) -> 0
+                        const curr = state.atomModifiers[box.index];
+                        state.atomModifiers[box.index] = curr === 0 ? 1 : (curr === 1 ? -1 : 0);
+                        drawMonitorImage();
+                        return;
+                    }
+                }
+
+                // Otherwise drag probe horizontally
+                isDraggingProbe = true;
+                state.playing = false;
+                document.getElementById('play-icon').className = "ph-fill ph-play text-base";
+                document.getElementById('play-text').textContent = "Resume Scan";
+                updateProbeFromPointer(pt.x, canvas.width);
+            });
+
+            window.addEventListener('pointermove', (e) => {
+                if (!isDraggingProbe) return;
+                const pt = getCanvasCoords(e);
+                updateProbeFromPointer(pt.x, canvas.width);
+            });
+
+            window.addEventListener('pointerup', () => {
+                isDraggingProbe = false;
+            });
+        }
+
+        function updateProbeFromPointer(px, width) {
+            const xLeft = width * 0.12;
+            const xRight = width * 0.88;
+            const u = 0.12 + ((px - xLeft) / (xRight - xLeft)) * 0.76;
+            state.scanX = Math.max(0.08, Math.min(0.92, u));
+            updateXSliderUI();
+            drawMonitorImage();
+        }
+
+        // ============================================================================
+        // TAB 3: CONCEPT CHECK QUIZ DATA & RENDERER
+        // ============================================================================
+        const quizQuestions = [
+            {
+                q: "1. What physical phenomenon allows electrons to jump across the narrow vacuum gap between the sample surface and the STM probe tip?",
+                options: [
+                    "Thermionic emission due to high probe temperature",
+                    "Quantum tunnelling across the potential barrier",
+                    "Photoelectric effect induced by laser illumination",
+                    "Diffraction of matter waves around the sample atoms"
+                ],
+                correct: 1,
+                explanation: "When a small bias voltage is applied and the probe tip is held within about an atom's diameter from the surface, electrons jump across the gap via quantum tunnelling, producing a tunnelling current."
+            },
+            {
+                q: "2. While scanning in 'Constant Height Mode', the STM probe passes directly over a protruding atom on the sample surface. How do the tip-to-surface distance and tunnelling current change?",
+                options: [
+                    "Tip-to-surface distance remains unchanged; tunnelling current remains constant.",
+                    "Tip-to-surface distance decreases; tunnelling current increases drastically.",
+                    "Tip-to-surface distance increases; tunnelling current decreases drastically.",
+                    "The probe moves upwards automatically to keep the tunnelling current constant."
+                ],
+                correct: 1,
+                explanation: "In constant height mode, the vertical position of the tip is fixed. Over a protruding atom, the gap decreases slightly, which causes the tunnelling current to increase drastically (exponentially)."
+            },
+            {
+                q: "3. In 'Constant Current Mode', how is the atomic profile of the sample surface determined?",
+                options: [
+                    "By measuring the diffraction pattern of scattered electrons",
+                    "By keeping the tip at a fixed vertical height and recording current peaks",
+                    "By moving the probe up and down to keep the tunnelling current (and gap distance) constant, and recording the vertical position of the probe",
+                    "By varying the bias voltage while holding the probe stationary"
+                ],
+                correct: 2,
+                explanation: "As shown in Table 3.2a, in constant current mode the feedback system moves the probe vertically to keep the tunnelling current and tip-to-surface distance constant. Monitoring this vertical movement reveals the surface contour."
+            },
+            {
+                q: "4. Which of the following statements regarding the resolving power of an STM is CORRECT?",
+                options: [
+                    "It is limited by the Rayleigh criterion and the de Broglie wavelength of electrons.",
+                    "A larger probe tip gives a stronger current and therefore higher resolving power.",
+                    "The resolving power is limited by the size of the probe's tip; since diffraction is not involved, the Rayleigh criterion is not applicable.",
+                    "STM can resolve biological cells in insulating water droplets without conductivity."
+                ],
+                correct: 2,
+                explanation: "Because STM forms images by local quantum tunnelling rather than focusing waves through an aperture, diffraction is not involved and the Rayleigh criterion does not apply. A sharper (single-atom) tip gives higher resolving power."
+            }
+        ];
+
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            if (!container) return;
+            container.innerHTML = quizQuestions.map((item, qIdx) => `
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-3">
+                    <h3 class="font-bold text-sm sm:text-base">${item.q}</h3>
+                    <div class="grid grid-cols-1 gap-2" id="q-options-${qIdx}">
+                        ${item.options.map((opt, oIdx) => `
+                            <button onclick="answerQuiz(${qIdx}, ${oIdx})" id="q-${qIdx}-opt-${oIdx}"
+                                class="text-left px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-blue-400 text-xs sm:text-sm font-medium transition flex items-center justify-between gap-2">
+                                <span>${opt}</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                    <div id="q-feedback-${qIdx}" class="hidden text-xs sm:text-sm p-3 rounded-xl"></div>
+                </div>
+            `).join('');
+        }
+
+        function answerQuiz(qIdx, selectedIdx) {
+            const item = quizQuestions[qIdx];
+            const fb = document.getElementById(`q-feedback-${qIdx}`);
+            fb.classList.remove('hidden');
+
+            item.options.forEach((_, oIdx) => {
+                const btn = document.getElementById(`q-${qIdx}-opt-${oIdx}`);
+                if (oIdx === item.correct) {
+                    btn.className = "text-left px-3.5 py-2.5 rounded-xl border-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-900 dark:text-emerald-200 text-xs sm:text-sm font-bold flex items-center justify-between gap-2";
+                } else if (oIdx === selectedIdx) {
+                    btn.className = "text-left px-3.5 py-2.5 rounded-xl border-2 border-rose-500 bg-rose-50 dark:bg-rose-950/50 text-rose-900 dark:text-rose-200 text-xs sm:text-sm font-semibold flex items-center justify-between gap-2";
+                }
+            });
+
+            if (selectedIdx === item.correct) {
+                fb.className = "text-xs sm:text-sm p-3 rounded-xl bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800";
+                fb.innerHTML = `<strong>Correct!</strong> ${item.explanation}`;
+            } else {
+                fb.className = "text-xs sm:text-sm p-3 rounded-xl bg-rose-100/80 dark:bg-rose-950/60 text-rose-900 dark:text-rose-200 border border-rose-300 dark:border-rose-800";
+                fb.innerHTML = `<strong>Not quite.</strong> ${item.explanation}`;
+            }
+        }
+
+        function resetQuiz() {
+            renderQuiz();
+        }
+
+        // ============================================================================
+        // RESPONSIVE CANVAS SIZING & MAIN ANIMATION LOOP
+        // ============================================================================
+        function handleResize() {
+            const ids = ['atomicCanvas', 'traceCanvas', 'expCurveCanvas', 'stmMonitorCanvas', 'compareHeightCanvas', 'compareCurrentCanvas'];
+            ids.forEach(id => {
+                const c = document.getElementById(id);
+                if (c && c.parentElement && c.parentElement.clientWidth > 0) {
+                    c.width = c.parentElement.clientWidth;
+                    c.height = c.parentElement.clientHeight;
+                }
+            });
+            drawMonitorImage();
+        }
+
+        function animateLoop() {
+            if (state.playing) {
+                state.scanX += 0.0022 * state.scanSpeed * state.scanDirection;
+                if (state.scanX >= 0.90) {
+                    state.scanX = 0.10; // Wrap around like a raster scan line
+                }
+                updateXSliderUI();
+            }
+
+            if (state.mainTab === 'sim') {
+                renderAtomicCanvas();
+                renderTraceCanvas();
+                renderExpCurveCanvas();
+                drawMonitorImage();
+            } else if (state.mainTab === 'compare') {
+                renderSideBySidePanel('compareHeightCanvas', 'constant_height');
+                renderSideBySidePanel('compareCurrentCanvas', 'constant_current');
+            }
+
+            requestAnimationFrame(animateLoop);
+        }
+
+        window.onload = function () {
+            setSurfacePreset('textbook');
+            renderQuiz();
+            setupCanvasInteractions();
+            handleResize();
+            window.addEventListener('resize', handleResize);
+            animateLoop();
+        };
+    </script>
+</body>
+</html>
