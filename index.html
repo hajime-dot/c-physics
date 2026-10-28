@@ -2231,7 +2231,7 @@ CE,2009,44,A`;
 
   function rebuildSims(readyList) {
     var ready = (readyList || []).slice().sort(function (a, b) {
-      return (a.sort || 0) - (b.sort || 0);
+      return String(a.title).localeCompare(String(b.title), undefined, { sensitivity: "base" });
     });
     // Drop TBD cards whose title matches a ready sim (case-insensitive)
     var readyTitles = {};
