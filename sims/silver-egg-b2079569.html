@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Total Internal Reflection: The Silver Egg</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* Slate 900 */
+            color: #f8fafc; /* Slate 50 */
+        }
+        
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            margin-top: -8px;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+        
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+            background: #334155;
+            border-radius: 3px;
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glow-text {
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col p-4 md:p-8">
+
+    <header class="mb-8 text-center max-w-4xl mx-auto">
+        <h1 class="text-3xl md:text-5xl font-bold mb-3 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">The "Silver" Soot Egg</h1>
+        <p class="text-slate-400 text-lg">Detailed Optical Boundary Simulation</p>
+    </header>
+
+    <main class="flex-grow flex flex-col lg:flex-row gap-6 max-w-7xl mx-auto w-full">
+        
+        <!-- Left Column: Simulation -->
+        <div class="flex-1 flex flex-col gap-6">
+            <!-- Canvas Container -->
+            <div class="relative w-full aspect-video rounded-2xl overflow-hidden glass-panel shadow-2xl">
+                <canvas id="simCanvas" class="w-full h-full block"></canvas>
+                
+                <!-- Floating Info Badges on Canvas -->
+                <div class="absolute top-4 left-4 flex flex-col gap-2 pointer-events-none">
+                    <div class="bg-black/60 px-3 py-1.5 rounded-full text-sm font-mono text-blue-300 border border-blue-500/40 shadow-lg backdrop-blur-sm">
+                        Incident Angle (θi): <span id="angleReadout">0.0</span>°
+                    </div>
+                    <div class="bg-black/60 px-3 py-1.5 rounded-full text-sm font-mono text-emerald-300 border border-emerald-500/40 shadow-lg backdrop-blur-sm">
+                        Critical Angle (θc): 48.6°
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="glass-panel p-6 rounded-2xl">
+                <h2 class="text-xl font-semibold mb-4 border-b border-slate-600 pb-2">Experiment Controls</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Environment Toggles -->
+                    <div class="flex flex-col gap-4">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <div class="relative">
+                                <input type="checkbox" id="waterToggle" class="sr-only" checked>
+                                <div class="block bg-slate-700 w-14 h-8 rounded-full transition-colors duration-300" id="waterBg"></div>
+                                <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-300 translate-x-6"></div>
+                            </div>
+                            <span class="font-medium text-slate-200">Submerge in Water</span>
+                        </label>
+                        
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <div class="relative">
+                                <input type="checkbox" id="sootToggle" class="sr-only" checked>
+                                <div class="block bg-slate-700 w-14 h-8 rounded-full transition-colors duration-300" id="sootBg"></div>
+                                <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-300 translate-x-6"></div>
+                            </div>
+                            <span class="font-medium text-slate-200">Coat Egg in Carbon Soot</span>
+                        </label>
+                        
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <div class="relative">
+                                <input type="checkbox" id="anglesToggle" class="sr-only">
+                                <div class="block bg-slate-700 w-14 h-8 rounded-full transition-colors duration-300" id="anglesBg"></div>
+                                <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-300"></div>
+                            </div>
+                            <span class="font-medium text-slate-200">Show Angles on Diagram</span>
+                        </label>
+                    </div>
+
+                    <!-- Light Beam Slider -->
+                    <div class="flex flex-col justify-center">
+                        <label for="lightSlider" class="mb-2 font-medium text-slate-200 flex justify-between">
+                            <span>Laser Position (Angle)</span>
+                        </label>
+                        <input type="range" id="lightSlider" min="0" max="100" value="80">
+                        <p class="text-xs text-slate-400 mt-2 text-center">Move the laser to change the angle at which light hits the water-air boundary.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Explanation Panel -->
+        <div class="w-full lg:w-96 flex flex-col gap-4">
+            <div class="glass-panel p-6 rounded-2xl flex-grow flex flex-col">
+                <h2 class="text-2xl font-bold mb-2 text-white">Observation</h2>
+                <div id="observationStatus" class="text-emerald-400 font-semibold mb-4 text-lg">
+                    Perfect Silver Mirror (TIR)
+                </div>
+                
+                <h3 class="text-lg font-semibold text-slate-300 mt-2 mb-2 border-b border-slate-600 pb-1">The Physics</h3>
+                <div id="physicsExplanation" class="text-slate-300 space-y-3 text-sm leading-relaxed flex-grow">
+                    <!-- Content injected via JS -->
+                </div>
+
+                <div class="mt-6 bg-slate-800/50 p-4 rounded-xl border border-slate-600/50">
+                    <h4 class="font-semibold text-blue-300 mb-1">Optical Constants</h4>
+                    <ul class="text-xs text-slate-400 space-y-1 font-mono">
+                        <li>Refractive Index (Water): n = 1.333</li>
+                        <li>Refractive Index (Air): n = 1.000</li>
+                        <li>Snell's Law: n₁sin(θ₁) = n₂sin(θ₂)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- DOM Elements ---
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+        const waterToggle = document.getElementById('waterToggle');
+        const sootToggle = document.getElementById('sootToggle');
+        const lightSlider = document.getElementById('lightSlider');
+        const angleReadout = document.getElementById('angleReadout');
+        const observationStatus = document.getElementById('observationStatus');
+        const physicsExplanation = document.getElementById('physicsExplanation');
+        const waterBg = document.getElementById('waterBg');
+        const sootBg = document.getElementById('sootBg');
+        const anglesToggle = document.getElementById('anglesToggle');
+        const anglesBg = document.getElementById('anglesBg');
+
+        // --- State Variables ---
+        let width, height;
+        let isWater = true;
+        let isSoot = true;
+        let showAngles = false;
+        let sliderVal = 80; // 0 to 100
+        
+        // Physics constants
+        const N_WATER = 1.333;
+        const N_AIR = 1.000;
+        const CRITICAL_ANGLE = Math.asin(N_AIR / N_WATER); // Radians
+        const CRITICAL_ANGLE_DEG = CRITICAL_ANGLE * (180 / Math.PI); // ~48.6 degrees
+
+        // Animation variables
+        let time = 0;
+
+        // --- Resize Handler ---
+        function resize() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width * window.devicePixelRatio;
+            canvas.height = rect.height * window.devicePixelRatio;
+            width = canvas.width;
+            height = canvas.height;
+            draw();
+        }
+        window.addEventListener('resize', resize);
+
+        // --- UI Update logic ---
+        function updateToggleUI() {
+            // Water Toggle UI
+            if (isWater) {
+                waterBg.classList.replace('bg-slate-700', 'bg-blue-500');
+                waterToggle.nextElementSibling.nextElementSibling.classList.add('translate-x-6');
+            } else {
+                waterBg.classList.replace('bg-blue-500', 'bg-slate-700');
+                waterToggle.nextElementSibling.nextElementSibling.classList.remove('translate-x-6');
+            }
+
+            // Soot Toggle UI
+            if (isSoot) {
+                sootBg.classList.replace('bg-slate-700', 'bg-emerald-500');
+                sootToggle.nextElementSibling.nextElementSibling.classList.add('translate-x-6');
+            } else {
+                sootBg.classList.replace('bg-emerald-500', 'bg-slate-700');
+                sootToggle.nextElementSibling.nextElementSibling.classList.remove('translate-x-6');
+            }
+
+            // Angles Toggle UI
+            if (showAngles) {
+                anglesBg.classList.replace('bg-slate-700', 'bg-purple-500');
+                anglesToggle.nextElementSibling.nextElementSibling.classList.add('translate-x-6');
+            } else {
+                anglesBg.classList.replace('bg-purple-500', 'bg-slate-700');
+                anglesToggle.nextElementSibling.nextElementSibling.classList.remove('translate-x-6');
+            }
+        }
+
+        function drawArrowHead(ctx, x, y, angle, color) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(-15, 6);
+            ctx.lineTo(-15, -6);
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = color;
+            ctx.fill();
+            ctx.restore();
+        }
+
+        // Helper function to draw a mathematical "egg" path 
+        function drawEggPath(ctx, cx, cy, a_base, b, k_val) {
+            ctx.beginPath();
+            for (let i = 0; i <= 360; i += 2) {
+                let theta = i * Math.PI / 180;
+                let Y = b * Math.sin(theta);
+                // Egg asymmetry equation: width modifies based on Y position (wider at bottom)
+                let A_Y = a_base * (1 + k_val * Y / b);
+                let X = A_Y * Math.cos(theta);
+                if (i === 0) ctx.moveTo(cx + X, cy + Y);
+                else ctx.lineTo(cx + X, cy + Y);
+            }
+            ctx.closePath();
+        }
+
+        // --- Drawing Logic ---
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
+            
+            // Scale definitions to show the whole system
+            const eggRadius = Math.min(width, height) * 0.35; // Increased size slightly
+            const a_base = eggRadius * 0.75; // Base horizontal radius
+            const b_inner = eggRadius * 1.0; // Vertical radius
+            const k_asym = 0.2;              // Asymmetry factor (creates the egg shape)
+            const airLayerThickness = 30;    // Visible gap (increased slightly)
+            
+            let hasAirLayer = isWater && isSoot;
+
+            // Outer boundary dimensions
+            const a_outer_base = a_base + airLayerThickness;
+            const b_outer = b_inner + airLayerThickness;
+
+            // Position the egg in the bottom-right to maximize the light path across the screen
+            const cx = width * 0.70;
+            const cy = height * 0.60;
+
+            // 1. Draw Environment (Air/Water)
+            if (isWater) {
+                // Solid academic blue for better contrast
+                ctx.fillStyle = '#2c5282'; 
+                ctx.fillRect(0, 0, width, height);
+            } else {
+                ctx.fillStyle = '#0f172a'; // Slate 900
+                ctx.fillRect(0, 0, width, height);
+            }
+
+            // 2. Draw Air Layer
+            if (hasAirLayer) {
+                // Fill the gap between the two boundaries
+                ctx.beginPath();
+                // Outer path (clockwise)
+                for (let i = 0; i <= 360; i += 2) {
+                    let theta = i * Math.PI / 180;
+                    let Y = b_outer * Math.sin(theta);
+                    let A_Y = a_outer_base * (1 + k_asym * Y / b_outer);
+                    let X = A_Y * Math.cos(theta);
+                    if (i === 0) ctx.moveTo(cx + X, cy + Y);
+                    else ctx.lineTo(cx + X, cy + Y);
+                }
+                // Inner path (counter-clockwise to punch hole)
+                for (let i = 360; i >= 0; i -= 2) {
+                    let theta = i * Math.PI / 180;
+                    let Y = b_inner * Math.sin(theta);
+                    let A_Y = a_base * (1 + k_asym * Y / b_inner);
+                    let X = A_Y * Math.cos(theta);
+                    ctx.lineTo(cx + X, cy + Y);
+                }
+                ctx.closePath();
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+                ctx.fill();
+
+                // Draw solid boundary line for the water-air interface
+                drawEggPath(ctx, cx, cy, a_outer_base, b_outer, k_asym);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+
+                // Upright Label for the air layer
+                ctx.save();
+                let l_Y = -b_inner * 0.6; // Top-left area
+                let l_A = (a_base + airLayerThickness/2) * (1 + k_asym * l_Y / (b_inner + airLayerThickness/2));
+                let l_X = -l_A; // Left side
+                ctx.translate(cx + l_X, cy + l_Y);
+                ctx.rotate(-Math.PI / 8); // Slight readable tilt (NOT inverted)
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.font = 'bold 13px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('AIR LAYER', 0, 0);
+                ctx.restore();
+            }
+
+            // 3. Draw Egg Body
+            drawEggPath(ctx, cx, cy, a_base, b_inner, k_asym);
+            ctx.fillStyle = isSoot ? '#111111' : '#fde047';
+            ctx.fill();
+            
+            if (isSoot) {
+                // Subtle edge definition for soot
+                ctx.strokeStyle = '#222';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            // 4. Calculate Laser Physics
+            // Map slider (0-100) to Y position. Prevent hitting exact 90 deg pole to avoid math NaN
+            const maxOffset = b_outer * 0.95; 
+            const laserY = cy - (sliderVal / 100) * maxOffset;
+
+            // Intersection with the CURRENT active outer boundary
+            let current_a_base = hasAirLayer ? a_outer_base : a_base;
+            let current_b = hasAirLayer ? b_outer : b_inner;
+
+            let Y_ray = laserY - cy;
+            let intersectX = cx; // Default if missed
+            let nx = 1, ny = 0;  // Default normal
+            
+            const val = 1 - Math.pow(Y_ray / current_b, 2);
+            if (val > 0) {
+                let A_Y = current_a_base * (1 + k_asym * Y_ray / current_b);
+                let X_int = -A_Y * Math.sqrt(val); // Left intersection
+                intersectX = cx + X_int; 
+                
+                // Outward Normal Vector at intersection evaluated on the egg curve
+                let A_prime = current_a_base * k_asym / current_b;
+                nx = (2 * X_int) / (A_Y * A_Y);
+                ny = (2 * Y_ray) / (current_b * current_b) - (2 * X_int * X_int) / Math.pow(A_Y, 3) * A_prime;
+                
+                const nLen = Math.sqrt(nx*nx + ny*ny);
+                nx /= nLen;
+                ny /= nLen; // Normal points OUTWARD into incident medium (Water/Left)
+            }
+
+            // Incident ray (horizontal from left)
+            const ix = 1;
+            const iy = 0;
+
+            // Angle of Incidence
+            // Since `N = [nx, ny]` points opposite to the incoming light, 
+            // dot product with `-N` gives cos(theta_i)
+            const dotProduct = (ix * -nx) + (iy * -ny);
+            const angleIncidence = Math.acos(dotProduct);
+            const angleIncidenceDeg = angleIncidence * (180 / Math.PI);
+
+            angleReadout.innerText = angleIncidenceDeg.toFixed(1);
+
+            // 5. Draw Rays & Optics
+            ctx.lineCap = 'round';
+            
+            // Incident Ray
+            ctx.beginPath();
+            ctx.moveTo(0, laserY);
+            ctx.lineTo(intersectX, laserY);
+            ctx.strokeStyle = '#ef4444'; // Red
+            ctx.lineWidth = 4;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#ef4444';
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            
+            // Place arrow head halfway along the incident ray's long path
+            drawArrowHead(ctx, intersectX * 0.5, laserY, 0, '#ef4444');
+
+            // Normal Line (Dashed)
+            ctx.beginPath();
+            ctx.setLineDash([5, 5]);
+            ctx.moveTo(intersectX + nx * 80, laserY + ny * 80);  // Outside
+            ctx.lineTo(intersectX - nx * 80, laserY - ny * 80); // Inside
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            let isTIR = false;
+
+            if (hasAirLayer) {
+                if (angleIncidence > CRITICAL_ANGLE) {
+                    isTIR = true;
+                    // --- TOTAL INTERNAL REFLECTION ---
+                    const d = (ix * nx) + (iy * ny);
+                    const rx = ix - 2 * d * nx;
+                    const ry = iy - 2 * d * ny;
+
+                    ctx.beginPath();
+                    ctx.moveTo(intersectX, laserY);
+                    // Ensure the reflected ray reaches all the way off canvas
+                    ctx.lineTo(intersectX + rx * width * 2, laserY + ry * width * 2);
+                    
+                    ctx.strokeStyle = '#ffffff'; 
+                    ctx.lineWidth = 6;
+                    ctx.shadowBlur = 20;
+                    ctx.shadowColor = '#ffffff';
+                    ctx.stroke();
+                    ctx.shadowBlur = 0;
+                    
+                    // Place arrow head dynamically on the reflected line
+                    drawArrowHead(ctx, intersectX + rx * 150, laserY + ry * 150, Math.atan2(ry, rx), '#ffffff');
+                } else {
+                    // --- SNELL'S LAW REFRACTION INTO AIR GAP ---
+                    let r = N_WATER / N_AIR;
+                    let c = -(ix * nx + iy * ny); // c is positive since nx is negative
+                    
+                    let radicand = 1 - r*r*(1 - c*c);
+                    if (radicand >= 0) { // Math check
+                        let coeff = r * c - Math.sqrt(radicand);
+                        let tx = r * ix + coeff * nx;
+                        let ty = r * iy + coeff * ny;
+                        
+                        // Normalize Transmitted vector
+                        let tLen = Math.sqrt(tx*tx + ty*ty);
+                        tx /= tLen;
+                        ty /= tLen;
+
+                        // Ray trace to find where it hits the INNER soot egg numerically
+                        let t_found = -1;
+                        let max_t = current_a_base * 2;
+                        let step = 1.0;
+                        
+                        for (let current_t = 0.1; current_t < max_t; current_t += step) {
+                            let test_X = (intersectX - cx) + current_t * tx;
+                            let test_Y = (laserY - cy) + current_t * ty;
+                            let A_test = a_base * (1 + k_asym * test_Y / b_inner);
+                            let F = (test_X * test_X) / (A_test * A_test) + (test_Y * test_Y) / (b_inner * b_inner) - 1;
+                            
+                            if (F <= 0) { // Crossed the boundary!
+                                let t_low = current_t - step;
+                                let t_high = current_t;
+                                // Binary search to find exact intersection limit
+                                for(let refine = 0; refine < 10; refine++) {
+                                    let t_mid = (t_low + t_high) / 2;
+                                    let m_X = (intersectX - cx) + t_mid * tx;
+                                    let m_Y = (laserY - cy) + t_mid * ty;
+                                    let m_A = a_base * (1 + k_asym * m_Y / b_inner);
+                                    let m_F = (m_X * m_X) / (m_A * m_A) + (m_Y * m_Y) / (b_inner * b_inner) - 1;
+                                    if(m_F <= 0) t_high = t_mid;
+                                    else t_low = t_mid;
+                                }
+                                t_found = t_high;
+                                break;
+                            }
+                        }
+                        
+                        if (t_found > 0) {
+                            let innerX = intersectX + t_found * tx;
+                            let innerY = laserY + t_found * ty;
+                            
+                            // Draw Refracted Ray inside air gap
+                            ctx.beginPath();
+                            ctx.moveTo(intersectX, laserY);
+                            ctx.lineTo(innerX, innerY);
+                            ctx.strokeStyle = 'rgba(239, 68, 68, 0.9)';
+                            ctx.lineWidth = 3;
+                            ctx.stroke();
+                            
+                            // Draw Point of Absorption on the Soot
+                            ctx.beginPath();
+                            ctx.arc(innerX, innerY, 5, 0, Math.PI*2);
+                            ctx.fillStyle = '#ef4444';
+                            ctx.shadowBlur = 10;
+                            ctx.shadowColor = '#ef4444';
+                            ctx.fill();
+                            ctx.shadowBlur = 0;
+                        }
+                    }
+                }
+            } else if (!isWater && isSoot) {
+                // Immediate Absorption
+                ctx.beginPath();
+                ctx.arc(intersectX, laserY, 5, 0, Math.PI*2);
+                ctx.fillStyle = '#ef4444';
+                ctx.fill();
+            } else {
+                // Clean Egg: Scattering & Weak Reflection
+                const d = (ix * nx) + (iy * ny);
+                const rx = ix - 2 * d * nx;
+                const ry = iy - 2 * d * ny;
+                
+                ctx.beginPath();
+                ctx.moveTo(intersectX, laserY);
+                // Ensure ray reaches all the way off canvas
+                ctx.lineTo(intersectX + rx * width * 2, laserY + ry * width * 2);
+                ctx.strokeStyle = 'rgba(239, 68, 68, 0.3)'; 
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                drawArrowHead(ctx, intersectX + rx * 150, laserY + ry * 150, Math.atan2(ry, rx), 'rgba(239, 68, 68, 0.6)');
+
+                ctx.beginPath();
+                ctx.arc(intersectX, laserY, 5, 0, Math.PI*2);
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.5)';
+                ctx.fill();
+            }
+
+            // 6. Draw Analytical Angles
+            if (showAngles) {
+                const r = 60; // Increased radius for easier reading
+                let baseAngle = Math.atan2(ny, nx);
+                
+                // Force angle interpretation
+                if (baseAngle > 0) baseAngle -= Math.PI * 2; 
+                
+                ctx.save();
+                ctx.translate(intersectX, laserY);
+                
+                // Incidence Arc
+                ctx.beginPath();
+                ctx.arc(0, 0, r, -Math.PI, baseAngle, false);
+                ctx.strokeStyle = 'rgba(239, 68, 68, 0.8)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                let midInc = (-Math.PI + baseAngle) / 2;
+                ctx.fillStyle = '#fca5a5'; 
+                ctx.font = "bold 18px monospace";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("θi", (r+20)*Math.cos(midInc), (r+20)*Math.sin(midInc));
+
+                // Reflection or Refraction Arc
+                if (hasAirLayer) {
+                    if (isTIR) {
+                        const d = (ix * nx) + (iy * ny);
+                        const rx = ix - 2 * d * nx;
+                        const ry = iy - 2 * d * ny;
+                        let refBase = Math.atan2(ry, rx);
+                        
+                        ctx.beginPath();
+                        ctx.arc(0, 0, r+10, baseAngle, refBase, false); 
+                        ctx.strokeStyle = '#ffffff';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                        
+                        let midRef = (baseAngle + refBase) / 2;
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillText("θr", (r+30)*Math.cos(midRef), (r+30)*Math.sin(midRef));
+                    } else {
+                        // Refraction Angle (θt)
+                        // Bends away from the normal.
+                        let r = N_WATER / N_AIR;
+                        let c = -nx; 
+                        let radicand = 1 - r*r*(1 - c*c);
+                        if (radicand >= 0) {
+                            let coeff = r * c - Math.sqrt(radicand);
+                            let tx = r * ix + coeff * nx;
+                            let ty = r * iy + coeff * ny;
+                            let tBase = Math.atan2(ty, tx);
+
+                            // The normal pointing inside is `baseAngle + Math.PI`
+                            let invertedNormal = baseAngle + Math.PI;
+
+                            ctx.beginPath();
+                            ctx.arc(0, 0, r+5, invertedNormal, tBase, true); 
+                            ctx.strokeStyle = '#fca5a5';
+                            ctx.lineWidth = 2;
+                            ctx.stroke();
+
+                            let midRef = (invertedNormal + tBase) / 2;
+                            ctx.fillStyle = '#fca5a5';
+                            ctx.fillText("θt", (r+25)*Math.cos(midRef), (r+25)*Math.sin(midRef));
+                        }
+                    }
+                }
+                ctx.restore();
+            }
+
+            // 7. Update Explanation Text
+            updateExplanation(hasAirLayer, isTIR, angleIncidenceDeg);
+        }
+
+        function updateExplanation(hasAirLayer, isTIR, angle) {
+            let statusText = "";
+            let statusColor = "";
+            let explanationText = "";
+
+            if (!isSoot) {
+                statusText = "Egg is Visible (No TIR)";
+                statusColor = "text-yellow-400";
+                explanationText = "The egg is clean. Light hits the surface of the egg directly. Some light reflects weakly, and some enters the egg and scatters, allowing you to see the true color of the egg shell.";
+            } else if (!isWater) {
+                statusText = "Black Egg (Light Absorbed)";
+                statusColor = "text-slate-400";
+                explanationText = "The egg is coated in carbon soot. Because it is surrounded by air, light travels through the air, hits the pitch-black carbon soot, and is almost entirely absorbed. The egg appears black.";
+            } else if (hasAirLayer && !isTIR) {
+                statusText = "Refraction into Air (Absorbed)";
+                statusColor = "text-orange-400";
+                explanationText = `Because soot is hydrophobic, it traps a thick layer of air around the egg under water.<br><br>The light passes from water to air. However, your incidence angle (<b>${angle.toFixed(1)}°</b>) is less than the critical angle (<b>48.6°</b>). The light bends (refracts) into the air gap and hits the soot beneath, where it is instantly absorbed.`;
+            } else if (hasAirLayer && isTIR) {
+                statusText = "✨ Silver Mirror Effect! (TIR)";
+                statusColor = "text-emerald-400 glow-text";
+                explanationText = `<b>Magic achieved!</b> Light attempts to travel from a denser medium (Water, n=1.33) into a less dense medium (Air, n=1.00). <br><br>Because the light hits the boundary at an angle (<b>${angle.toFixed(1)}°</b>) greater than the Critical Angle (<b>48.6°</b>), <b>Total Internal Reflection</b> occurs. The light bounces completely off the air boundary without ever touching the soot.`;
+            }
+
+            observationStatus.className = `font-bold text-xl mb-4 ${statusColor}`;
+            observationStatus.innerHTML = statusText;
+            physicsExplanation.innerHTML = explanationText;
+        }
+
+        // --- Event Listeners & Animation Loop ---
+        waterToggle.addEventListener('change', (e) => {
+            isWater = e.target.checked;
+            updateToggleUI();
+        });
+
+        sootToggle.addEventListener('change', (e) => {
+            isSoot = e.target.checked;
+            updateToggleUI();
+        });
+
+        anglesToggle.addEventListener('change', (e) => {
+            showAngles = e.target.checked;
+            updateToggleUI();
+        });
+
+        lightSlider.addEventListener('input', (e) => {
+            sliderVal = parseInt(e.target.value);
+        });
+
+        function animate() {
+            time += 0.05;
+            draw();
+            requestAnimationFrame(animate);
+        }
+
+        // Initialize
+        isWater = waterToggle.checked;
+        isSoot = sootToggle.checked;
+        showAngles = anglesToggle.checked;
+        updateToggleUI();
+        resize();
+        animate(); // Start loop
+
+    </script>
+</body>
+</html>
