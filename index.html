@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="Carmel Physics" />
+  <meta name="apple-mobile-web-app-title" content="C-Physics" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
-  <title>Carmel Physics · Department Hub</title>
+  <title>C-Physics · Department Hub</title>
   <style>
     :root {
       --carmel: #990011;
@@ -608,7 +608,7 @@
     <button type="button" class="menu-btn" id="menuBtn" aria-label="Open navigation">☰</button>
     <div class="brand">
       <div class="brand-mark" aria-hidden="true">C</div>
-      <h1>Carmel Physics <span class="sub">· Department Hub</span></h1>
+      <h1>C-Physics <span class="sub">· Department Hub</span></h1>
     </div>
     <span class="ver" title="Hub version">v0.5.15</span>
   </header>
@@ -645,7 +645,7 @@
     <main class="main" id="main">
       <section class="panel active" id="panel-home" data-panel="home" aria-labelledby="home-title">
         <h2 class="panel-title" id="home-title">Welcome</h2>
-        <p class="panel-lead">Carmel Secondary School · Physics department hub · v0.5.15</p>
+        <p class="panel-lead">C-Physics · Department hub · v0.5.15</p>
         <div class="stats" id="homeStats"></div>
         <div class="fact-card" id="homeFact" aria-live="polite">
           <div class="fact-kicker">Today in physics · <span class="fact-date" id="homeFactDate"></span></div>
@@ -691,7 +691,7 @@
 
       <section class="panel" id="panel-materials" data-panel="materials" aria-labelledby="mat-title">
         <h2 class="panel-title" id="mat-title">Class Materials</h2>
-        <p class="panel-lead">Drive folder · teaching use only · school domain.</p>
+        <p class="panel-lead">Drive folder · teaching use only.</p>
         <div class="link-list" id="matList"></div>
       </section>
 
@@ -703,7 +703,7 @@
         <iframe id="mcqFrame" title="DSE MCQ Answer Finder" loading="lazy"></iframe>
       </section>
 
-      <footer class="footer">Teaching use only · Carmel Secondary School · school domain · hub v0.5.15</footer>
+      <footer class="footer">Teaching use only · C-Physics · hub v0.5.15</footer>
     </main>
   </div>
 
@@ -2107,7 +2107,7 @@ CE,2009,44,A`;
     'Energy and Use of Energy': '☀'
   };
 
-  /** Map legacy / alias topic labels → canonical 6 Carmel titles */
+  /** Map legacy / alias topic labels → canonical titles */
   function normalizeTopic(t) {
     t = String(t == null ? '' : t).trim();
     if (!t) return 'Mechanics';
