@@ -15,8 +15,8 @@
  */
 var SHEET_ID = "1MXX-mM_HFfo_gaP4yca4yO_u11LjIeih0lDI-JRiZ9g";
 var SHEET_GID = 620668479;
-var GITHUB_REPO = "hajime-dot/carmel-physics";
-var PAGES_BASE = "https://hajime-dot.github.io/carmel-physics/sims/";
+var GITHUB_REPO = "hajime-dot/c-physics";
+var PAGES_BASE = "https://hajime-dot.github.io/c-physics/sims/";
 
 function setSecrets() {
   PropertiesService.getScriptProperties().setProperties({
